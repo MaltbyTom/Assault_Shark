@@ -1,9 +1,9 @@
 # They Comin
 
-2D scrolling flight shooter inspired by the aesthetic of 80's arcade games
-Written by Tom Maltby, attributions for components follow
-www.maltby.org
-currently 1380 lines, written in one forty hour weekend of coding
+* 2D scrolling flight shooter inspired by the aesthetic of 80's arcade games
+* Written by Tom Maltby, attributions for components follow
+* www.maltby.org
+* currently 1380 lines, written in one forty hour weekend of coding
 
 ## Gameplay Gif
 
