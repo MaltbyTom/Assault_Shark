@@ -21,6 +21,7 @@
 # Import os for file handling
 # Import tkinter for root graphic context
 # Import math for reasons
+# Import glob for image preload
 
 import random
 import pygame
@@ -28,6 +29,7 @@ import tkinter
 import os
 import os.path
 import math
+import glob
 
 # Import pygame.locals for easier access to key coordinates
 # Updated to conform to flake8 and black standards
@@ -72,7 +74,7 @@ class SunMoon(pygame.sprite.Sprite):
     def __init__(self, wavenum):
         super(SunMoon, self).__init__()
         # Start with Sun loaded
-        self.surf = pygame.image.load("Graphics/sun1.png").convert()
+        self.surf = get_image("sun1.png").convert()
         self.surf.set_colorkey(WHITE, RLEACCEL)
         self.rect = self.surf.get_rect()
         # Place randomly
@@ -82,11 +84,11 @@ class SunMoon(pygame.sprite.Sprite):
 
         if wavenum < 3:
             # Keep sun until wave 3
-            self.surf = pygame.image.load("Graphics/sun1.png").convert()
+            self.surf = get_image("sun1.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
         if wavenum > 2 and wavenum < 4:
             # Then replace it with moon
-            self.surf = pygame.image.load("Graphics/moon1.png").convert()
+            self.surf = get_image("moon1.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
 
 # Define the Player object extending pygame.sprite.Sprite
@@ -94,7 +96,7 @@ class SunMoon(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, firebullet):
         super(Player, self).__init__()
-        self.surf = pygame.image.load("Graphics/jet.png").convert()
+        self.surf = get_image("jet.png").convert()
         self.surf.set_colorkey(WHITE, RLEACCEL)
         self.rect = self.surf.get_rect()
         # Start jet in middle of left edge
@@ -154,11 +156,11 @@ class Mountain(pygame.sprite.Sprite):
             self.mountnum = str(random.randint(1,4))
         else:
             self.mountnum = str(random.randint(1,6))
-        self.surf = pygame.image.load("Graphics/mountain" + self.mountnum + ".png").convert()
+        self.surf = get_image("mountain" + self.mountnum + ".png").convert()
         self.surf.set_colorkey(WHITE, RLEACCEL)
         # Starts on the bottom, off the screen to the right
         self.rect = self.surf.get_rect(bottomleft=(SCREEN_WIDTH + 30, SCREEN_HEIGHT_NOBOX),)
-        if (random.randint(1,100) + (3 * wave)) > 50: 
+        if (random.randint(1,100) + (wave * wave)) > 90: 
                 # Spawn gun on rock, more likely in later waves
                 new_enemy = Enemy(7,14,1,self)
                 enemies.add(new_enemy)
@@ -179,7 +181,7 @@ class Enemy(pygame.sprite.Sprite):
         super(Enemy, self).__init__()
         if etype == 1:
             # Missile
-            self.surf = pygame.image.load("Graphics/missile.png").convert()
+            self.surf = get_image("missile.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL) 
             # Random speed, climb/dive               
             self.speed = random.randint(5, 20)
@@ -189,7 +191,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 1
         elif etype == 3:
             # Homing missile from blimp
-            self.surf = pygame.image.load("Graphics/missile2.png").convert()
+            self.surf = get_image("missile2.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # Just faster than blimp top speed
             self.speed = 12
@@ -203,7 +205,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 1
         elif etype == 4:
             # Blimp
-            self.surf = pygame.image.load("Graphics/ship4.png").convert()
+            self.surf = get_image("ship4.png").convert()
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             # Random low speed, climb/dive                
             self.speed = random.randint(5, 10)
@@ -214,7 +216,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 10
         elif etype == 5:
             # Armored blimp
-            self.surf = pygame.image.load("Graphics/ship4a.png").convert()
+            self.surf = get_image("ship4a.png").convert()
             self.surf.set_colorkey((0, 0, 0), RLEACCEL) 
             # Random low speed               
             self.speed = random.randint(5, 10)
@@ -225,7 +227,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 20
         elif etype == 7:
             # Gun on rock
-            self.surf = pygame.image.load("Graphics/gun1.png").convert()
+            self.surf = get_image("gun1.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # Speed matches rocks, clouds
             self.speed = 5
@@ -236,31 +238,31 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 25
         elif etype == 11:
             #extra life
-            self.surf = pygame.image.load("Graphics/extralife.png").convert()
+            self.surf = get_image("extralife.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 12:
             #power up flamer
-            self.surf = pygame.image.load("Graphics/powerupflamer.png").convert()
+            self.surf = get_image("powerupflamer.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 13:
             #power up shock
-            self.surf = pygame.image.load("Graphics/powerupshock.png").convert()
+            self.surf = get_image("powerupshock.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)            
         elif etype == 14:
             #power up bio
-            self.surf = pygame.image.load("Graphics/powerupbio.png").convert()
+            self.surf = get_image("powerupbio.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 15:
             #power up pulse
-            self.surf = pygame.image.load("Graphics/poweruppulse.png").convert()
+            self.surf = get_image("poweruppulse.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 16:
             #power up health
-            self.surf = pygame.image.load("Graphics/poweruphealth.png").convert()
+            self.surf = get_image("poweruphealth.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 17:
             #power up armor
-            self.surf = pygame.image.load("Graphics/poweruparmor.png").convert()
+            self.surf = get_image("poweruparmor.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
             
         if etype > 10 and etype < 20:
@@ -337,11 +339,11 @@ class Enemy(pygame.sprite.Sprite):
             # Decrement boomcounter to animate explosion
             self.boomcounter = self.boomcounter - 1
             if self.boomcounter > 8:
-                self.surf = pygame.image.load("Graphics/boom.png").convert()
+                self.surf = get_image("boom.png").convert()
             elif self.boomcounter < 9 and self.boomcounter > 5:
-                self.surf = pygame.image.load("Graphics/boom2.png").convert()
+                self.surf = get_image("boom2.png").convert()
             elif self.boomcounter < 6:
-                self.surf = pygame.image.load("Graphics/boom3.png").convert()
+                self.surf = get_image("boom3.png").convert()
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # If time's up, kill
             if self.boomcounter < 1:
@@ -351,11 +353,11 @@ class Enemy(pygame.sprite.Sprite):
             # Decrement boomcounter to animate explosion
             self.boomcounter = self.boomcounter - 1
             if self.boomcounter > 8:
-                self.surf = pygame.image.load("Graphics/ship4xp1.png").convert()
+                self.surf = get_image("ship4xp1.png").convert()
             elif self.boomcounter < 9 and self.boomcounter > 5:
-                self.surf = pygame.image.load("Graphics/ship4xp2.png").convert()
+                self.surf = get_image("ship4xp2.png").convert()
             elif self.boomcounter < 6:
-                self.surf = pygame.image.load("Graphics/ship4xp3.png").convert()
+                self.surf = get_image("ship4xp3.png").convert()
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             # If time's up, kill
             if self.boomcounter < 1:
@@ -370,30 +372,30 @@ class Bullet(pygame.sprite.Sprite):
         self.btype = btype
         if btype == 1:
             #Machine Gun
-            self.surf = pygame.image.load("Graphics/bullet.png").convert() 
+            self.surf = get_image("bullet.png") 
             self.speed = 25   
             shoot_sound.play()
         elif btype == 2:
             #Flamer
-            self.surf = pygame.image.load("Graphics/blast1.png").convert()
+            self.surf = get_image("blast1.png")
             self.speed = 20
             self.boomcounter = boomcounter
             flamer_sound.play()
         elif btype == 3:
             #Shock Shield
-            self.surf = pygame.image.load("Graphics/shock1.png")
+            self.surf = get_image("shock1.png")
             self.speed = 0
             self.boomcounter = boomcounter
             shock_sound.play()
         elif btype == 4:
             #Bio Blaster
-            self.surf = pygame.image.load("Graphics/bio1.png")
+            self.surf = get_image("bio1.png")
             self.speed = 30
             self.boomcounter = boomcounter
             bio_sound.play()
         elif btype == 5:
             #Pulse
-            self.surf = pygame.image.load("Graphics/pulse1.png")
+            self.surf = get_image("pulse1.png")
             self.speed = 15
             self.boomcounter = boomcounter
             pulse_sound.play()
@@ -418,19 +420,15 @@ class Bullet(pygame.sprite.Sprite):
             #Flamer
             self.boomcounter = self.boomcounter - 1
             if self.boomcounter > 22:
-                self.surf = pygame.image.load("Graphics/blast1.png").convert()
+                self.surf = get_image("blast1.png")
             elif self.boomcounter < 23 and self.boomcounter > 16:
-                self.surf = pygame.image.load("Graphics/blast2.png").convert()
+                self.surf = get_image("blast2.png")
             elif self.boomcounter < 17 and self.boomcounter > 10:
-                #if self.boomcounter == 16:
-                    #self.rect.top = self.rect.top - 20
-                self.surf = pygame.image.load("Graphics/blast3.png").convert()
+                self.surf = get_image("blast3.png")
             elif self.boomcounter < 11 and self.boomcounter > 5:
-                #if self.boomcounter == 10:
-                    #self.rect.top = self.rect.top - 20
-                self.surf = pygame.image.load("Graphics/blast4.png").convert()
+                self.surf = get_image("blast4.png")
             elif self.boomcounter < 6:
-                self.surf = pygame.image.load("Graphics/blast5.png").convert()
+                self.surf = get_image("blast5.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # If animation is finished, kill
             if self.boomcounter < 1:
@@ -442,33 +440,27 @@ class Bullet(pygame.sprite.Sprite):
             if self.boomcounter > 16:
                 self.kill()
             if self.boomcounter < 5:
-                self.surf = pygame.image.load("Graphics/shock1.png").convert()
+                self.surf = get_image("shock1.png")
             elif self.boomcounter > 4 and self.boomcounter < 9:
-                self.surf = pygame.image.load("Graphics/shock2.png").convert()
+                self.surf = get_image("shock2.png")
             elif self.boomcounter > 8 and self.boomcounter < 13:
-                self.surf = pygame.image.load("Graphics/shock3.png").convert()
+                self.surf = get_image("shock3.png")
             elif self.boomcounter > 12:
-                self.surf = pygame.image.load("Graphics/shock4.png").convert()
+                self.surf = get_image("shock4.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
         if self.btype == 4:
             #Bio Spiral
             self.boomcounter = self.boomcounter - 1
             if self.boomcounter > 22:
-                self.surf = pygame.image.load("Graphics/bio1.png").convert()
+                self.surf = get_image("bio1.png")
             elif self.boomcounter < 23 and self.boomcounter > 16:
-                self.surf = pygame.image.load("Graphics/bio2.png").convert()
+                self.surf = get_image("bio2.png")
             elif self.boomcounter < 17 and self.boomcounter > 10:
-                #if self.boomcounter == 16:
-                    #self.rect.top = self.rect.top - 20
-                self.surf = pygame.image.load("Graphics/bio3.png").convert()
+                self.surf = get_image("bio3.png")
             elif self.boomcounter < 11 and self.boomcounter > 5:
-                #if self.boomcounter == 10:
-                    #self.rect.top = self.rect.top - 60
-                self.surf = pygame.image.load("Graphics/bio4.png").convert()
+                self.surf = get_image("bio4.png")
             elif self.boomcounter < 6:
-                #if self.boomcounter == 5:
-                    #self.rect.top = self.rect.top - 120
-                self.surf = pygame.image.load("Graphics/bio5.png").convert()
+                self.surf = get_image("bio5.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # If animation is finished, kill
             if self.boomcounter < 1:
@@ -477,23 +469,15 @@ class Bullet(pygame.sprite.Sprite):
             #Pulse
             self.boomcounter = self.boomcounter - 1
             if self.boomcounter > 22:
-                self.surf = pygame.image.load("Graphics/pulse1.png").convert()
+                self.surf = get_image("pulse1.png")
             elif self.boomcounter < 23 and self.boomcounter > 16:
-                self.surf = pygame.image.load("Graphics/pulse2.png").convert()
-                #if self.boomcounter == 22:
-                    #self.rect.top = self.rect.top - 12
+                self.surf = get_image("pulse2.png")
             elif self.boomcounter < 17 and self.boomcounter > 10:
-                #if self.boomcounter == 16:
-                    #self.rect.top = self.rect.top - 12
-                self.surf = pygame.image.load("Graphics/pulse3.png").convert()
+                self.surf = get_image("pulse3.png")    
             elif self.boomcounter < 11 and self.boomcounter > 5:
-                #if self.boomcounter == 10:
-                    #self.rect.top = self.rect.top - 24
-                self.surf = pygame.image.load("Graphics/pulse4.png").convert()
+                self.surf = get_image("pulse4.png")
             elif self.boomcounter < 6:
-                #if self.boomcounter == 5:
-                    #self.rect.top = self.rect.top - 24
-                self.surf = pygame.image.load("Graphics/pulse5.png").convert()
+                self.surf = get_image("pulse5.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # If animation is finished, kill
             if self.boomcounter < 1:
@@ -510,16 +494,16 @@ class Cloud(pygame.sprite.Sprite):
         super(Cloud, self).__init__()
         if wave < 3:
             # During the day, use light clouds
-            self.surf = pygame.image.load("Graphics/cloud.png").convert()
+            self.surf = get_image("cloud.png").convert()
         else:
             # At night, use dark clouds
-            self.surf = pygame.image.load("Graphics/cloud2.png").convert()
+            self.surf = get_image("cloud2.png").convert()
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)
         # The starting position is randomly generated
         self.rect = self.surf.get_rect(
             center=(
                 random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
-                random.randint(0, SCREEN_HEIGHT_NOBOX),
+                random.randint(0, SCREEN_HEIGHT_NOBOX - 200),
             )
         )
 
@@ -531,80 +515,99 @@ class Cloud(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()   
 
+#Define and cache fonts
+pygame.font.init()
+font15 = pygame.font.Font("fonts/ARCADE_R.ttf", 15)
+font16 = pygame.font.Font("fonts/ARCADE_R.ttf", 16)
+font20 = pygame.font.Font("fonts/ARCADE_R.ttf", 20)
+font30 = pygame.font.Font("fonts/ARCADE_R.ttf", 30)
+font50 = pygame.font.Font("fonts/ARCADE_R.ttf", 50)
+font60 = pygame.font.Font("fonts/ARCADE_R.ttf", 60)
+font75 = pygame.font.Font("fonts/ARCADE_R.ttf", 75)
+
+# Cache repeated text renders
+playagametextblack = font30.render("Press Enter To Play - Press Esc to Quit", 1, BLACK)
+playagametextred = font30.render("Press Enter To Play - Press Esc to Quit", 1, RED)
+pausetext1 = font20.render("Controls:", 1, BLACK)
+pausetext2 = font16.render("Flying: Arrow keys - Up, Down, Left, Right", 1, BLACK)
+pausetext3 = font16.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, BLACK)
+pausetext4 = font16.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, BLACK)
+pausetext5 = font20.render("Press Enter To UnPause - Press Esc to Quit", 1, BLACK)
+
 def texts(lives, score):
     # gives lives, score, waves, high score
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",20)
-    scoretext=font.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,0))
+    #font = pygame.font.Font("fonts/ARCADE_R.ttf",20)
+    scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,0))
     screen.blit(scoretext, (32, SCREEN_HEIGHT - 22))
-    scoretext=font.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,255))
+    scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,255))
     screen.blit(scoretext, (30, SCREEN_HEIGHT - 20))
 
 def texts2(flamer, shock, bio, pulse):
     # gives ammo - machinegun has infinite ammo
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",15)
-    scoretext=font.render("MG(SP): 999   FLAMER(X): "+str(flamer)+"  SHOCK SHIELD(C): " + str(shock)  + "  PULSAR(V): " + str(pulse) + "   BIO BLAST(B): "+str(bio), 1, (0,0,0))
+    #font = pygame.font.Font("fonts/ARCADE_R.ttf",15)
+    scoretext=font15.render("MG(SP): 999   FLAMER(X): "+str(flamer)+"  SHOCK SHIELD(C): " + str(shock)  + "  PULSAR(V): " + str(pulse) + "   BIO BLAST(B): "+str(bio), 1, (0,0,0))
     screen.blit(scoretext, (32, SCREEN_HEIGHT - 42))
-    scoretext=font.render("MG(SP): 999   FLAMER(X): "+str(flamer)+"  SHOCK SHIELD(C): "+str(shock) + "  PULSAR(V): " + str(pulse) + "   BIO BLAST(B): "+str(bio), 1, (0,0,255))
+    scoretext=font15.render("MG(SP): 999   FLAMER(X): "+str(flamer)+"  SHOCK SHIELD(C): "+str(shock) + "  PULSAR(V): " + str(pulse) + "   BIO BLAST(B): "+str(bio), 1, (0,0,255))
     screen.blit(scoretext, (30, SCREEN_HEIGHT - 40))
 
 def texts3(highscore):
     # on enter to play screen, gives high score
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
+   # font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
     
-    playagametext = font.render("Press Enter To Play - Press Esc to Quit", 1, (0,0,0))
-    ptxtoffset = playagametext.width / 2
-    screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 60))
-    playagametext = font.render("Press Enter To Play - Press Esc to Quit", 1, (255,0,0))
-    screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 58))
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",60)
-    playagametext = font.render("High Score: "+str(highscore), 1, (0,0,0))
+    #playagametext = font30.render("Press Enter To Play - Press Esc to Quit", 1, (0,0,0))
+    ptxtoffset = playagametextblack.width / 2
+    screen.blit(playagametextblack, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 60))
+    #playagametext = font30.render("Press Enter To Play - Press Esc to Quit", 1, (255,0,0))
+    screen.blit(playagametextred, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 58))
+    #font = pygame.font.Font("fonts/ARCADE_R.ttf",60)
+    playagametext = font60.render("High Score: "+str(highscore), 1, (0,0,0))
     ptxtoffset = playagametext.width / 2
     screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 100))
-    playagametext = font.render("High Score: "+str(highscore), 1, (255,0,0))
+    playagametext = font60.render("High Score: "+str(highscore), 1, (255,0,0))
     screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 102))
     #Control list
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",20)
-    pausetext = font.render("Controls:", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2))
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",16)
-    pausetext = font.render("Flying: Arrow keys - Up, Down, Left, Right", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 20))
-    pausetext = font.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 40))
-    pausetext = font.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 60))
+    #font = pygame.font.Font("fonts/ARCADE_R.ttf",20)
+    #pausetext1 = font20.render("Controls:", 1, (0,0,0))
+    ptxtoffset = pausetext1.width / 2
+    screen.blit(pausetext1, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2))
+    #font = pygame.font.Font("fonts/ARCADE_R.ttf",16)
+    #pausetext2 = font16.render("Flying: Arrow keys - Up, Down, Left, Right", 1, (0,0,0))
+    ptxtoffset = pausetext2.width / 2
+    screen.blit(pausetext2, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 20))
+    #pausetext3 = font16.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, (0,0,0))
+    ptxtoffset = pausetext3.width / 2
+    screen.blit(pausetext3, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 40))
+    #pausetext4 = font16.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, (0,0,0))
+    ptxtoffset = pausetext4.width / 2
+    screen.blit(pausetext4, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 60))
 
 def texts4():
     #Pause screen    
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",20)
-    pausetext = font.render("Press Enter To UnPause - Press Esc to Quit", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 30))
+    #font = pygame.font.Font("fonts/ARCADE_R.ttf",20)
+    #pausetext5 = font20.render("Press Enter To UnPause - Press Esc to Quit", 1, (0,0,0))
+    ptxtoffset = pausetext5.width / 2
+    screen.blit(pausetext5, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 30))
     #Control list
-    pausetext = font.render("Controls:", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2))
-    font = pygame.font.Font("fonts/ARCADE_R.ttf",16)
-    pausetext = font.render("Flying: Arrow keys - Up, Down, Left, Right", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 20))
-    pausetext = font.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 40))
-    pausetext = font.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, (0,0,0))
-    ptxtoffset = pausetext.width / 2
-    screen.blit(pausetext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 60))
+    #pausetext1 = font20.render("Controls:", 1, (0,0,0))
+    ptxtoffset = pausetext1.width / 2
+    screen.blit(pausetext1, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2))
+    #font = pygame.font.Font("fonts/ARCADE_R.ttf",16)
+    #pausetext2 = font16.render("Flying: Arrow keys - Up, Down, Left, Right", 1, (0,0,0))
+    ptxtoffset = pausetext2.width / 2
+    screen.blit(pausetext2, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 20))
+    #pausetext3 = font16.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, (0,0,0))
+    ptxtoffset = pausetext3.width / 2
+    screen.blit(pausetext3, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 40))
+    #pausetext4 = font16.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, (0,0,0))
+    ptxtoffset = pausetext4.width / 2
+    screen.blit(pausetext4, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 60))
 
 
 
 def healthbar(left, top, health):
     healthbarborder = pygame.Rect(left + 40, top, 200, 30)
     healthbarfilled = pygame.Rect(left + 42, top + 2, int(196 * (health/100)), 26)
-    heartimg = pygame.image.load("Graphics/heart.png").convert()
+    heartimg = get_image("heart.png").convert()
     heartimg.set_colorkey(WHITE, RLEACCEL)
     screen.blit(heartimg, (left,top))
 
@@ -620,7 +623,7 @@ def healthbar(left, top, health):
 def armorbar(left, top, armor):
     armorbarborder = pygame.Rect(left + 40, top, 100, 30)
     armorbarfilled = pygame.Rect(left + 42, top +2, int(96 * (armor/50)), 26)
-    shieldimg = pygame.image.load("Graphics/shield.png").convert()
+    shieldimg = get_image("shield.png").convert()
     shieldimg.set_colorkey(WHITE, RLEACCEL)
     screen.blit(shieldimg, (left, top))
     pygame.draw.rect(screen, BLACK, armorbarborder, 0, 2)
@@ -645,14 +648,28 @@ pygame.init()
 # Setup the clock for a decent framerate
 clock = pygame.time.Clock()
 
+
+
 # Create the screen object
 # First set the icon
-icon = pygame.image.load("Graphics/icon.png")
+icon = pygame.image.load("Graphics/""icon.png")
 icon.set_colorkey(BLACK, RLEACCEL)
 pygame.display.set_icon(icon)
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('They Comin')
+
+# Preload graphics
+def get_image(key):
+    if not key in image_cache:
+        image_cache[key] = pygame.image.load("Graphics/" + key).convert()
+    return image_cache[key]
+
+image_cache = {}
+images = glob.glob ("Graphics/*.png")
+for image in images:
+    img_name = os.path.basename(image)
+    get_image(img_name)
 
 # Create sunmoon
 wavesunmoon = SunMoon(0)
@@ -708,6 +725,13 @@ pulse_sound = pygame.mixer.Sound("sounds/Pulse_sound.ogg")
 move_up_sound.set_volume(0.5)
 move_down_sound.set_volume(0.5)
 collision_sound.set_volume(0.5)
+shoot_sound.set_volume(0.5)
+bio_sound.set_volume(0.5)
+shock_sound.set_volume(0.5)
+flamer_sound.set_volume(0.5)
+powerup_sound.set_volume(0.5)
+wavechange_sound.set_volume(0.5)
+pulse_sound.set_volume(0.5)
 
 # Set player lives, score, special weapons, redflash, greenflash, gamerunning variables
 plives = 3
@@ -801,57 +825,60 @@ while running:
 
                 # Should we add a new mountain?
                 elif event.type == ADDMOUNTAIN:
-                    # wave increases chance
-                    if random.randint(1,100) < 25 + (2 * wave):
-                        # Create the new mountain, and add it to our sprite groups
-                        new_mountain = Mountain()
-                        mountains.add(new_mountain)
-                        all_sprites.add(new_mountain)
+                    if redflash == False and greenflash == False:
+                        # wave increases chance
+                        if random.randint(1,100) < 25 + (2 * wave):
+                            # Create the new mountain, and add it to our sprite groups
+                            new_mountain = Mountain()
+                            mountains.add(new_mountain)
+                            all_sprites.add(new_mountain)
 
                 # Should we add a new enemy?
                 elif event.type == ADDENEMY:
                     # No new enemies while dead/wave 'Get Ready'
-                    enemiestocreate = random.randint(1,int(math.sqrt(wave)))
-                    for x in range(1, enemiestocreate + 1):
-                        if redflash == False and greenflash == False:
-                            # Create the new enemy, and add it to our sprite groups
-                            hp = 1
-                            powerup = random.randint(1,100)
-                            if powerup < 3 + wave :
-                                # Blimp1
-                                newetype = 4
-                                hp = 10
-                            if powerup > 2 + wave and powerup < 5 + wave * 2:
-                                # Blimp2
-                                newetype = 5
-                                hp = 20
-                            if powerup < 88 and powerup > 4 + wave * 2:
-                                # Missile
-                                newetype = 1
-                            elif powerup > 86 and powerup < 89:
-                                # Health
-                                newetype = 16
-                            elif powerup > 88 and powerup < 91:
-                                # Armor
-                                newetype = 17
-                            elif powerup > 90 and powerup < 93:
-                                # Extra Life
-                                newetype = 11
-                            elif powerup > 92 and powerup < 95:
-                                # Power Up FLamer
-                                newetype = 12
-                            elif powerup > 94 and powerup < 97:
-                                # Power Up Shock
-                                newetype = 13
-                            elif powerup > 96 and powerup < 99:
-                                # Power Up Bio
-                                newetype = 14
-                            elif powerup > 97:
-                                # Power Up Pulse
-                                newetype = 15
-                            new_enemy = Enemy(newetype,14,hp,0)
-                            enemies.add(new_enemy)
-                            all_sprites.add(new_enemy)
+                    wavcompleteperc = int(((wavecounter + wave)/wavegoal) * 100)
+                    if random.randint(1,100) < wavcompleteperc + 25 + wave * wave:
+                        enemiestocreate = random.randint(1,int(math.sqrt(wave)))
+                        for x in range(1, enemiestocreate + 1):
+                            if redflash == False and greenflash == False:
+                                # Create the new enemy, and add it to our sprite groups
+                                hp = 1
+                                powerup = random.randint(1,100)
+                                if powerup < 3 + wave :
+                                    # Blimp1
+                                    newetype = 4
+                                    hp = 10
+                                if powerup > 2 + wave and powerup < 5 + wave * 2:
+                                    # Blimp2
+                                    newetype = 5
+                                    hp = 20
+                                if powerup < 88 and powerup > 4 + wave * 2:
+                                    # Missile
+                                    newetype = 1
+                                elif powerup > 86 and powerup < 89:
+                                    # Health
+                                    newetype = 16
+                                elif powerup > 88 and powerup < 91:
+                                    # Armor
+                                    newetype = 17
+                                elif powerup > 90 and powerup < 93:
+                                    # Extra Life
+                                    newetype = 11
+                                elif powerup > 92 and powerup < 95:
+                                    # Power Up FLamer
+                                    newetype = 12
+                                elif powerup > 94 and powerup < 97:
+                                    # Power Up Shock
+                                    newetype = 13
+                                elif powerup > 96 and powerup < 99:
+                                    # Power Up Bio
+                                    newetype = 14
+                                elif powerup > 97:
+                                    # Power Up Pulse
+                                    newetype = 15
+                                new_enemy = Enemy(newetype,14,hp,0)
+                                enemies.add(new_enemy)
+                                all_sprites.add(new_enemy)
 
                 # Should we add a new cloud?
                 elif event.type == ADDCLOUD:
@@ -971,14 +998,14 @@ while running:
                 pygame.mixer.music.stop()
                 #Count down on get ready message - has to occur after sprites
                 counterstr = ""
-                font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
-                deadtext = font.render("You Died!  Lives remain: " + str(plives), 1, BLACK)
+                #font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
+                deadtext = font30.render("You Died!  Lives remain: " + str(plives), 1, BLACK)
                 dtxtoffset = deadtext.width / 2
                 screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset, 200))
-                deadtext = font.render("You Died!  Lives remain: " + str(plives), 1, BLUE)
+                deadtext = font30.render("You Died!  Lives remain: " + str(plives), 1, BLUE)
                 screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset + 2, 202))
                 # Bigger font for the countdown
-                font = pygame.font.Font("fonts/ARCADE_R.ttf",75) 
+                #font = pygame.font.Font("fonts/ARCADE_R.ttf",75) 
                 if pygame.time.get_ticks() > redflashticks + 2500:
                     counterstr = "1"
                 elif pygame.time.get_ticks() > redflashticks + 2000:
@@ -989,23 +1016,23 @@ while running:
                     counterstr = "4"
                 elif pygame.time.get_ticks() > redflashticks + 500:
                     counterstr = "5"           
-                countertext = font.render("GET READY: " + counterstr, 1, BLACK)
+                countertext = font75.render("GET READY: " + counterstr, 1, BLACK)
                 ctxtoffset = countertext.width / 2
                 screen.blit(countertext, (SCREEN_WIDTH / 2 - ctxtoffset, SCREEN_HEIGHT / 2))          
-                countertext = font.render("GET READY: " + counterstr, 1, BLUE)
+                countertext = font75.render("GET READY: " + counterstr, 1, BLUE)
                 screen.blit(countertext, (SCREEN_WIDTH / 2 - ctxtoffset + 2, SCREEN_HEIGHT / 2 + 2))  
             elif greenflash:
                 #Count down on get ready message - has to occur after sprites
                 pygame.mixer.music.stop()
                 counterstr = ""
-                font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
-                deadtext = font.render("Wave #" + str(wave) + " (0/" +str(wavegoal) + ")", 1, BLACK)
+                #font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
+                deadtext = font30.render("Wave #" + str(wave) + " (0/" +str(wavegoal) + ")", 1, BLACK)
                 dtxtoffset = deadtext.width / 2
                 screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset, 200))
-                deadtext = font.render("Wave #" + str(wave) + " (0/" +str(wavegoal) + ")", 1, BLUE)
+                deadtext = font30.render("Wave #" + str(wave) + " (0/" +str(wavegoal) + ")", 1, BLUE)
                 screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset + 2, 202))
                 # Bigger font for the countdown
-                font = pygame.font.Font("fonts/ARCADE_R.ttf",75) 
+                #font = pygame.font.Font("fonts/ARCADE_R.ttf",75) 
                 if pygame.time.get_ticks() > greenflashticks + 2500:
                     counterstr = "1"
                 elif pygame.time.get_ticks() > greenflashticks + 2000:
@@ -1016,13 +1043,13 @@ while running:
                     counterstr = "4"
                 elif pygame.time.get_ticks() > greenflashticks + 500:
                     counterstr = "5"           
-                countertext = font.render("GET READY: " + counterstr, 1, BLACK)
+                countertext = font75.render("GET READY: " + counterstr, 1, BLACK)
                 ctxtoffset = countertext.width / 2
                 screen.blit(countertext, (SCREEN_WIDTH / 2 - ctxtoffset, SCREEN_HEIGHT / 2))          
-                countertext = font.render("GET READY: " + counterstr, 1, BLUE)
+                countertext = font75.render("GET READY: " + counterstr, 1, BLUE)
                 screen.blit(countertext, (SCREEN_WIDTH / 2 - ctxtoffset + 2, SCREEN_HEIGHT / 2 + 2))
 
-            # Check if any enemies have collided with the player
+            # Check if the player has collided with any mountains
             crash = pygame.sprite.spritecollideany(player, mountains)
             if crash:
                 # Decrement lives
@@ -1276,7 +1303,7 @@ while running:
             if wavecounter > wavegoal:
                 # Set up next wave
                 wave = wave + 1
-                wavegoal = wavegoal + (wave * wave * 10)
+                wavegoal = wavegoal + (wave * wave * 10) + 100
                 wavecounter = 0
                 # Green flash for wave complete
                 greenflash = True
@@ -1349,7 +1376,7 @@ while running:
                         redflash = False
                         greenflash = False  
                         wavecounter = 0
-                        wavegoal = 50
+                        wavegoal = 150
                         pygame.mixer.music.play(loops=-1)
                         wavesunmoon.rect.center=(random.randint(100, SCREEN_WIDTH),random.randint(0, SCREEN_HEIGHT_NOBOX),)
                         wavesunmoon.update(wave)

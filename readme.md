@@ -1,9 +1,9 @@
 # They Comin
 
-* 2D scrolling flight shooter inspired by the aesthetic of 80's arcade games
-* Written by Tom Maltby, attributions for components follow
-* www.maltby.org
-* currently 1380 lines, written in one forty hour weekend of coding
+2D scrolling flight shooter inspired by the aesthetic of 80's arcade games
+Written by Tom Maltby, attributions for components follow
+www.maltby.org
+currently 1407 lines (original 1380 lines written in one forty hour weekend of coding)
 
 ## Gameplay Gif
 
@@ -35,24 +35,32 @@ SOFTWARE.
 
 ## Description
 
-Barring 2 hours last summer, this is my first Python coding, and my first significant coding in any language
-in the last 15 years.  There are a lot of things that should be made more elegant.  Graphics and fonts and sounds
-are loaded as needed rather than being cached.  A lot of things should be further object oriented.  I haven't 
-looked into Python's best practice file / directory structure, etc.  This is the result of an initial 40 hour 
-coding blast over a weekend, starting as proof of concept and then repeatedly throwing a few hours at the most 
-synchronous next topic for maximum effect in available time.  
+Barring 2 hours last summer, this is my first Python coding, and my first 
+significant coding in any language in the last 15 years.  There are a lot of 
+things that should be made more elegant.  As of this update, graphics are
+all preloaded into a dictionary.  Fonts are preloaded, and all text that isn't 
+a variable merge is pre-rendered.  A lot of things still should be further object 
+oriented.  I haven't looked into Python's best practice file / directory structure,
+etc.  This is the result of an initial 40 hour coding blast over a weekend, now 
+with 4 hours of housekeeping and play balancing.  It started as proof of concept and
+then grew through repeatedly throwing a few hours at the most synchronous next topic
+for maximum effect in available time.  
 
-Hopefully I will keep finding time to put some of those organizational improvements in, as well as to implement some
-of my desired feature list that I haven't gotten to.  It's a fun game.  
+Hopefully I will keep finding time to put some of those organizational improvements 
+in, as well as to implement some of my desired feature list that I haven't gotten to.
 
-Based off Jon Fincher's 120 line tutorial py_tut_with_images.py
+It's a fun game.  My teenage child, who is the primary playtester, put up a 
+high score just over 100K, and made it to wave 23.
+
+Further credits:
+* Based off Jon Fincher's 120 line tutorial py_tut_with_images.py
 py_tut_with_images on github: https://github.com/realpython/pygame-primer/blob/master/py_tut_with_images.py
 Jon's blog: https://realpython.com/pygame-a-primer/
+* Additional sounds from  http://rpg.hamsterrepublic.com/ohrrpgce/Free_Sound_Effects#Battle_Sounds
+* Arcade font from https://www.dafont.com/arcade-ya.font , by Yuji Adachi, listed as 100% free
 
-Additional sounds from  http://rpg.hamsterrepublic.com/ohrrpgce/Free_Sound_Effects#Battle_Sounds
-Arcade font from https://www.dafont.com/arcade-ya.font , by Yuji Adachi, listed as 100% free
-
-Thanks to Jon for the neat demo of a viable set of tools, and to the creators of the great font, sounds, and music.
+Thanks to Jon for the neat demo of a viable set of tools, and to the creators of the great 
+font, sounds, and music.
 
 Graphics except jet, missile, and white cloud are by me, using Corel and Gimp.
  
@@ -61,7 +69,7 @@ Graphics except jet, missile, and white cloud are by me, using Corel and Gimp.
 
 ### Requirements:
 
-pygame-ce 2.5.3 (SDL 2.30.12, Python 3.12.2)
+pygame-ce 2.5.3 (SDL 2.30.12, Python 3.12.2), pip
 
 ### Step by step instructions:
 
@@ -88,19 +96,31 @@ pip install -r requirements.txt
 ```
 
 ## Update log:
+
+### 3/6/2025 - housekeeping & play balance
+
+* All graphics preloaded into a dictionary
+* All fonts preloaded, all text that isn't a variable merge pre-rendered
+* From user reccomendations, early waves now start slower 
+    * using a % of wave completed factor + wave number squared
+* Guns spawn less often in early waves
+* Mountains / Guns now blocked from spawning between waves
+* Masking improved on tall tower, short gun platform, and gun wheel 
+    * (sneaky off white regions replaced with ffffff pure white)
+
 (Pre Github)
 
-### 2/28/2025
+### 3/2/2025
 
-* Missile movement climb/dive, variance
-* Plane shoots
-* Diverse collision tree
-* Bio, Blaster, Shock Shield added
-* collision tree improved
-* Powerups added
-* Powerup collision results
-* Initial game status text bars
-
+* Discovered updating the rect attribute after resizing fixes the collision errors with growing bullets such as bio
+* Added mountains/towers
+* Added guns on mountains/towers
+* Worked out impacts on towers for bullets/enemies/player
+* Weighted spawn rate with wave
+* Next life / next wave pauses more dramatic with red/green flash and countdown on screen
+* Added player health and armor
+* Integrated status bar with health and armor bars
+* Added health and armor power ups
 
 ### 3/1/2025
 
@@ -121,14 +141,16 @@ pip install -r requirements.txt
 * Create sounds folder
 * Create graphics folder
 
-### 3/2/2025
 
-* Discovered updating the rect attribute after resizing fixes the collision errors with growing bullets such as bio
-* Added mountains/towers
-* Added guns on mountains/towers
-* Worked out impacts on towers for bullets/enemies/player
-* Weighted spawn rate with wave
-* Next life / next wave pauses more dramatic with red/green flash and countdown on screen
-* Added player health and armor
-* Integrated status bar with health and armor bars
-* Added health and armor power ups
+### 2/28/2025
+
+* Missile movement climb/dive, variance
+* Plane shoots
+* Diverse collision tree
+* Bio, Blaster, Shock Shield added
+* collision tree improved
+* Powerups added
+* Powerup collision results
+* Initial game status text bars
+
+
