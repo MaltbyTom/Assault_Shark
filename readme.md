@@ -97,6 +97,10 @@ pip install -r requirements.txt
 
 ## Update log:
 
+### 3/7/2025
+* Animated blinking light on nose cone of homing missile
+* Stopped background sounds before player collision or wavechange sounds
+
 ### 3/6/2025 - housekeeping & play balance
 
 * All graphics preloaded into a dictionary

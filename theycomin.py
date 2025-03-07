@@ -74,7 +74,7 @@ class SunMoon(pygame.sprite.Sprite):
     def __init__(self, wavenum):
         super(SunMoon, self).__init__()
         # Start with Sun loaded
-        self.surf = get_image("sun1.png").convert()
+        self.surf = get_image("sun1.png")
         self.surf.set_colorkey(WHITE, RLEACCEL)
         self.rect = self.surf.get_rect()
         # Place randomly
@@ -84,11 +84,11 @@ class SunMoon(pygame.sprite.Sprite):
 
         if wavenum < 3:
             # Keep sun until wave 3
-            self.surf = get_image("sun1.png").convert()
+            self.surf = get_image("sun1.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
         if wavenum > 2 and wavenum < 4:
             # Then replace it with moon
-            self.surf = get_image("moon1.png").convert()
+            self.surf = get_image("moon1.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
 
 # Define the Player object extending pygame.sprite.Sprite
@@ -96,7 +96,7 @@ class SunMoon(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, firebullet):
         super(Player, self).__init__()
-        self.surf = get_image("jet.png").convert()
+        self.surf = get_image("jet.png")
         self.surf.set_colorkey(WHITE, RLEACCEL)
         self.rect = self.surf.get_rect()
         # Start jet in middle of left edge
@@ -156,7 +156,7 @@ class Mountain(pygame.sprite.Sprite):
             self.mountnum = str(random.randint(1,4))
         else:
             self.mountnum = str(random.randint(1,6))
-        self.surf = get_image("mountain" + self.mountnum + ".png").convert()
+        self.surf = get_image("mountain" + self.mountnum + ".png")
         self.surf.set_colorkey(WHITE, RLEACCEL)
         # Starts on the bottom, off the screen to the right
         self.rect = self.surf.get_rect(bottomleft=(SCREEN_WIDTH + 30, SCREEN_HEIGHT_NOBOX),)
@@ -181,7 +181,7 @@ class Enemy(pygame.sprite.Sprite):
         super(Enemy, self).__init__()
         if etype == 1:
             # Missile
-            self.surf = get_image("missile.png").convert()
+            self.surf = get_image("missile.png")
             self.surf.set_colorkey(WHITE, RLEACCEL) 
             # Random speed, climb/dive               
             self.speed = random.randint(5, 20)
@@ -191,13 +191,15 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 1
         elif etype == 3:
             # Homing missile from blimp
-            self.surf = get_image("missile2.png").convert()
+            self.surf = get_image("missile21.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # Just faster than blimp top speed
             self.speed = 12
             # Starts at nose of blimp
             self.rect = self.surf.get_rect(center=(launcher.rect.left - 20, launcher.rect.top))
             # Follows player on y axis
+            self.ticks = 0
+            self.aniframe = 1
             if self.rect.top > player.rect.top:
                 self.climb = - 3
             else:
@@ -205,7 +207,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 1
         elif etype == 4:
             # Blimp
-            self.surf = get_image("ship4.png").convert()
+            self.surf = get_image("ship4.png")
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             # Random low speed, climb/dive                
             self.speed = random.randint(5, 10)
@@ -216,7 +218,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 10
         elif etype == 5:
             # Armored blimp
-            self.surf = get_image("ship4a.png").convert()
+            self.surf = get_image("ship4a.png")
             self.surf.set_colorkey((0, 0, 0), RLEACCEL) 
             # Random low speed               
             self.speed = random.randint(5, 10)
@@ -227,7 +229,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 20
         elif etype == 7:
             # Gun on rock
-            self.surf = get_image("gun1.png").convert()
+            self.surf = get_image("gun1.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # Speed matches rocks, clouds
             self.speed = 5
@@ -238,31 +240,31 @@ class Enemy(pygame.sprite.Sprite):
             self.hp = 25
         elif etype == 11:
             #extra life
-            self.surf = get_image("extralife.png").convert()
+            self.surf = get_image("extralife.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 12:
             #power up flamer
-            self.surf = get_image("powerupflamer.png").convert()
+            self.surf = get_image("powerupflamer.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 13:
             #power up shock
-            self.surf = get_image("powerupshock.png").convert()
+            self.surf = get_image("powerupshock.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)            
         elif etype == 14:
             #power up bio
-            self.surf = get_image("powerupbio.png").convert()
+            self.surf = get_image("powerupbio.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 15:
             #power up pulse
-            self.surf = get_image("poweruppulse.png").convert()
+            self.surf = get_image("poweruppulse.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 16:
             #power up health
-            self.surf = get_image("poweruphealth.png").convert()
+            self.surf = get_image("poweruphealth.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
         elif etype == 17:
             #power up armor
-            self.surf = get_image("poweruparmor.png").convert()
+            self.surf = get_image("poweruparmor.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
             
         if etype > 10 and etype < 20:
@@ -294,6 +296,16 @@ class Enemy(pygame.sprite.Sprite):
                     self.climb = 3
                 else:
                     self.climb = -3
+                # cycle through animation to blink the light
+                self.ticks = self.ticks + 1
+                if self.ticks == 3:
+                    self.surf = get_image("missile22.png")
+                elif self.ticks == 6:
+                    self.surf = get_image("missile23.png")
+                elif self.ticks > 8:
+                    self.surf = get_image("missile21.png")
+                    self.ticks = 0
+                self.surf.set_colorkey(WHITE, RLEACCEL)
         # Move, climb/dive
         if self.etype ==7:
             self.rect.move_ip(-self.speed, 0)
@@ -339,11 +351,11 @@ class Enemy(pygame.sprite.Sprite):
             # Decrement boomcounter to animate explosion
             self.boomcounter = self.boomcounter - 1
             if self.boomcounter > 8:
-                self.surf = get_image("boom.png").convert()
+                self.surf = get_image("boom.png")
             elif self.boomcounter < 9 and self.boomcounter > 5:
-                self.surf = get_image("boom2.png").convert()
+                self.surf = get_image("boom2.png")
             elif self.boomcounter < 6:
-                self.surf = get_image("boom3.png").convert()
+                self.surf = get_image("boom3.png")
             self.surf.set_colorkey(WHITE, RLEACCEL)
             # If time's up, kill
             if self.boomcounter < 1:
@@ -353,11 +365,11 @@ class Enemy(pygame.sprite.Sprite):
             # Decrement boomcounter to animate explosion
             self.boomcounter = self.boomcounter - 1
             if self.boomcounter > 8:
-                self.surf = get_image("ship4xp1.png").convert()
+                self.surf = get_image("ship4xp1.png")
             elif self.boomcounter < 9 and self.boomcounter > 5:
-                self.surf = get_image("ship4xp2.png").convert()
+                self.surf = get_image("ship4xp2.png")
             elif self.boomcounter < 6:
-                self.surf = get_image("ship4xp3.png").convert()
+                self.surf = get_image("ship4xp3.png")
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             # If time's up, kill
             if self.boomcounter < 1:
@@ -494,10 +506,10 @@ class Cloud(pygame.sprite.Sprite):
         super(Cloud, self).__init__()
         if wave < 3:
             # During the day, use light clouds
-            self.surf = get_image("cloud.png").convert()
+            self.surf = get_image("cloud.png")
         else:
             # At night, use dark clouds
-            self.surf = get_image("cloud2.png").convert()
+            self.surf = get_image("cloud2.png")
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)
         # The starting position is randomly generated
         self.rect = self.surf.get_rect(
@@ -607,7 +619,7 @@ def texts4():
 def healthbar(left, top, health):
     healthbarborder = pygame.Rect(left + 40, top, 200, 30)
     healthbarfilled = pygame.Rect(left + 42, top + 2, int(196 * (health/100)), 26)
-    heartimg = get_image("heart.png").convert()
+    heartimg = get_image("heart.png")
     heartimg.set_colorkey(WHITE, RLEACCEL)
     screen.blit(heartimg, (left,top))
 
@@ -623,7 +635,7 @@ def healthbar(left, top, health):
 def armorbar(left, top, armor):
     armorbarborder = pygame.Rect(left + 40, top, 100, 30)
     armorbarfilled = pygame.Rect(left + 42, top +2, int(96 * (armor/50)), 26)
-    shieldimg = get_image("shield.png").convert()
+    shieldimg = get_image("shield.png")
     shieldimg.set_colorkey(WHITE, RLEACCEL)
     screen.blit(shieldimg, (left, top))
     pygame.draw.rect(screen, BLACK, armorbarborder, 0, 2)
@@ -1184,6 +1196,13 @@ while running:
                 # Stop any moving sounds and play the collision sound
                 move_up_sound.stop()
                 move_down_sound.stop()
+                shoot_sound.stop()
+                bio_sound.stop()
+                shock_sound.stop()
+                flamer_sound.stop()
+                powerup_sound.stop()
+                wavechange_sound.stop()
+                pulse_sound.stop()
                 if crash.etype < 10:
                     # If hostile
                     collision_sound.play()
@@ -1310,6 +1329,13 @@ while running:
                 greenflashticks = pygame.time.get_ticks()
                 move_up_sound.stop()
                 move_down_sound.stop()
+                shoot_sound.stop()
+                collision_sound.stop()
+                bio_sound.stop()
+                shock_sound.stop()
+                flamer_sound.stop()
+                powerup_sound.stop()
+                pulse_sound.stop()
                 wavechange_sound.play()
                 # Move player positon to hide
                 player.rect.left = -300
@@ -1334,7 +1360,7 @@ while running:
                     if enemy1.etype > 10:
                         # If Powerup, kill
                         enemy1.kill()
-                    wavecounter = wavecounter + 1
+                    score = score + 1
 
             if score > highscore:
                 highscore = score
