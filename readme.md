@@ -11,6 +11,8 @@ currently 3274 lines
 ## Gameplay Gif
 
 Assault Shark, as of 3/15/25 update:
+![Assault Shark](https://github.com/user-attachments/assets/0baaeea0-21fb-48f9-bb9f-34dddfaa4023)
+
 
 Original 40 hour game while first learning Python:
 ![they comin gif](https://github.com/user-attachments/assets/739a6257-07a0-4942-954c-34ba4292b26a)
