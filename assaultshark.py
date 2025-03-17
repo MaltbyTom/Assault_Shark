@@ -69,6 +69,7 @@ from pygame.locals import (
     QUIT,
     RLEACCEL,
     K_F5,
+    K_RCTRL, #tilt
 )
 
 
@@ -84,8 +85,8 @@ YELLOW = pygame.Color("yellow")
 
 # Define constants for the screen width and height
 root = tkinter.Tk()
-SCREEN_WIDTH = root.winfo_screenwidth() - 50
-SCREEN_HEIGHT = root.winfo_screenheight() - 100
+SCREEN_WIDTH = root.winfo_screenwidth() # - 50
+SCREEN_HEIGHT = root.winfo_screenheight() # - 100
 SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100
 
 # Define the Sun and Moon object
@@ -130,33 +131,60 @@ class Player(pygame.sprite.Sprite):
 
     # Move the sprite based on joystick
     #def updatestk(self, )
- 
+    jetupdown = 1
+    tilt = 1
     # Move the sprite based on keypresses
     def update(self, pressed_keys):
+        global jetupdown
+        global tilt
+        joytilt = False
         if redflash == False and greenflash == False:
-            
+            jetupdown = 1
+            tilt = 1
             # handle joysticks
-            left_x, left_y = controller.get_left_stick()
-             # player move   
-            self.rect.move_ip(int(left_x * 5), 0)
-            self.rect.move_ip(0, int(left_y * 5))
-            triggers = controller.get_triggers()
-            buttons = controller.get_buttons()
-            if triggers > 0.3:
-                self.firebullet = 3
-            if buttons[0] == 1:
-                self.firebullet = 4
-            if buttons[2] == 1:
-                self.firebullet = 5
-            if buttons[1] == 1:
-                self.firebullet = 6
-            if buttons[3] == 1:
-                self.firebullet = 7
+            if nojoy == False:
+                left_x, left_y = controller.get_left_stick()
+                # player move   
+                self.rect.move_ip(int(left_x * 5), 0)
+                if left_y > .2:
+                    jetupdown = 2
+                elif left_y < -.2:
+                    jetupdown = 0
+                else:
+                    jetupdown = 1
+                self.rect.move_ip(0, int(left_y * 5))
+                triggers = controller.get_triggers()
+                buttons = controller.get_buttons()
+                if triggers > 0.3:
+                    self.firebullet = 3
+                if buttons[0] == 1:
+                    self.firebullet = 4
+                if buttons[2] == 1:
+                    self.firebullet = 5
+                if buttons[1] == 1:
+                    self.firebullet = 6
+                if buttons[3] == 1:
+                    self.firebullet = 7
+                if buttons[4] == 1:
+                    joytilt = True
+                    if jetupdown == 0:
+                        self.surf = get_image("jetup.png")
+                    elif jetupdown == 1:
+                        self.surf = get_image("jet.png")
+                    elif jetupdown == 2:
+                        self.surf = get_image("jetdown.png")
+                    tilt = jetupdown
+                else:
+                    self.surf = get_image("jet.png")
+                self.surf.set_colorkey(WHITE, RLEACCEL)
+            
             if pressed_keys[K_UP]:
                 self.rect.move_ip(0, -5)
                 move_up_sound.play()
-            if pressed_keys[K_DOWN]:
+                jetupdown = 0
+            elif pressed_keys[K_DOWN]:
                 self.rect.move_ip(0, 5)
+                jetupdown = 2
                 move_down_sound.play()
             if pressed_keys[K_LEFT]:
                 self.rect.move_ip(-10, 0)
@@ -178,6 +206,18 @@ class Player(pygame.sprite.Sprite):
             if pressed_keys[K_v]:
                 #pulse
                 self.firebullet = 7
+            if pressed_keys[K_RCTRL]:
+                if jetupdown == 0:
+                    self.surf = get_image("jetup.png")
+                elif jetupdown == 1:
+                    self.surf = get_image("jet.png")
+                elif jetupdown == 2:
+                    self.surf = get_image("jetdown.png")
+                tilt = jetupdown
+            else:
+                if joytilt == False:
+                    self.surf = get_image("jet.png")
+            self.surf.set_colorkey(WHITE, RLEACCEL)
             # Keep player on the screen if not on flash       
             if self.rect.left < 0:
                 self.rect.left = 0
@@ -187,6 +227,7 @@ class Player(pygame.sprite.Sprite):
                 self.rect.top = 0
             elif self.rect.bottom >= SCREEN_HEIGHT_NOBOX:
                 self.rect.bottom = SCREEN_HEIGHT_NOBOX
+            
         return(self)                
 
 # Define the mountain object extending pygame.sprite.Sprite
@@ -243,8 +284,12 @@ class Enemy(pygame.sprite.Sprite):
                 # Let boss shoot at multiple levels
                 if hasattr(launcher, "etype"):
                     if enemydict[launcher.etype]["boss"] == 1:
-                        randadd = random.randint(-100,100)
-                        self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + randadd + enemydict[etype]["centerheight"]))
+                        if etype == 91:
+                            #print("tentaclespawn")
+                            self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + enemydict[etype]["centerheight"]))
+                        else:
+                            randadd = random.randint(-100,100)
+                            self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + randadd + enemydict[etype]["centerheight"]))
                     else:
                         self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + enemydict[etype]["centerheight"]))    
                 else:
@@ -271,10 +316,14 @@ class Enemy(pygame.sprite.Sprite):
         self.etype = etype
         # set blowup time to enemy as passed
         self.boomcounter = boomcounter
+        #if etype == 91:
+        #    print("has self.hp")
 
     # Move the enemy based on speed
     # Remove it when it passes the left edge of the screen
     def update(self):
+        #if self.etype == 91:
+        #    print("tentacle update")
         if random.randint(1,10)>5:
             # 50% modify climb if applicable
             if enemydict[self.etype]["randclimb"]:
@@ -293,6 +342,8 @@ class Enemy(pygame.sprite.Sprite):
                     self.climb = enemydict[self.etype]["climbmax"]
         if enemydict[self.etype]["isanimated"]:
             # animate through dictionary checks
+            #if self.etype == 91:
+            #    print("animated")
             framecheck = 0
             gotframe = False
             self.ticks = self.ticks -1
@@ -300,17 +351,45 @@ class Enemy(pygame.sprite.Sprite):
                 self.ticks = self.ticks = enemydict[self.etype]["ticks"]
             while gotframe == False:
                 if self.ticks > enemydict[self.etype]["aniframetimers"][framecheck]:
+                    oldright = self.rect.right
+                    oldtop = self.rect.top
+                    oldbottom = self.rect.bottom
+                    nextimg = enemydict[self.etype]["aniframes"][framecheck]
                     self.surf = get_image(enemydict[self.etype]["aniframes"][framecheck])
                     gotframe = True
                 else:
                     framecheck = framecheck + 1
             if self.ticks < 0:
                 self.ticks = self.ticks = enemydict[self.etype]["ticks"]
+            daboss = None
+            if self.etype == 91:
+                for e in enemies:
+                    if enemydict[e.etype]["boss"]:
+                        daboss = e
+                if daboss:
+                    self.rect = self.surf.get_rect()
+                    self.rect.right = daboss.rect.left + 30
+                    if nextimg == "tentacledown.png":
+                        self.rect.top = daboss.rect.bottom - 60
+                    elif nextimg == "tentacleup.png":
+                        self.rect.bottom = daboss.rect.bottom - 60
+                    elif nextimg == "tentacle.png":
+                        self.rect.centery = daboss.rect.bottom - 60
+                    else:
+                        self.rect.centery = daboss.rect.bottom - 50
+                else:
+                    self.kill()
+                    return
             self.surf.set_colorkey(enemydict[self.etype]["mask"], RLEACCEL)
 
         # Move the enemy
         if enemydict[self.etype]["advancedmovement"] == True:
-            isdone = amove(self)   
+            #if self.etype == 91:
+            #    print("call amove")
+            isdone = amove(self) 
+        #for e in enemies:
+            #if e.etype == 91:
+            #    print("back from amove")
         if hasattr(self, "rect"):
             if hasattr(self.rect, "move_ip"):
                 self.rect.move_ip(-self.speed, self.climb)
@@ -350,7 +429,13 @@ class Enemy(pygame.sprite.Sprite):
             if redflash == False:
                 if random.randint(1,100) + wave * 2 > 90 and self.fired == 0:
                     # Shoot designated ammotype
-                    new_enemy = Enemy(enemydict[self.etype]["ammotype"],14,1,self)
+                    if enemydict[self.etype]["boss"]:
+                        if tentacleattack == False:
+                            possibles = len(enemydict[self.etype]["ammotype"]) - 1
+                            shot = enemydict[self.etype]["ammotype"][random.randint(0, possibles)]
+                            new_enemy = Enemy(shot,14,1,self)
+                    else:    
+                        new_enemy = Enemy(enemydict[self.etype]["ammotype"],14,1,self)
                     enemies.add(new_enemy)
                     all_sprites.add(new_enemy)
                     self.fired = enemydict[self.etype]["fired"]
@@ -392,12 +477,16 @@ class Enemy(pygame.sprite.Sprite):
                     self.kill()
         if enemydict[self.etype]["isground"] == True:
             self.rect.bottom = SCREEN_HEIGHT_NOBOX
+        #for e in enemies:
+        #    if e.etype == 91:
+        #        print ("still exists at exit")
 
 # Define the bullet object extending pygame.sprite.Sprite
 # Instead of a surface, we use an image for a better looking sprite
 class Bullet(pygame.sprite.Sprite):
     def __init__(self,startx,starty,btype,boomcounter):
         super(Bullet, self).__init__()
+        global tilt
         self.btype = btype
         self.surf = get_image(bulletdict[self.btype]["imgname"])
         self.name = "bullet" + bulletdict[self.btype]["imgname"]
@@ -406,18 +495,26 @@ class Bullet(pygame.sprite.Sprite):
         self.boomcounter = boomcounter
         self.surf.set_colorkey(WHITE, RLEACCEL)
         # The starting position is the nose of the plane
-        self.rect = self.surf.get_rect(
-            center=(
-                startx,
-                starty
-            )
-        )
+        self.rect = self.surf.get_rect(center = (startx, starty))
+        match tilt:
+            case 0:
+                self.climb = -15
+            case 1:
+                self.climb = 0
+            case 2:                
+                self.climb = 15
         
     # Move the bullet based on speed
     # Remove it when it passes the right edge of the screen
     def update(self):
-        self.rect.move_ip(self.speed, 0)
+        self.rect.move_ip(self.speed, self.climb)
         if self.rect.left > SCREEN_WIDTH:
+            self.kill()
+        if self.rect.right < 0:
+            self.kill()
+        if self.rect.bottom < 0:
+            self.kill()
+        if self.rect.top > SCREEN_HEIGHT_NOBOX:
             self.kill()
         if bulletdict[self.btype]["isanimated"]:
             self.boomcounter = self.boomcounter - 1
@@ -519,7 +616,7 @@ class Cloud(pygame.sprite.Sprite):
     # Move the cloud based on a constant speed
     # Remove it when it passes the left edge of the screen
     def update(self):
-        self.rect.move_ip(-5, 0)
+        self.rect.move_ip(-6, 0)
         # if off left edge, kill
         if self.rect.right < 0:
             self.kill()   
@@ -527,74 +624,137 @@ class Cloud(pygame.sprite.Sprite):
 # Advanced movement function(s)
 
 def amove(thise):
-    # For the first case, assume a desire to stay in the vertical center, 150 pixels from the back edge of the screen
-    # Initialize locals
-    movex = 0
-    movey = 0
-    # Set base coordinates
-    basey = SCREEN_HEIGHT_NOBOX / 2 - thise.rect.height / 2
-    basex = SCREEN_WIDTH - 250
-    # establish proposed move
-    movey = thise.climb + thise.rect.bottom
-    if thise.speed > 5:
-        movex = thise.speed + thise.rect.left
+    if thise.etype == 91:
+        # Tentacle
+        #print("amove")
+        #daboss = False
+        for e in enemies:
+            if enemydict[e.etype]["boss"] == True:
+                daboss = e
+        #if daboss:
+            #print(daboss.etype)
+            
+            #if enemydict[daboss]["isexploded"]:
+            #    thise.kill()
+            #thise.rect.right = daboss.rect.left + 25
+            #if thise.ticks == 1:
+            #    thise.kill()
+            #elif thise.ticks < 15 or thise.ticks > 19 or thise.ticks == 17 or thise.ticks == 18:
+            #    thise.rect.centery = daboss.rect.bottom - 50
+            #elif thise.ticks == 15 or thise.ticks == 16:
+            #    thise.rect.bottom = daboss.rect.bottom - 70
+            #elif thise.ticks == 19 or thise.ticks == 20:
+            #    thise.rect.top == daboss.rect.bottom - 70
+       # else:
+        #    thise.kill()
     else:
-        movex = thise.speed + thise.rect.right
-    # Adjust towards base on probablility of distance per axis
-    if movex > basex:
-        percreturn = movex - basex
-        if random.randint(1,100) < percreturn:
-            thise.speed = thise.speed + 3
-    if movex < basex:
-        percreturn = (basex - movex) // 5        
-        if random.randint(1,100) < percreturn:
-            thise.speed = thise.speed - 3
-    
-    # Update proposed x position
-    if thise.speed > 5:
-        movex = thise.speed + thise.rect.left
-    else:
-        movex = thise.speed + thise.rect.right
-    if movey > basey:
-        percreturn = (movey - basey) // 2
-        if random.randint(1,100) < percreturn:
-            thise.climb = thise.climb - 3
-    if movey < basey:
-        percreturn = basey - movey        
-        if random.randint(1,100) < percreturn:
-            thise.speed = thise.speed + 3
-    # Update proposed y position
-    movey = thise.climb + thise.rect.bottom
-    # Now check that we aren't running into a mountain or the ground
-    if movey > SCREEN_HEIGHT_NOBOX:
-        movey = SCREEN_HEIGHT_NOBOX - 50
-    if len(mountains) > 0:
-        for m in mountains:
-            if m.rect.collidepoint(movey,movex):
-                thise.climb = -5
-                thise.speed = 5
-    # Don't leave the screen
-    if thise.rect.right > SCREEN_WIDTH:
-        thise.rect.right = SCREEN_WIDTH - 30
-        thise.speed = 6
-    if thise.rect.left < 0:
-        thise.rect.left = 30
-        thise.speed = -6
-    if thise.rect.top < 0:
-        thise.rect.top = 30
-        thise.climb = -3
-    if thise.rect.bottom > SCREEN_HEIGHT_NOBOX:
-        thise.rect.bottom = SCREEN_HEIGHT_NOBOX - 50
-        thise.climb = + 3
-    if thise.speed > 15:
-        thise.speed = 15
-    if thise.speed < -15:
-        thise.speed = -15
-    if thise.climb > 8:
-        thise.climb = 8
-    if thise.climb < -8:
-        thise.climb = -8
-    return(thise)
+        # right now,  only the boss
+        # For the first case, assume a desire to stay in the vertical center, 150 pixels from the back edge of the screen
+        # Initialize locals
+        if enemydict[thise.etype]["boss"]:
+            movex = 0
+            movey = 0
+            # Set base coordinates
+            basey = SCREEN_HEIGHT_NOBOX / 2 - thise.rect.height / 2
+            basex = SCREEN_WIDTH - 250
+            # establish proposed move
+        
+            if player.rect.right + 500 > thise.rect.left:
+                if player.rect.top > thise.rect.bottom:
+                    # Dive
+                    thise.climb = 6
+                elif player.rect.bottom < thise.rect.top + 75:
+                    # Climb
+                    thise.climb = - 6
+                if player.rect.right + 300 > thise.rect.left:
+                    if player.rect.right > thise.rect.right:
+                        thise.speed = -5
+                    elif player.rect.bottom > thise.rect.top + 75:
+                        if player.rect.top < thise.rect.bottom:
+                            # Tentacle attack
+                            tentacleattack = False
+                            for e in enemies:
+                                if e.etype == 91:
+                                    tentacleattack = True
+                            if tentacleattack == False:
+                                tentacleattack = True
+                                new_enemy = Enemy(91,14,300,thise)
+                                enemies.add(new_enemy)
+                                all_sprites.add(new_enemy)
+                                #print("Back from enemy init")
+                else:
+                    thise.speed = 8
+                    # Charge 
+            else:
+                movey = thise.climb + thise.rect.bottom
+                if thise.speed > 5:
+                    movex = thise.speed + thise.rect.left
+                else:
+                    movex = thise.speed + thise.rect.right
+                # Adjust towards base on probablility of distance per axis
+                if movex > basex:
+                    percreturn = movex - basex
+                    if random.randint(1,100) < percreturn:
+                        thise.speed = thise.speed + 3
+                if movex < basex:
+                    percreturn = (basex - movex) // 5        
+                    if random.randint(1,100) < percreturn:
+                        thise.speed = thise.speed - 3
+                
+                # Update proposed x position
+                if thise.speed > 5:
+                    movex = thise.speed + thise.rect.left
+                else:
+                    movex = thise.speed + thise.rect.right
+                if movey > basey:
+                    percreturn = (movey - basey) // 2
+                    if random.randint(1,100) < percreturn:
+                        thise.climb = thise.climb - 3
+                if movey < basey:
+                    percreturn = basey - movey        
+                    if random.randint(1,100) < percreturn:
+                        thise.speed = thise.speed + 3
+                # Update proposed y position
+                movey = thise.climb + thise.rect.bottom
+                # Now check that we aren't running into a mountain or the ground
+                if movey > SCREEN_HEIGHT_NOBOX:
+                    movey = SCREEN_HEIGHT_NOBOX - 50
+                if len(mountains) > 0:
+                    for m in mountains:
+                        if m.rect.collidepoint(movey,movex):
+                            thise.climb = -5
+                            thise.speed = 5
+
+            # Don't chase past half screen
+            if thise.rect.left < SCREEN_WIDTH / 2:
+                thise.rect.left = SCREEN_WIDTH / 2
+                thise.speed = -5
+            # Don't leave the screen
+            
+            if thise.rect.right > SCREEN_WIDTH:
+                thise.rect.right = SCREEN_WIDTH - 30
+                thise.speed = 6
+            if thise.rect.left < 0:
+                thise.rect.left = 30
+                thise.speed = -6
+            if thise.rect.top < 0:
+                thise.rect.top = 30
+                thise.climb = -3
+            if thise.rect.bottom > SCREEN_HEIGHT_NOBOX:
+                thise.rect.bottom = SCREEN_HEIGHT_NOBOX - 50
+                thise.climb = + 3
+            if thise.speed > 15:
+                thise.speed = 15
+            if thise.speed < -15:
+                thise.speed = -15
+            if thise.climb > 8:
+                thise.climb = 8
+            if thise.climb < -8:
+                thise.climb = -8
+        #for e in enemies:
+            #if e.etype == 91: 
+                #print("end of amove")
+        return(thise)
     
 
 
@@ -610,32 +770,42 @@ font60 = pygame.font.Font("fonts/ARCADE_R.ttf", 60)
 font75 = pygame.font.Font("fonts/ARCADE_R.ttf", 75)
 
 # Cache repeated text renders
-playagametextblack = font30.render("Press Enter To Play - Press Esc to Quit", 1, BLACK)
-playagametextred = font30.render("Press Enter To Play - Press Esc to Quit", 1, RED)
-pausetext1 = font20.render("Controls:", 1, BLACK)
-pausetext2 = font16.render("Flying: Arrow keys - Up, Down, Left, Right", 1, BLACK)
+playagametextblack = font20.render("Press Enter/[Start] To Play - Press Esc/[Back] to Quit", 1, BLACK)
+playagametextred = font20.render("Press Enter/[Start] To Play - Press Esc/[Back] to Quit", 1, RED)
+pausetext1 = font20.render(" Keyboard Controls:", 1, BLACK)
+pausetext2 = font16.render("Flying: Arrow keys - Up, Down, Left, Right -- Tilt: R Ctrl", 1, BLACK)
 pausetext3 = font16.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, BLACK)
 pausetext4 = font16.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, BLACK)
 pausetext5 = font20.render("Press Enter To UnPause - Press Esc to Quit", 1, BLACK)
-pausetext1red = font20.render("Controls:", 1, RED)
-pausetext2red = font16.render("Flying: Arrow keys - Up, Down, Left, Right", 1, RED)
+pausetext1red = font20.render(" Keyboard Controls:", 1, RED)
+pausetext2red = font16.render("Flying: Arrow keys - Up, Down, Left, Right -- Tilt: R Ctrl", 1, RED)
 pausetext3red = font16.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, RED)
 pausetext4red = font16.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, RED)
 pausetext5red = font20.render("Press Enter To UnPause - Press Esc to Quit", 1, RED)
+pausetext6 = font20.render(" Joystick Controls:", 1, BLACK)
+pausetext7 = font16.render("Flying: Left Stick - Up, Down, Left, Right -- Tilt: Left Bump Trigger", 1, BLACK)
+pausetext8 = font16.render("Weapons: Right Trigger - Machine Gun, A - Flamer, X - Shock Shield, B - Pulsar, Y - Bio Blast", 1, BLACK)
+pausetext9 = font16.render("Start - Play / Pause / Unpause, Back - Quit ", 1, BLACK)
+pausetext10 = font20.render("Press Start To UnPause - Press Bacl to Quit", 1, BLACK)
+pausetext6red = font20.render(" Joystick Controls:", 1, RED)
+pausetext7red = font16.render("Flying: Left Stick - Up, Down, Left, Right -- Tilt: Left Bump Trigger", 1, RED)
+pausetext8red = font16.render("Weapons: Right Trigger - Machine Gun, A - Flamer, X - Shock Shield, B - Pulsar, Y - Bio Blast", 1, RED)
+pausetext9red = font16.render("Start - Play / Pause / Unpause, Back - Quit ", 1, RED)
+pausetext10red = font20.render("Press Start To UnPause - Press Bacl to Quit", 1, RED)
 
 def texts(lives, score):
     # gives lives, score, waves, high score
     scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,0))
-    screen.blit(scoretext, (32, SCREEN_HEIGHT - 22))
+    screen.blit(scoretext, (52, SCREEN_HEIGHT - 27))
     scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,255))
-    screen.blit(scoretext, (30, SCREEN_HEIGHT - 20))
+    screen.blit(scoretext, (50, SCREEN_HEIGHT - 25))
 
 def texts2(flamer, shock, bio, pulse):
     # gives ammo - machinegun has infinite ammo
     scoretext=font15.render("MG(SP): 999   FLAMER(X): "+str(flamer)+"  SHOCK SHIELD(C): " + str(shock)  + "  PULSAR(V): " + str(pulse) + "   BIO BLAST(B): "+str(bio), 1, (0,0,0))
-    screen.blit(scoretext, (32, SCREEN_HEIGHT - 42))
+    screen.blit(scoretext, (52, SCREEN_HEIGHT - 47))
     scoretext=font15.render("MG(SP): 999   FLAMER(X): "+str(flamer)+"  SHOCK SHIELD(C): "+str(shock) + "  PULSAR(V): " + str(pulse) + "   BIO BLAST(B): "+str(bio), 1, (0,0,255))
-    screen.blit(scoretext, (30, SCREEN_HEIGHT - 40))
+    screen.blit(scoretext, (50, SCREEN_HEIGHT - 45))
 
 def texts3(highscore):
     # on enter to play screen, gives high score
@@ -648,10 +818,10 @@ def texts3(highscore):
     screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 100))
     playagametext = font60.render("High Score: "+str(highscore), 1, (255,0,0))
     screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 102))
-    #Control list
+    # Control list
     ptxtoffset = pausetext1.width / 2
-    screen.blit(pausetext1, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2))
-    screen.blit(pausetext1red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 2))
+    screen.blit(pausetext1, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -5))
+    screen.blit(pausetext1red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + -3))
     ptxtoffset = pausetext2.width / 2
     screen.blit(pausetext2, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 20))
     screen.blit(pausetext2red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 22))
@@ -661,6 +831,19 @@ def texts3(highscore):
     ptxtoffset = pausetext4.width / 2
     screen.blit(pausetext4, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 60))
     screen.blit(pausetext4red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 62))
+    # Joystick controls
+    ptxtoffset = pausetext6.width / 2
+    screen.blit(pausetext6, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 190))
+    screen.blit(pausetext6red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 188))
+    ptxtoffset = pausetext7.width / 2
+    screen.blit(pausetext7, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 165))
+    screen.blit(pausetext7red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 163))
+    ptxtoffset = pausetext8.width / 2
+    screen.blit(pausetext8, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -145))
+    screen.blit(pausetext8red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 143))
+    ptxtoffset = pausetext9.width / 2
+    screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
+    screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
 
 def texts4():
     #Pause screen    
@@ -680,6 +863,19 @@ def texts4():
     ptxtoffset = pausetext4.width / 2
     screen.blit(pausetext4, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 60))
     screen.blit(pausetext4red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 62))
+    # Joystick controls
+    ptxtoffset = pausetext6.width / 2
+    screen.blit(pausetext6, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 185))
+    screen.blit(pausetext6red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 183))
+    ptxtoffset = pausetext7.width / 2
+    screen.blit(pausetext7, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 165))
+    screen.blit(pausetext7red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 163))
+    ptxtoffset = pausetext8.width / 2
+    screen.blit(pausetext8, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -145))
+    screen.blit(pausetext8red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 143))
+    ptxtoffset = pausetext9.width / 2
+    screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
+    screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
 
 healthhardmax = 400
 armorhardmax = 200
@@ -695,6 +891,7 @@ def healthbar(left, top, health):
     heartimg = get_image("heart.png")
     heartimg.set_colorkey(WHITE, RLEACCEL)
     screen.blit(heartimg, (left,top))
+    healthbarmark = pygame.Rect(left + 237, top-3, 1, 33)
 
     if health > 70:
         healthbarcolor = GREEN
@@ -704,7 +901,9 @@ def healthbar(left, top, health):
         healthbarcolor = RED
     pygame.draw.rect(screen, BLACK, healthbarborder, 0, 2)
     pygame.draw.rect(screen, healthbarcolor, healthbarfilled, 0, 2)
-    return health
+    if healthmax > 200:
+        pygame.draw.rect(screen, BLACK, healthbarmark, 0, 0)
+    #return health
 
 def bosshealthbar(left, top, boss, health, bosshealthblink):
  
@@ -738,8 +937,12 @@ def armorbar(left, top, armor):
     shieldimg = get_image("shield.png")
     shieldimg.set_colorkey(WHITE, RLEACCEL)
     screen.blit(shieldimg, (left, top))
+    armorbarmark = pygame.Rect(left + 137, top-3, 1, 33)
     pygame.draw.rect(screen, BLACK, armorbarborder, 0, 2)
     pygame.draw.rect(screen, BLUE, armorbarfilled, 0, 2)
+    if armormax > 100:
+        pygame.draw.rect(screen, BLACK, armorbarmark, 0, 0)
+    #return healthmax
     return armor
 
 def fpscounter():    
@@ -748,15 +951,28 @@ def fpscounter():
     screen.blit(fps_t,(10,10))  
 
 def statusdisplay():
-    statusbox = pygame.Rect(3, SCREEN_HEIGHT - 94, SCREEN_WIDTH - 3, 94)
+    statusbox = pygame.Rect(3, SCREEN_HEIGHT - 97, SCREEN_WIDTH - 6, 94)
     statusboxframe = pygame.Rect(0,SCREEN_HEIGHT - 100,SCREEN_WIDTH,100)
     pygame.draw.rect(screen, BLUE, statusboxframe, 0, 3)
-    pygame.draw.rect(screen, GRAY, statusbox, 0, 3)   
+    pygame.draw.rect(screen, "#808080", statusbox, 0, 3)   
+    cornimg = get_image("corner1a.png")
+    cornimg.set_colorkey(WHITE, RLEACCEL)
+    screen.blit(cornimg, (0, SCREEN_HEIGHT - 24))   
+    cornimg = get_image("corner2.png")
+    cornimg.set_colorkey(WHITE, RLEACCEL)
+    screen.blit(cornimg, (0, SCREEN_HEIGHT - 100))
+    cornimg = get_image("corner3a.png")
+    cornimg.set_colorkey(WHITE, RLEACCEL)
+    screen.blit(cornimg, (SCREEN_WIDTH - 24, SCREEN_HEIGHT - 100))
+    cornimg = get_image("corner4.png")
+    cornimg.set_colorkey(WHITE, RLEACCEL)
+    screen.blit(cornimg, (SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24))
+    
     # Draw our game text
     texts(plives, score)
     texts2(flamer,shock,bio,pulse)   
-    healthbar(10, SCREEN_HEIGHT - 80, player.hp)
-    armorbar((healthmax + 50), SCREEN_HEIGHT - 80, player.armor)
+    healthbar(20, SCREEN_HEIGHT - 85, player.hp)
+    armorbar((healthmax + 70), SCREEN_HEIGHT - 85, player.armor)
 # Setup for sounds, defaults are good
 pygame.mixer.init()
 
@@ -767,8 +983,11 @@ pygame.init()
 clock = pygame.time.Clock()
 
 # make a controller
-controller = xbox360_controller.Controller()
-
+nojoy = False
+try:
+    controller = xbox360_controller.Controller()
+except pygame.error:
+    nojoy = True
 # Create the screen object
 # First set the icon
 icon = pygame.image.load("Graphics/""icon.png")
@@ -1052,8 +1271,8 @@ enemydict = {
         "skyburst": False,
         # Is enemy intended on ground
         "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
+        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher object, 
+        # otherwise they may be tuples to generate starting position with randint
         "islauncher": True,
         "centerwidth": -20,
         "centerheight": 0,
@@ -1427,7 +1646,7 @@ enemydict = {
         # Does the enemy shoot
         "isshooter": True,
         # Ammo type if isshooter
-        "ammotype": 6,
+        "ammotype": (2,3,6),
         # Does it explode at peak height
         "skyburst": False,
         # Is enemy intended on ground
@@ -1457,7 +1676,7 @@ enemydict = {
         "fired": 0,
         "ispowerup": False,
         # Tuple for range of damage
-        "damage": (100,200),
+        "damage": (50,100),
         # is boss?
         "boss": 1,
         # boomcounter for explosion timing
@@ -1859,6 +2078,76 @@ enemydict = {
         "dammountain": 100,
         # perc damage from enemies
         "damenemies": 100,
+        # perc damage from bullets
+        "dambullets": 100,
+        # perc damage from player collision
+        "damplayer": 100
+    },
+    91: {
+        # Boss tentacle attack
+        "imgname": "tentacle7.png",
+        "mask": WHITE,
+        # Advanced movement flag
+        "advancedmovement": True,
+        # If speed is random, speed passes a tuple, otherwise a single value
+        "randspeed": False,
+        "speed": 0, 
+        # If climb is random, climb passes a tuple, otherwise a single value
+        "randclimb": False,
+        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
+        "ishoming": False,
+        "climb": 0,
+        # Limits for climb/dive
+        "climbmax": 0,
+        "climbmin": -0,
+        # Is location random
+        "randcenter": False,
+        # Does the enemy shoot
+        "isshooter": False,
+        # Ammo type if isshooter
+        "ammotype": 0,
+        # Does it explode at peak height
+        "skyburst": False,
+        # Is enemy intended on ground
+        "isground": False,
+        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher object, 
+        # otherwise they may be tuples to generate starting position with randint
+        "islauncher": True,
+        "centerwidth": 20,
+        "centerheight": 100,
+        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
+        "isanimated": True,
+        # Total ticks to recycle animation timer at
+        "ticks": 34,
+        # Number of animation frames
+        "numaniframes": 17,
+        # Timing for animation frames
+        "aniframetimers": (32,30,28,26,24,22,20,18,16,14,12,10,8,6,4,2,0),    
+        # Animation frame names   
+        "aniframes": ("tentacle7.png","tentacle6.png","tentacle5.png","tentacle4.png","tentacle4.png","tentacle3.png","tentacle2.png","tentacle.png",
+                      "tentacleup.png","tentacle.png","tentacledown.png","tentacle.png","tentacle2.png","tentacle3.png","tentacle4.png","tentacle5.png",
+                      "tentacle6.png","tentacle7.png"),
+        # If isexploded, animates once through on boomcounter, then dies
+        "isexploded": False,
+        # If isexplodable, eplodes before dying into etype isexplodable
+        "isexplodable": False,
+        # Missiles and shells have one hp; blimps and guns have more
+        "hp": 300,
+        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
+        "fired": 0,
+        "ispowerup": False,
+        # Tuple for range of damage
+        "damage": (25,75),
+        # is boss?
+        "boss": 0,
+        # boomcounter for explosion timing
+        "boomcounter": 20,
+        # perc damage from ground
+        "damground": 0,
+        # perc damage from mountain
+        "dammountain": 0,
+        # perc damage from enemies
+        "damenemies": 0,
         # perc damage from bullets
         "dambullets": 100,
         # perc damage from player collision
@@ -2481,7 +2770,12 @@ wave = 1
 wavecounter = 0
 wavegoal = 150
 waveendticks = 0
-
+# Tentacle attack not in progress
+tentacleattack = False
+jetupdown = 1
+tilt = 1
+lastwaveboss = 0
+triplefire = True
 
 # check for saved highscore
 hsfilename = "highscore.txt"
@@ -2589,12 +2883,24 @@ while running:
                             # No new enemies while dead/wave 'Get Ready'
                             # Percentage of wave complete for factoring rate of enemy spawning
                             wavcompleteperc = int(((wavecounter + wave)/wavegoal) * 100)
+                            # Possible to spawn boss at 50%
                             if wavcompleteperc > 50 and waveboss < wave and random.randint(1,100) > 95:
                                 new_enemy = Enemy(41,35,hp,0)
                                 enemies.add(new_enemy)
                                 all_sprites.add(new_enemy)
                                 new_enemy.hp = (new_enemy.hp / 2) * wave
                                 waveboss = waveboss + 1
+                                lastwaveboss = wave
+                                #print("Boss spawned!  Wave"+ str(wave))
+                            # if Boss hasn't spawned by 90%, spawn boss
+                            if wavcompleteperc > 90 and lastwaveboss < wave:
+                                new_enemy = Enemy(41,35,hp,0)
+                                enemies.add(new_enemy)
+                                all_sprites.add(new_enemy)
+                                new_enemy.hp = (new_enemy.hp / 2) * wave
+                                waveboss = waveboss + 1
+                                lastwaveboss = wave
+                                #print("Boss spawned!  Wave"+ str(wave))
 
                             if random.randint(1,100) < wavcompleteperc + 25 + wave * wave:
                                 enemiestocreate = random.randint(1,int(math.sqrt(wave)))
@@ -2665,9 +2971,20 @@ while running:
                     elif event.type == ADDBULLET:
                         if player.firebullet > 0 and player.firebullet < 4:
                             # Create the new bullet, and add it to our sprite groups
-                            new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
-                            bullets.add(new_bullet)
-                            all_sprites.add(new_bullet)
+                            if triplefire:
+                                new_bullet = Bullet(player.rect.right,player.rect.bottom + 18,1,8)
+                                bullets.add(new_bullet)
+                                all_sprites.add(new_bullet)
+                                new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
+                                bullets.add(new_bullet)
+                                all_sprites.add(new_bullet)
+                                new_bullet = Bullet(player.rect.right,player.rect.bottom - 18,1,8)
+                                bullets.add(new_bullet)
+                                all_sprites.add(new_bullet)
+                            else:
+                                new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
+                                bullets.add(new_bullet)
+                                all_sprites.add(new_bullet)
                             player.firebullet = player.firebullet - 1 
                         elif player.firebullet == 4:
                             # Create the blast bullet, and add it to our sprite groups
@@ -2746,8 +3063,9 @@ while running:
                 # Update the position of our enemies, bullets, and clouds
                 wavesunmoon.update(wave)
                 mountains.update()
-                enemies.update()
                 bullets.update()
+                enemies.update()
+                
                 #player.update(pressed_keys)
                 clouds.update()
                 
@@ -2759,10 +3077,10 @@ while running:
                 for entity in mountains:
                     if hasattr(entity, "rect") and hasattr(entity, "surf"):
                         screen.blit(entity.surf, entity.rect)
-                for entity in enemies:
+                for entity in bullets:
                     if hasattr(entity, "rect") and hasattr(entity, "surf"):
                         screen.blit(entity.surf, entity.rect)
-                for entity in bullets:
+                for entity in enemies:
                     if hasattr(entity, "rect") and hasattr(entity, "surf"):
                         screen.blit(entity.surf, entity.rect)
                 for entity in clouds:
@@ -2876,7 +3194,8 @@ while running:
                                 if enemydict[enemy1.etype]["isexplodable"]:
                                     enemy1.etype = enemydict[enemy1.etype]["isexplodable"]
                                 else:
-                                    enemy1.kill()
+                                    if enemydict[enemy1.etype]["boss"] == False:
+                                        enemy1.kill()
                                 score = score + 1
                                 wavecounter = wavecounter + 1                                                           
                         # If no lives remain, kill player
@@ -2890,11 +3209,15 @@ while running:
                 # PLAYER ENEMY COLLISIONS
                 
                 # Make sure all enemies have rectangles
-                for e in enemies:
-                    if hasattr(e, "rect") == False:
-                        e.kill()
+                #for e in enemies:
+                    #if e.etype == 91:
+                    #    print("check for crash")
+                    #if hasattr(e, "rect") == False:
+                    #    e.kill()
                 crash = pygame.sprite.spritecollideany(player, enemies)
                 if crash:
+                    #if crash.etype == 91:
+                        #print("crash")
                     if crash.etype < 100:
                         # Missile or blimp, possibly exploding
                         collision_sound.play()
@@ -2985,8 +3308,10 @@ while running:
                         if player.armor > armormax // 2:
                             player.armor = armormax // 2
 
-                    # Remove the Enemy if not boss
-                    if enemydict[crash.etype]["boss"] == 0:
+                    # Remove the Enemy if not boss or tentacle
+                    if enemydict[crash.etype]["boss"] == 0 and crash.etype != 91:
+                        #if crash.etype == 91:
+                        #    print("killed in crash")
                         crash.kill()
                     else:
                         # Player bounces off boss
@@ -3023,22 +3348,27 @@ while running:
                 # Check for other collisions, kill colliding enemies and destructable bullets   
                 # ENEMY ENEMY COLLISIONS
                 # Make sure all enemies have rectangles
-                for e in enemies:
-                    if hasattr(e, "rect") == False:
-                        e.kill()
+                #for e in enemies:
+                #    if hasattr(e, "rect") == False:
+                #        e.kill()
                 for i, enemy1 in enumerate(enemies):
                     enemy2 = pygame.sprite.spritecollideany(enemy1, enemies)
                     # If enemies collide
                     if enemy2 != enemy1: 
+                        #if enemy2.etype == 91:
+                            #print("enemy2")
+                        #if enemy1.etype == 91:
+                            #print("enemy1")
                         # Not with themselves
                         # De-collide, move smaller
                         #enemy2.rect = enemy2.surf.get_rect()
-                        if enemy2.rect.height * enemy2.rect.width < enemy1.rect.height * enemy1.rect.width:
+                        # If enemy2 is smaller and not tentacle or boss
+                        if ((enemy2.rect.height * enemy2.rect.width) < (enemy1.rect.height * enemy1.rect.width)) and enemy2.etype != 91 and enemy2.etype != 41:
                             if enemy2.rect.centerx < enemy1.rect.centerx:
                                 enemy2.rect.right = enemy1.rect.left -5
                             else:
                                 enemy2.rect.left = enemy1.rect.right +5
-                        else:
+                        elif enemy1.etype != 91 and enemy1.etype != 41:
                             if enemy1.rect.centerx < enemy2.rect.centerx:
                                 enemy1.rect.right = enemy2.rect.left -5
                             else:
@@ -3141,10 +3471,14 @@ while running:
                         waveendticks += 1
                     if len(enemies) == 0 or waveendticks > 150:
                         # Set up next wave
+                        jetupdown = 1
+                        tilt = 1
                         wave = wave + 1
                         wavegoal = wavegoal + (wave * wave * 10) + 100
                         wavecounter = 0
                         waveendticks = 0
+                        jetupdown = 1
+                        tilt = 1
                         # Green flash for wave complete
                         greenflash = True
                         greenflashticks = pygame.time.get_ticks()
@@ -3212,6 +3546,8 @@ while running:
                             wavegoal = 150
                             waveboss = 0
                             waveendticks = 0
+                            jetupdown = 1
+                            tilt = 1
                             pygame.mixer.music.play(loops=-1)
                             wavesunmoon.rect.center=(random.randint(100, SCREEN_WIDTH),random.randint(0, SCREEN_HEIGHT_NOBOX),)
                             wavesunmoon.update(wave)
@@ -3248,6 +3584,8 @@ while running:
                             wavesunmoon.update(wave)
                             player.rect.left = 30
                             player.rect.top = SCREEN_HEIGHT_NOBOX / 5
+                            jetupdown = 1
+                            tilt = 1
 
                         elif event.key == K_ESCAPE:
                             # Prepare for exit
