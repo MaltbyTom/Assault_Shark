@@ -761,13 +761,13 @@ def amove(thise):
 # Define and cache fonts
 
 pygame.font.init()
-font15 = pygame.font.Font("fonts/ARCADE_R.ttf", 15)
-font16 = pygame.font.Font("fonts/ARCADE_R.ttf", 16)
-font20 = pygame.font.Font("fonts/ARCADE_R.ttf", 20)
-font30 = pygame.font.Font("fonts/ARCADE_R.ttf", 30)
-font50 = pygame.font.Font("fonts/ARCADE_R.ttf", 50)
-font60 = pygame.font.Font("fonts/ARCADE_R.ttf", 60)
-font75 = pygame.font.Font("fonts/ARCADE_R.ttf", 75)
+font15 = pygame.font.Font("fonts/arcade_r.ttf", 15)
+font16 = pygame.font.Font("fonts/arcade_r.ttf", 16)
+font20 = pygame.font.Font("fonts/arcade_r.ttf", 20)
+font30 = pygame.font.Font("fonts/arcade_r.ttf", 30)
+font50 = pygame.font.Font("fonts/arcade_r.ttf", 50)
+font60 = pygame.font.Font("fonts/arcade_r.ttf", 60)
+font75 = pygame.font.Font("fonts/arcade_r.ttf", 75)
 
 # Cache repeated text renders
 playagametextblack = font20.render("Press Enter/[Start] To Play - Press Esc/[Back] to Quit", 1, BLACK)
@@ -990,7 +990,7 @@ except pygame.error:
     nojoy = True
 # Create the screen object
 # First set the icon
-icon = pygame.image.load("Graphics/""icon.png")
+icon = pygame.image.load("graphics/icon.png")
 icon.set_colorkey(BLACK, RLEACCEL)
 pygame.display.set_icon(icon)
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
@@ -1000,12 +1000,12 @@ pygame.display.set_caption('Assault Shark')
 # Preload graphics
 def get_image(key):
     if not key in image_cache:
-        image_cache[key] = pygame.image.load("Graphics/" + key).convert()
+        image_cache[key] = pygame.image.load("graphics/" + key).convert()
     return image_cache[key]
 
 image_cache = {}
 # Gets a list of all images in the graphics directory
-images = glob.glob ("Graphics/*.png")
+images = glob.glob ("graphics/*.png")
 # Loads all images into the image_cache dictionary
 for image in images:
     img_name = os.path.basename(image)
@@ -3120,14 +3120,14 @@ while running:
                     pygame.mixer.music.stop()
                     #Count down on get ready message - has to occur after sprites
                     counterstr = ""
-                    #font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
+                    #font = pygame.font.Font("fonts/arcade_r.ttf",30)
                     deadtext = font30.render("You Died!  Lives remain: " + str(plives), 1, BLACK)
                     dtxtoffset = deadtext.width / 2
                     screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset, 200))
                     deadtext = font30.render("You Died!  Lives remain: " + str(plives), 1, BLUE)
                     screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset + 2, 202))
                     # Bigger font for the countdown
-                    #font = pygame.font.Font("fonts/ARCADE_R.ttf",75) 
+                    #font = pygame.font.Font("fonts/arcade_r.ttf",75) 
                     if pygame.time.get_ticks() > redflashticks + 2500:
                         counterstr = "1"
                     elif pygame.time.get_ticks() > redflashticks + 2000:
@@ -3147,14 +3147,14 @@ while running:
                     #Count down on get ready message - has to occur after sprites
                     pygame.mixer.music.stop()
                     counterstr = ""
-                    #font = pygame.font.Font("fonts/ARCADE_R.ttf",30)
+                    #font = pygame.font.Font("fonts/arcade_r.ttf",30)
                     deadtext = font30.render("Wave #" + str(wave) + " (0/" +str(wavegoal) + ")", 1, BLACK)
                     dtxtoffset = deadtext.width / 2
                     screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset, 200))
                     deadtext = font30.render("Wave #" + str(wave) + " (0/" +str(wavegoal) + ")", 1, BLUE)
                     screen.blit(deadtext, (SCREEN_WIDTH / 2 - dtxtoffset + 2, 202))
                     # Bigger font for the countdown
-                    #font = pygame.font.Font("fonts/ARCADE_R.ttf",75) 
+                    #font = pygame.font.Font("fonts/arcade_r.ttf",75) 
                     if pygame.time.get_ticks() > greenflashticks + 2500:
                         counterstr = "1"
                     elif pygame.time.get_ticks() > greenflashticks + 2000:
