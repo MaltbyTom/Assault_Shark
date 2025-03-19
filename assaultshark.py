@@ -1,7 +1,7 @@
 # Written by Tom Maltby, (c)Tom Maltby 2025, credits follow
 # www.maltby.org
 # 
-# Currently 3276 lines
+# Currently 2298 lines and a 2213 line dictionary
 # Original game: 1521 lines, 1 weekend of coding + 6 hrs resource housekeeping & trim
 # 
 # Originally based off Jon Fincher's 120 line tutorial py_tut_with_images.py
@@ -43,6 +43,7 @@ import os.path
 import math
 import glob
 import xbox360_controller
+import edict # Enemy dictionary module
 
 
 
@@ -249,7 +250,7 @@ class Mountain(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect(bottomleft=(SCREEN_WIDTH + 30, SCREEN_HEIGHT_NOBOX),)
         if (random.randint(1,100) + (wave * wave)) > 90: 
                 # Spawn gun on rock, more likely in later waves
-                new_enemy = Enemy(7,14,1,self)
+                new_enemy = Enemy("e_g_cannon7",14,1,self)
                 enemies.add(new_enemy)
                 all_sprites.add(new_enemy)
 
@@ -266,51 +267,63 @@ class Mountain(pygame.sprite.Sprite):
 # Instead of a surface, we use an image for a better looking sprite
 class Enemy(pygame.sprite.Sprite):
 
-    def __init__(self, etype, boomcounter, hp, launcher):
+    def __init__(self, etype, boomcounter, egg, launcher):
         super(Enemy, self).__init__()
-        self.name = "enemy" + enemydict[etype]["imgname"]
-        self.surf = get_image(enemydict[etype]["imgname"])
-        self.surf.set_colorkey(enemydict[etype]["mask"], RLEACCEL) 
+        self.name = "enemy" + edict.enemydict[etype]["imgname"]
+        self.surf = get_image(edict.enemydict[etype]["imgname"])
+        self.surf.set_colorkey(edict.enemydict[etype]["mask"], RLEACCEL) 
         # Random speed, climb/dive               
-        if enemydict[etype]["randspeed"]:
-            self.speed = random.randint(*enemydict[etype]["speed"])
+        if edict.enemydict[etype]["randspeed"]:
+            self.speed = random.randint(*edict.enemydict[etype]["speed"])
         else:
-            self.speed = enemydict[etype]["speed"]
-        if enemydict[etype]["randcenter"]:
-            self.rect = self.surf.get_rect(center = (random.randint(*enemydict[etype]["centerwidth"]), random.randint(*enemydict[etype]["centerheight"])))
+            self.speed = edict.enemydict[etype]["speed"]
+        if egg == -1:
+            eggy = launcher.rect.bottom + random.randint(15,25)
+            if eggy >= SCREEN_HEIGHT_NOBOX:
+                eggy = SCREEN_HEIGHT_NOBOX - 20
+            eggx = launcher.rect.right + random.randint(15,25)
+            if eggx >= SCREEN_WIDTH:
+                eggx = SCREEN_WIDTH - 20
+            self.rect = self.surf.get_rect(center =(eggx,eggy))
+        elif edict.enemydict[etype]["randcenter"]:
+            if etype.startswith("e_pu"):
+                self.rect = self.surf.get_rect(center = (random.randint(edict.enemydict[etype]["centerwidth"][0], edict.enemydict[etype]["centerwidth"][1]), random.randint(edict.enemydict[etype]["centerheight"][0], edict.enemydict[etype]["centerheight"][1])))
+            else:
+                # Random Center modifies base random positions of (SCREEN_WIDTH, SCREENWIDTH + 20) and (0, SCREEN_HEIGHT_NOBOX)
+                self.rect = self.surf.get_rect(center = (random.randint(edict.enemydict[etype]["centerwidth"][0] + SCREEN_WIDTH, edict.enemydict[etype]["centerwidth"][1] + SCREEN_WIDTH + 20), random.randint(edict.enemydict[etype]["centerheight"][0] + 0, edict.enemydict[etype]["centerheight"][1] + SCREEN_HEIGHT_NOBOX )))
         else:
-            if enemydict[etype]["islauncher"]:
+            if edict.enemydict[etype]["islauncher"]:
                 randadd = 0
                 # Let boss shoot at multiple levels
                 if hasattr(launcher, "etype"):
-                    if enemydict[launcher.etype]["boss"] == 1:
-                        if etype == 91:
+                    if edict.enemydict[launcher.etype]["boss"] == 1:
+                        if etype == "e_tent_tentacle91":
                             #print("tentaclespawn")
-                            self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + enemydict[etype]["centerheight"]))
+                            self.rect = self.surf.get_rect(center=(launcher.rect.left + edict.enemydict[etype]["centerwidth"], launcher.rect.top + edict.enemydict[etype]["centerheight"]))
                         else:
                             randadd = random.randint(-100,100)
-                            self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + randadd + enemydict[etype]["centerheight"]))
+                            self.rect = self.surf.get_rect(center=(launcher.rect.left + edict.enemydict[etype]["centerwidth"], launcher.rect.top + randadd + edict.enemydict[etype]["centerheight"]))
                     else:
-                        self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + enemydict[etype]["centerheight"]))    
+                        self.rect = self.surf.get_rect(center=(launcher.rect.left + edict.enemydict[etype]["centerwidth"], launcher.rect.top + edict.enemydict[etype]["centerheight"]))    
                 else:
-                    self.rect = self.surf.get_rect(center=(launcher.rect.left + enemydict[etype]["centerwidth"], launcher.rect.top + enemydict[etype]["centerheight"]))
+                    self.rect = self.surf.get_rect(center=(launcher.rect.left + edict.enemydict[etype]["centerwidth"], launcher.rect.top + edict.enemydict[etype]["centerheight"]))
             else:
-                self.rect = self.surf.get_rect(center = (enemydict[etype]["centerwidth"], enemydict[etype]["centerheight"]))               
-        if enemydict[etype]["randclimb"]:
-            if enemydict[etype]["ishoming"]:
-                climbmod = random.randint(*enemydict[etype]["climb"])
+                self.rect = self.surf.get_rect(center = (edict.enemydict[etype]["centerwidth"], edict.enemydict[etype]["centerheight"]))               
+        if edict.enemydict[etype]["randclimb"]:
+            if edict.enemydict[etype]["ishoming"]:
+                climbmod = random.randint(*edict.enemydict[etype]["climb"])
                 if self.rect.top > player.rect.top:
                     self.climb = - climbmod
                 else:
                     self.climb = climbmod
             else:
-                self.climb = random.randint(*enemydict[etype]["climb"])
+                self.climb = random.randint(*edict.enemydict[etype]["climb"])
         else:
-            self.climb = enemydict[etype]["climb"]
-        if enemydict[etype]["isanimated"]:
-            self.ticks = enemydict[etype]["ticks"]
-        self.fired = enemydict[etype]["fired"]
-        self.hp = enemydict[etype]["hp"]
+            self.climb = edict.enemydict[etype]["climb"]
+        if edict.enemydict[etype]["isanimated"]:
+            self.ticks = edict.enemydict[etype]["ticks"]
+        self.fired = edict.enemydict[etype]["fired"]
+        self.hp = edict.enemydict[etype]["hp"]
 
         
         self.etype = etype
@@ -326,21 +339,21 @@ class Enemy(pygame.sprite.Sprite):
         #    print("tentacle update")
         if random.randint(1,10)>5:
             # 50% modify climb if applicable
-            if enemydict[self.etype]["randclimb"]:
+            if edict.enemydict[self.etype]["randclimb"]:
                 # get mod/turn as tuple of random parameters
-                climbmod = random.randint(*enemydict[self.etype]["climb"])
-                if enemydict[self.etype]["ishoming"]:
+                climbmod = random.randint(*edict.enemydict[self.etype]["climb"])
+                if edict.enemydict[self.etype]["ishoming"]:
                     if self.rect.top > player.rect.top:
                         self.climb = self.climb - climbmod
                     else:
                         self.climb = self.climb + climbmod 
                 else:
                     self.climb = self.climb + climbmod
-                if enemydict[self.etype]["climbmin"] > self.climb:
-                    self.climb = enemydict[self.etype]["climbmin"] 
-                if enemydict[self.etype]["climbmax"] < self.climb:
-                    self.climb = enemydict[self.etype]["climbmax"]
-        if enemydict[self.etype]["isanimated"]:
+                if edict.enemydict[self.etype]["climbmin"] > self.climb:
+                    self.climb = edict.enemydict[self.etype]["climbmin"] 
+                if edict.enemydict[self.etype]["climbmax"] < self.climb:
+                    self.climb = edict.enemydict[self.etype]["climbmax"]
+        if edict.enemydict[self.etype]["isanimated"]:
             # animate through dictionary checks
             #if self.etype == 91:
             #    print("animated")
@@ -348,23 +361,23 @@ class Enemy(pygame.sprite.Sprite):
             gotframe = False
             self.ticks = self.ticks -1
             if self.ticks < 1:
-                self.ticks = self.ticks = enemydict[self.etype]["ticks"]
+                self.ticks = self.ticks = edict.enemydict[self.etype]["ticks"]
             while gotframe == False:
-                if self.ticks > enemydict[self.etype]["aniframetimers"][framecheck]:
+                if self.ticks > edict.enemydict[self.etype]["aniframetimers"][framecheck]:
                     oldright = self.rect.right
                     oldtop = self.rect.top
                     oldbottom = self.rect.bottom
-                    nextimg = enemydict[self.etype]["aniframes"][framecheck]
-                    self.surf = get_image(enemydict[self.etype]["aniframes"][framecheck])
+                    nextimg = edict.enemydict[self.etype]["aniframes"][framecheck]
+                    self.surf = get_image(edict.enemydict[self.etype]["aniframes"][framecheck])
                     gotframe = True
                 else:
                     framecheck = framecheck + 1
             if self.ticks < 0:
-                self.ticks = self.ticks = enemydict[self.etype]["ticks"]
+                self.ticks = self.ticks = edict.enemydict[self.etype]["ticks"]
             daboss = None
-            if self.etype == 91:
+            if self.etype == "e_tent_tentacle91":
                 for e in enemies:
-                    if enemydict[e.etype]["boss"]:
+                    if edict.enemydict[e.etype]["boss"]:
                         daboss = e
                 if daboss:
                     self.rect = self.surf.get_rect()
@@ -380,10 +393,10 @@ class Enemy(pygame.sprite.Sprite):
                 else:
                     self.kill()
                     return
-            self.surf.set_colorkey(enemydict[self.etype]["mask"], RLEACCEL)
+            self.surf.set_colorkey(edict.enemydict[self.etype]["mask"], RLEACCEL)
 
         # Move the enemy
-        if enemydict[self.etype]["advancedmovement"] == True:
+        if edict.enemydict[self.etype]["advancedmovement"] == True:
             #if self.etype == 91:
             #    print("call amove")
             isdone = amove(self) 
@@ -401,64 +414,77 @@ class Enemy(pygame.sprite.Sprite):
                 # Make top & bottom permeable to powerups; other enemies must stay in screen
                 if self.rect.bottom > SCREEN_HEIGHT_NOBOX:
                     # ENEMY GROUND COLLISIONS
-                    if enemydict[self.etype]["ispowerup"] == False:
-                        if enemydict[self.etype]["isground"] == False: # Missile Launcher should be on ground
+                    if edict.enemydict[self.etype]["ispowerup"] == False:
+                        if edict.enemydict[self.etype]["isground"] == False: # Missile Launcher should be on ground
                             # Otherwise Don't leave
                             self.rect.bottom = SCREEN_HEIGHT_NOBOX - 50
                             # Bounce
                             self.climb = self.climb * - 1 # * self.climb
-                        if enemydict[self.etype]["damground"] > 0:
-                            self.hp = self.hp - int(100 * (enemydict[self.etype]["damground"]/100))
+                        if edict.enemydict[self.etype]["damground"] > 0:
+                            self.hp = self.hp - int(100 * (edict.enemydict[self.etype]["damground"]/100))
                             if self.hp < 0:
                                 # Explode missiles, blimps
-                                if enemydict[self.etype]["isexplodable"]:
-                                    self.etype = enemydict[self.etype]["isexplodable"]
+                                if edict.enemydict[self.etype]["isexplodable"]:
+                                    self.etype = edict.enemydict[self.etype]["isexplodable"]
                                 else:
-                                    if enemydict[self.etype]["isexploded"] == False:
+                                    if edict.enemydict[self.etype]["isexploded"] == False:
                                         self.kill()
                 if self.rect.top < 0:
-                    if enemydict[self.etype]["ispowerup"] == False:
+                    if edict.enemydict[self.etype]["ispowerup"] == False:
                         # Don't leave
                         self.top = 5
                         # Bounce
                         self.climb = 3
                     elif self.rect.bottom < 0: # But don't let them disappear up without cleanup
                         self.kill()
-        if enemydict[self.etype]["isshooter"] == True:   
+        if edict.enemydict[self.etype]["islayer"] == True:
+            if random.randint(1,100) > 98:
+                if redflash == False and greenflash == False:
+                    new_enemy = Enemy(edict.enemydict[self.etype]["eggtype"],14,-1,self)
+                    enemies.add(new_enemy)
+                    all_sprites.add(new_enemy)
+        if edict.enemydict[self.etype]["isshooter"] == True:   
             # Functional blimp or missile launcher or cannon, potentialy etc
             if redflash == False:
                 if random.randint(1,100) + wave * 2 > 90 and self.fired == 0:
                     # Shoot designated ammotype
-                    if enemydict[self.etype]["boss"]:
+                    if edict.enemydict[self.etype]["boss"]:
                         if tentacleattack == False:
-                            possibles = len(enemydict[self.etype]["ammotype"]) - 1
-                            shot = enemydict[self.etype]["ammotype"][random.randint(0, possibles)]
+                            possibles = len(edict.enemydict[self.etype]["ammotype"]) - 1
+                            shot = edict.enemydict[self.etype]["ammotype"][random.randint(0, possibles)]
                             new_enemy = Enemy(shot,14,1,self)
                     else:    
-                        new_enemy = Enemy(enemydict[self.etype]["ammotype"],14,1,self)
+                        new_enemy = Enemy(edict.enemydict[self.etype]["ammotype"],14,1,self)
                     enemies.add(new_enemy)
                     all_sprites.add(new_enemy)
-                    self.fired = enemydict[self.etype]["fired"]
+                    self.fired = edict.enemydict[self.etype]["fired"]
                 elif self.fired > 0:
                     self.fired = self.fired - 1
-        if enemydict[self.etype]["isexploded"]:          
+        if edict.enemydict[self.etype]["isexploded"]: # or           
             self.hp = 1
             # Exploding animation            
-            self.boomcounter = self.boomcounter - 1
+            self.boomcounter -= 1
             # If animation is finished, kill
             if self.boomcounter < 1:
                 self.kill()
             framecheck = 0
             gotframe = False
             while gotframe == False and self.boomcounter > 0:
-                if self.boomcounter > enemydict[self.etype]["expframetimers"][framecheck]:
-                    self.surf = get_image(enemydict[self.etype]["expframes"][framecheck])
+                if self.boomcounter > edict.enemydict[self.etype]["expframetimers"][framecheck]:
+                    self.surf = get_image(edict.enemydict[self.etype]["expframes"][framecheck])
                     gotframe = True
                 else:
                     framecheck = framecheck + 1
-            self.surf.set_colorkey(enemydict[self.etype]["mask"], RLEACCEL)
+            self.surf.set_colorkey(edict.enemydict[self.etype]["mask"], RLEACCEL)
+        # Hatching routine
+        if self.etype.startswith("e_egg"):
+            self.boomcounter -= 1
+            if self.boomcounter < 1:
+                if edict.enemydict[self.etype]["isexplodable"]:
+                    self.etype = edict.enemydict[self.etype]["isexplodable"]
+                    self.speed = edict.enemydict[self.etype]["speed"][0]
         
-        if enemydict[self.etype]["skyburst"]:  #self.etype == 81: # Cannon shell
+        if edict.enemydict[self.etype]["skyburst"]:  #self.etype == 81: # Cannon shell
             # Don't let off screen
             if self.rect.right < 0:
                 self.kill
@@ -470,12 +496,12 @@ class Enemy(pygame.sprite.Sprite):
                 self.kill
             if self.climb > -1:
                 # Detonate at peak of arc
-                if enemydict[self.etype]["isexplodable"]:
-                    self.etype = enemydict[self.etype]["isexplodable"]
+                if edict.enemydict[self.etype]["isexplodable"]:
+                    self.etype = edict.enemydict[self.etype]["isexplodable"]
                     self.boomcounter = 7 # Abbreviated explosion
                 else:
                     self.kill()
-        if enemydict[self.etype]["isground"] == True:
+        if edict.enemydict[self.etype]["isground"] == True:
             self.rect.bottom = SCREEN_HEIGHT_NOBOX
         #for e in enemies:
         #    if e.etype == 91:
@@ -488,7 +514,16 @@ class Bullet(pygame.sprite.Sprite):
         super(Bullet, self).__init__()
         global tilt
         self.btype = btype
-        self.surf = get_image(bulletdict[self.btype]["imgname"])
+        # Apply machine gun upgrades
+        if btype == 1:
+            if mgtype == 1:
+                self.surf = get_image("bullet.png")
+            if mgtype == 2:
+                self.surf = get_image("bullet2.png")
+            if mgtype == 3:
+                self.surf = get_image("bullet3.png")
+        else:
+            self.surf = get_image(bulletdict[self.btype]["imgname"])
         self.name = "bullet" + bulletdict[self.btype]["imgname"]
         self.speed = bulletdict[self.btype]["bspeed"]
         bulletdict[self.btype]["sound"].play()
@@ -503,10 +538,32 @@ class Bullet(pygame.sprite.Sprite):
                 self.climb = 0
             case 2:                
                 self.climb = 15
+        # Adjust climb for outside bullets on multibullet
+        match boomcounter:
+            case 9:
+                self.climb += 1
+            case 11:
+                self.climb += 2
+            case 10:
+                self.climb -= 1
+            case 12:
+                self.climb -= 2
+            case 13:
+                # Spawned as rebound
+                self.rect.bottom = SCREEN_HEIGHT_NOBOX - 5
+                self.speed = bounceinherits + 2
+                self.climb = bounceinheritc
+            case 14:
+                # Spawned as second rebound
+                self.rect.bottom = SCREEN_HEIGHT_NOBOX - 5
+                self.speed = bounceinherits + 4
+                self.climb = bounceinheritc
         
     # Move the bullet based on speed
     # Remove it when it passes the right edge of the screen
     def update(self):
+        global bounceinheritc
+        global bounceinherits
         self.rect.move_ip(self.speed, self.climb)
         if self.rect.left > SCREEN_WIDTH:
             self.kill()
@@ -514,8 +571,42 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
         if self.rect.bottom < 0:
             self.kill()
+        # Check for bouncing or bounce/multiplying MG ammo upgrades if bullet hits ground
         if self.rect.top > SCREEN_HEIGHT_NOBOX:
-            self.kill()
+            if self.btype == 1:
+                match mgbounce:
+                    case 0:
+                        self.kill()
+                    case 1:
+                        self.climb = self.climb * -1
+                        self.rect.bottom = SCREEN_HEIGHT_NOBOX - 5
+                        # bounce
+                    case 2:
+                        self.climb = self.climb * -1
+                        self.rect.bottom = SCREEN_HEIGHT_NOBOX - 5
+                        # bounce 2 bullets
+                        bounceinherits = self.speed
+                        bounceinheritc = self.climb
+                        new_bullet = Bullet(self.rect.right, self.rect.top, 1, 13)                        
+                        bullets.add(new_bullet)
+                        all_sprites.add(new_bullet)
+                    case 3:
+                        self.climb = self.climb * -1
+                        self.rect.bottom = SCREEN_HEIGHT_NOBOX - 5
+                        # bounce 3 bullets
+                        bounceinherits = self.speed
+                        bounceinheritc = self.climb
+                        new_bullet = Bullet(self.rect.right, self.rect.top, 1, 13)                        
+                        bullets.add(new_bullet)
+                        all_sprites.add(new_bullet)
+                        new_bullet = Bullet(self.rect.right, self.rect.top, 1, 14)                        
+                        bullets.add(new_bullet)
+                        all_sprites.add(new_bullet)
+            else:  
+                self.kill()
+        if self.btype == 1:
+            if pygame.sprite.spritecollideany(self, mountains):
+                self.kill()
         if bulletdict[self.btype]["isanimated"]:
             self.boomcounter = self.boomcounter - 1
             # If animation is finished, kill
@@ -624,17 +715,17 @@ class Cloud(pygame.sprite.Sprite):
 # Advanced movement function(s)
 
 def amove(thise):
-    if thise.etype == 91:
+    if thise.etype == "e_tent_tentacle91":
         # Tentacle
         #print("amove")
         #daboss = False
         for e in enemies:
-            if enemydict[e.etype]["boss"] == True:
+            if edict.enemydict[e.etype]["boss"] == True:
                 daboss = e
         #if daboss:
             #print(daboss.etype)
             
-            #if enemydict[daboss]["isexploded"]:
+            #if edict.enemydict[daboss]["isexploded"]:
             #    thise.kill()
             #thise.rect.right = daboss.rect.left + 25
             #if thise.ticks == 1:
@@ -651,7 +742,7 @@ def amove(thise):
         # right now,  only the boss
         # For the first case, assume a desire to stay in the vertical center, 150 pixels from the back edge of the screen
         # Initialize locals
-        if enemydict[thise.etype]["boss"]:
+        if edict.enemydict[thise.etype]["boss"]:
             movex = 0
             movey = 0
             # Set base coordinates
@@ -674,11 +765,11 @@ def amove(thise):
                             # Tentacle attack
                             tentacleattack = False
                             for e in enemies:
-                                if e.etype == 91:
+                                if e.etype == "e_tent_tentacle91":
                                     tentacleattack = True
                             if tentacleattack == False:
                                 tentacleattack = True
-                                new_enemy = Enemy(91,14,300,thise)
+                                new_enemy = Enemy("e_tent_tentacle91",14,300,thise)
                                 enemies.add(new_enemy)
                                 all_sprites.add(new_enemy)
                                 #print("Back from enemy init")
@@ -877,6 +968,8 @@ def texts4():
     screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
     screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
 
+ 
+
 healthhardmax = 400
 armorhardmax = 200
 healthmax = 200
@@ -884,6 +977,93 @@ armormax = 100
 bossmode = False
 wasbossmode = bossmode
 bosshealthblink = 0
+# MG POWERUPS
+# 1, 2, 3, 5, 7
+mgmult = 1
+# 1, 2, 3
+mgtype = 1
+# 0, 1, 2
+mgbounce = 0
+# x, y, speed, climb
+bounceinheritc = 0
+bounceinherits = 0
+
+def mgbar(left, top):
+    # Initialize Machine Gun Panel images
+    # 
+    mgbutimg  = get_image("mgbut.png")
+    mgbarimg = get_image("mgbar.png")
+    ximg = get_image("x.png")
+    ximg.set_colorkey(WHITE, RLEACCEL)
+    x2img = get_image("x2.png")
+    x2img.set_colorkey(WHITE, RLEACCEL)
+    x3img = get_image("x3.png")
+    x3img.set_colorkey(WHITE, RLEACCEL)
+    x5img = get_image("x5.png")
+    x5img.set_colorkey(WHITE, RLEACCEL)
+    x7img = get_image("x7.png")
+    x7img.set_colorkey(WHITE, RLEACCEL)
+    b1img = get_image("b1.png")
+    b1img.set_colorkey(WHITE, RLEACCEL)
+    b2img = get_image("b2.png")
+    b2img.set_colorkey(WHITE, RLEACCEL)
+    b3img = get_image("b3.png")
+    b3img.set_colorkey(WHITE, RLEACCEL)
+    ammo1img = get_image("ammo1.png")
+    ammo1img.set_colorkey(WHITE, RLEACCEL)
+    ammo2img = get_image("ammo2.png")
+    ammo2img.set_colorkey(WHITE, RLEACCEL)
+    ammo3img = get_image("ammo3.png")
+    ammo3img.set_colorkey(WHITE, RLEACCEL)   
+
+    #mgbarimg.blit(freshmgbar,(0,0))
+    screen.blit(mgbarimg,(left,top))
+
+    match mgmult:
+
+        case 1:
+            screen.blit(ximg,(left,top))
+        case 2:
+            screen.blit(mgbutimg,(left+1,top+1))
+            screen.blit(x2img,(left,top))
+        case 3:
+            screen.blit(mgbutimg,(left+1,top+1))
+            screen.blit(x3img,(left,top))
+        case 5:
+            screen.blit(mgbutimg,(left+1,top+1))
+            screen.blit(x5img,(left,top))
+        case 7:
+            screen.blit(mgbutimg,(left+1,top+1))
+            screen.blit(x7img,(left,top))
+
+    match mgbounce:
+
+        case 0:
+            #screen.blit(mgbutimg,(left + 31,top))
+            screen.blit(ximg,(left + 31,top))
+        case 1:
+            screen.blit(mgbutimg,(left + 31,top+1))
+            screen.blit(b1img,(left + 31,top))
+        case 2:
+            screen.blit(mgbutimg,(left + 31,top+1))
+            screen.blit(b2img,(left + 31,top))
+        case 3:
+            screen.blit(mgbutimg,(left + 31,top+1))
+            screen.blit(b3img,(left + 31,top))
+    
+    match mgtype:
+        case 1:
+            screen.blit(mgbutimg,(left + 61,top + 1))
+            screen.blit(ammo1img,(left + 61,top))
+        case 2:
+            screen.blit(mgbutimg,(left + 61,top+1))
+            screen.blit(ammo2img,(left + 61,top))
+        case 3:
+            screen.blit(mgbutimg,(left + 61,top+1))
+            screen.blit(ammo3img,(left + 61,top))            
+    
+    #mgbarimg.blit(ximg,(31,0))
+    #mgbarimg.blit(ximg,(61,0))
 
 def healthbar(left, top, health):
     healthbarborder = pygame.Rect(left + 40, top, healthmax, 30)
@@ -907,7 +1087,7 @@ def healthbar(left, top, health):
 
 def bosshealthbar(left, top, boss, health, bosshealthblink):
  
-    bhealthmax = enemydict[boss.etype]["hp"] / 2 * wave
+    bhealthmax = edict.enemydict[boss.etype]["hp"] / 2 * wave
     barsizefactor = bhealthmax / 1000
     healthbarblink = pygame.Rect(left + 35, top-5, int(200 * barsizefactor) + 10, 40)
     healthbarborder = pygame.Rect(left + 40, top, int(200 * barsizefactor), 30)
@@ -973,6 +1153,7 @@ def statusdisplay():
     texts2(flamer,shock,bio,pulse)   
     healthbar(20, SCREEN_HEIGHT - 85, player.hp)
     armorbar((healthmax + 70), SCREEN_HEIGHT - 85, player.armor)
+    mgbar(SCREEN_WIDTH - 300, SCREEN_HEIGHT - 85)
 # Setup for sounds, defaults are good
 pygame.mixer.init()
 
@@ -1010,6 +1191,10 @@ images = glob.glob ("Graphics/*.png")
 for image in images:
     img_name = os.path.basename(image)
     get_image(img_name)
+
+# Preload JSON enemies
+jsons = edict.addjsons()
+print(str(jsons) + " JSON file(s) added")
 
 # Load and play our background music
 # Sound source: http://ccmixter.org/files/Apoxode/59262
@@ -1106,1606 +1291,7 @@ bulletdict = {
     }
 }    
 
-# Fill a nested dictionary of enemies by etype
-enemydict = {
-    1: {
-        # Missile, unguided
-        "imgname": "missile1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (5,20),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (-1,1),
-        # Limits for climb/dive
-        "climbmax": 8,
-        "climbmin": -8,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (SCREEN_WIDTH, SCREEN_WIDTH + 20),
-        "centerheight": (0,SCREEN_HEIGHT_NOBOX),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 10,
-        # Number of animation frames
-        "numaniframes": 2,
-        # Timing for animation frames
-        "aniframetimers": (5,0),    
-        # Animation frame names   
-        "aniframes": ("missile1.png","missile2.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 62,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage to player if collided
-        "damage": (10,20),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 100,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    2: {
-        # Homing Snek
-        "imgname": "snek1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 15, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": True,
-        "climb": (0,1),
-        # Limits for climb/dive
-        "climbmax": 3,
-        "climbmin": -3,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": True,
-        "centerwidth": -30,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 10,
-        # Number of animation frames
-        "numaniframes": 2,
-        # Timing for animation frames
-        "aniframetimers": (5,0),    
-        # Animation frame names   
-        "aniframes": ("snek1.png","snek2.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 62,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (15,30),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 100,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    3: {
-        # Homing Missile
-        "imgname": "missile21.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 16, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": True,
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 9,
-        "climbmin": -9,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher object, 
-        # otherwise they may be tuples to generate starting position with randint
-        "islauncher": True,
-        "centerwidth": -20,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 8,
-        # Number of animation frames
-        "numaniframes": 3,
-        # Timing for animation frames
-        "aniframetimers": (5,3,0),    
-        # Animation frame names   
-        "aniframes": ("missile21.png","missile22.png","missile23.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 62,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (15,30),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 100,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    4: {
-        # Blue blimp, unarmored
-        "imgname": "ship4.png",
-        "mask": BLACK, # Blimps are leftover from the VB They Comin, and have black for a mask color
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (5,10),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (-1,1),
-        # Limits for climb/dive
-        "climbmax": 3,
-        "climbmin": -3,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": True,
-        # Ammo type if isshooter
-        "ammotype": 2,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (SCREEN_WIDTH, SCREEN_WIDTH + 20),
-        "centerheight": (0,SCREEN_HEIGHT_NOBOX),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,             
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 61,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 20,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 4,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (30,45),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 100,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    5: {
-        # Red blimp, armored
-        "imgname": "ship4a.png",
-        "mask": BLACK, # Blimps are leftover from the VB They Comin, and have black for a mask color
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (5,10),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (-1,1),
-        # Limits for climb/dive
-        "climbmax": 3,
-        "climbmin": -3,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": True,
-        # Ammo type if isshooter
-        "ammotype": 6,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (SCREEN_WIDTH, SCREEN_WIDTH + 20),
-        "centerheight": (0,SCREEN_HEIGHT_NOBOX),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 61,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 20,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 5,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (40,60),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 100,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    6: {
-        # Homing Fish
-        "imgname": "fish1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 20, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": True,
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": -4,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": True,
-        "centerwidth": -38,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 12,
-        # Number of animation frames
-        "numaniframes": 2,
-        # Timing for animation frames
-        "aniframetimers": (6,0),    
-        # Animation frame names   
-        "aniframes": ("fish1.png","fish2.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 62,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (20,35),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 100,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    7: {
-        # Cannon
-        "imgname": "gun1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 5, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 0,
-        # Limits for climb/dive
-        "climbmax": 0,
-        "climbmin": 0,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": True,
-        # Ammo type if isshooter
-        "ammotype": 81,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": True,
-        "centerwidth": +60,
-        "centerheight": -20,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,         
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 64,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 25,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 2,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (25,40),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    8: {
-        # Missile Launcher
-        "imgname": "gun2.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 5, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 0,
-        # Limits for climb/dive
-        "climbmax": 0,
-        "climbmin": 0,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": True,
-        # Ammo type if isshooter
-        "ammotype": 3,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": True,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": SCREEN_WIDTH + 30,
-        "centerheight": SCREEN_HEIGHT_NOBOX -33,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 63,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 35,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 2,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (25,40),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    41: {
-        # Cuttleboss 1
-        "imgname": "shell3.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": True,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 10, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": (1,3),
-        # Limits for climb/dive
-        "climbmax": 5,
-        "climbmin": -5,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": True,
-        # Ammo type if isshooter
-        "ammotype": (2,3,6),
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": SCREEN_WIDTH + 30,
-        "centerheight": SCREEN_HEIGHT_NOBOX / 2,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 12,
-        # Number of animation frames
-        "numaniframes": 3,
-        # Timing for animation frames
-        "aniframetimers": (8,4,0),    
-        # Animation frame names   
-        "aniframes": ("shell3.png","shell3b.png", "shell3c.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 65,
-        # Missiles and shells have one hp; blimps and guns have more, bosses have many
-        "hp": 1000,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (50,100),
-        # is boss?
-        "boss": 1,
-        # boomcounter for explosion timing
-        "boomcounter": 35,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 0,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    61: {
-        # Exploded blimp
-        "imgname": "ship4xp1.png",
-        "mask": BLACK,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 10, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 3,
-        # Limits for climb/dive
-        "climbmax": 3,
-        "climbmin": 3,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": 0,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": True,
-        "numexpframes": 3,
-        # expframetimers are a countdown of ticks in each frame
-        "expframetimers": (8,5,0),
-        # expframes is a tuple of explosion frames
-        "expframes": ("ship4xp1.png","ship4xp2.png","ship4xp3.png"),
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (15,40),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 0,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    62: {
-        # Exploded missile or cannon shell
-        "imgname": "boom1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 10, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 3,
-        # Limits for climb/dive
-        "climbmax": 3,
-        "climbmin": 3,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": 0,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": True,
-        "numexpframes": 3,
-        # expframetimers are a countdown of ticks in each frame
-        "expframetimers": (8,5,0),
-        # expframes is a tuple of explosion frames
-        "expframes": ("boom.png","boom2.png","boom3.png"),
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (5,10),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 0,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    63: {
-        # Exploded Missile Launcher
-        "imgname": "gun2xp1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 5, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 0,
-        # Limits for climb/dive
-        "climbmax": 0,
-        "climbmin": 0,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": True,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": 0,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": True,
-        "numexpframes": 3,
-        # expframetimers are a countdown of ticks in each frame
-        "expframetimers": (8,5,0),
-        # expframes is a tuple of explosion frames
-        "expframes": ("gun2xp1.png","gun2xp2.png","gun2xp3.png"),
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (5,40),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 0,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    64: {
-        # Exploded Cannon
-        "imgname": "gun1xp1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 5, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 0,
-        # Limits for climb/dive
-        "climbmax": 0,
-        "climbmin": 0,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": True,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": 0,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": True,
-        "numexpframes": 3,
-        # expframetimers are a countdown of ticks in each frame
-        "expframetimers": (8,5,0),
-        # expframes is a tuple of explosion frames
-        "expframes": ("gun1xp1.png","gun1xp2.png","gun1xp3.png"),
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (5,40),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 0,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    65: {
-        # Exploded blimp
-        "imgname": "ship4xp1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 10, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 3,
-        # Limits for climb/dive
-        "climbmax": 3,
-        "climbmin": 3,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": 0,
-        "centerheight": 0,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": True,
-        "numexpframes": 4,
-        # expframetimers are a countdown of ticks in each frame
-        "expframetimers": (18,12,6,0),
-        # expframes is a tuple of explosion frames
-        "expframes": ("shell3xp1.png","shell3xp2.png","shell3xp3.png","shell3xp4.png"),
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (15,40),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 0,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    81: {
-        # Cannon Shell
-        "imgname": "bullete1.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 15, 
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": -5,
-        # Limits for climb/dive
-        "climbmax": 2,
-        "climbmin": -5,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": True,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": True,
-        "centerwidth": -5,
-        "centerheight": -5,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,      
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 62,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (15,25),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 100,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    91: {
-        # Boss tentacle attack
-        "imgname": "tentacle7.png",
-        "mask": WHITE,
-        # Advanced movement flag
-        "advancedmovement": True,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": False,
-        "speed": 0, 
-        # If climb is random, climb passes a tuple, otherwise a single value
-        "randclimb": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "ishoming": False,
-        "climb": 0,
-        # Limits for climb/dive
-        "climbmax": 0,
-        "climbmin": -0,
-        # Is location random
-        "randcenter": False,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher object, 
-        # otherwise they may be tuples to generate starting position with randint
-        "islauncher": True,
-        "centerwidth": 20,
-        "centerheight": 100,
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 34,
-        # Number of animation frames
-        "numaniframes": 17,
-        # Timing for animation frames
-        "aniframetimers": (32,30,28,26,24,22,20,18,16,14,12,10,8,6,4,2,0),    
-        # Animation frame names   
-        "aniframes": ("tentacle7.png","tentacle6.png","tentacle5.png","tentacle4.png","tentacle4.png","tentacle3.png","tentacle2.png","tentacle.png",
-                      "tentacleup.png","tentacle.png","tentacledown.png","tentacle.png","tentacle2.png","tentacle3.png","tentacle4.png","tentacle5.png",
-                      "tentacle6.png","tentacle7.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": False,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 300,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": False,
-        # Tuple for range of damage
-        "damage": (25,75),
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 0,
-        # perc damage from enemies
-        "damenemies": 0,
-        # perc damage from bullets
-        "dambullets": 100,
-        # perc damage from player collision
-        "damplayer": 100
-    },
-    111: {
-        # Life Powerup
-        "imgname": "extralife.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 12,
-        # Number of animation frames
-        "numaniframes": 3,
-        # Timing for animation frames
-        "aniframetimers": (6,3,0),    
-        # Animation frame names   
-        "aniframes": ("extralife.png","extralife2.png","extralife3.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    112: {
-        # Flamer Powerup
-        "imgname": "powerupflamer.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    113: {
-        # Shock Powerup
-        "imgname": "powerupshock.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    114: {
-        # Bio Blaster Powerup
-        "imgname": "powerupbio.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    115: {
-        # Pulsar Powerup
-        "imgname": "poweruppulse.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    116: {
-        # Health Powerup
-        "imgname": "poweruphealth.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    117: {
-        # Armor Powerup
-        "imgname": "poweruparmor.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": False,
-        "ticks": 0,       
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    118: {
-        # Healthmax Powerup
-        "imgname": "poweruphealthmax.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 12,
-        # Number of animation frames
-        "numaniframes": 3,
-        # Timing for animation frames
-        "aniframetimers": (6,3,0),    
-        # Animation frame names   
-        "aniframes": ("poweruphealthmax.png","poweruphealthmax1.png","poweruphealthmax2.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    },
-    119: {
-        # Armormax Powerup
-        "imgname": "poweruparmormax.png",
-        "mask": WHITE, 
-        # Advanced movement flag
-        "advancedmovement": False,
-        # If speed is random, speed passes a tuple, otherwise a single value
-        "randspeed": True,
-        "speed": (-1,1),
-        # If climb is random, speed passes a tuple, otherwise a single value
-        "randclimb": True,
-        "ishoming": False,
-        # If homing armament, climb must be a tuple for randint, and is +/- modified by player's position relative to enemy position
-        "climb": (1,2),
-        # Limits for climb/dive
-        "climbmax": 4,
-        "climbmin": 1,
-        # Is location random
-        "randcenter": True,
-        # Does the enemy shoot
-        "isshooter": False,
-        # Ammo type if isshooter
-        "ammotype": 0,
-        # Does it explode at peak height
-        "skyburst": False,
-        # Is enemy intended on ground
-        "isground": False,
-        # If islauncher, then centerwidth and centerheight are single values to modify top and left of launcher, otherwise they are tuples
-        # to generate starting position with randint
-        "islauncher": False,
-        "centerwidth": (100, SCREEN_WIDTH -100),
-        "centerheight": (-10, 0),
-        # If isanimated, the non-exploding version of the armament animates itself from ticks; explosion animations are handled with boomcounter
-        "isanimated": True,
-        # Total ticks to recycle animation timer at
-        "ticks": 12,
-        # Number of animation frames
-        "numaniframes": 3,
-        # Timing for animation frames
-        "aniframetimers": (6,3,0),    
-        # Animation frame names   
-        "aniframes": ("poweruparmormax.png","poweruparmormax1.png","poweruparmormax2.png"),
-        # If isexploded, animates once through on boomcounter, then dies
-        "isexploded": False,
-        # If isexplodable, eplodes before dying into etype isexplodable
-        "isexplodable": 0,
-        # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
-        # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
-        "fired": 0,
-        "ispowerup": True,
-        # is boss?
-        "boss": 0,
-        # boomcounter for explosion timing
-        "boomcounter": 20,
-        # perc damage from ground
-        "damground": 0,
-        # perc damage from mountain
-        "dammountain": 100,
-        # perc damage from enemies
-        "damenemies": 100,
-        # perc damage from bullets
-        "dambullets": 0,
-        # perc damage from player collision
-        "damplayer": 0
-    }
-}
+
 
 # Create sunmoon
 wavesunmoon = SunMoon(0)
@@ -2739,9 +1325,19 @@ all_sprites.add(player)
 
 
 
+
 # Set player lives, score, special weapons, redflash, greenflash, gamerunning variables
 
-
+# MG POWERUPS
+# 1, 2, 3, 5, 7
+mgmult = 1
+# 1, 2, 3
+mgtype = 1
+# 0, 1, 2
+mgbounce = 0
+# x, y, speed, climb
+bounceinheritc = 0
+bounceinherits = 0
 plives = 3
 score = 0
 flamer = 100
@@ -2775,7 +1371,8 @@ tentacleattack = False
 jetupdown = 1
 tilt = 1
 lastwaveboss = 0
-triplefire = True
+# This call creates a .json file with all fields in the dictionary
+# fullrec = edict.gencompleteblank()
 
 # check for saved highscore
 hsfilename = "highscore.txt"
@@ -2885,7 +1482,7 @@ while running:
                             wavcompleteperc = int(((wavecounter + wave)/wavegoal) * 100)
                             # Possible to spawn boss at 50%
                             if wavcompleteperc > 50 and waveboss < wave and random.randint(1,100) > 95:
-                                new_enemy = Enemy(41,35,hp,0)
+                                new_enemy = Enemy("e_boss_cutboss41",35,edict.enemydict["e_boss_cutboss41"]["hp"],0)
                                 enemies.add(new_enemy)
                                 all_sprites.add(new_enemy)
                                 new_enemy.hp = (new_enemy.hp / 2) * wave
@@ -2894,7 +1491,7 @@ while running:
                                 #print("Boss spawned!  Wave"+ str(wave))
                             # if Boss hasn't spawned by 90%, spawn boss
                             if wavcompleteperc > 90 and lastwaveboss < wave:
-                                new_enemy = Enemy(41,35,hp,0)
+                                new_enemy = Enemy("e_boss_cutboss41",35,edict.enemydict["e_boss_cutboss41"]["hp"],0)
                                 enemies.add(new_enemy)
                                 all_sprites.add(new_enemy)
                                 new_enemy.hp = (new_enemy.hp / 2) * wave
@@ -2902,62 +1499,140 @@ while running:
                                 lastwaveboss = wave
                                 #print("Boss spawned!  Wave"+ str(wave))
 
-                            if random.randint(1,100) < wavcompleteperc + 25 + wave * wave:
+                            if random.randint(1,150) < wavcompleteperc + 25 + wave * wave:
                                 enemiestocreate = random.randint(1,int(math.sqrt(wave)))
                                 for x in range(1, enemiestocreate + 1):
                                     if redflash == False and greenflash == False:
-                                        # Create the new enemy, and add it to our sprite groups
-                                        hp = 1
-                                        powerup = random.randint(1,100)
-                                        if powerup < 3 + wave :
-                                            # Blimp1
-                                            newetype = 4
-                                            hp = 10
-                                        if powerup > 2 + wave and powerup < 5 + wave * 2:
-                                            # Blimp2
-                                            newetype = 5
-                                            hp = 20
-                                        if powerup > 4 + wave * 2 and powerup < 7 + wave * 3:
-                                            # Missile Launcher
-                                            newetype = 8
-                                        if powerup < 88 and powerup > 6 + wave * 3:
-                                            # Missile
-                                            newetype = 1
-                                        elif powerup > 86 and powerup < 89:
-                                            # Health
-                                            newetype = 116
-                                            if healthmax < healthhardmax:
-                                                # 1 in 10 of boost to max health
-                                                if random.randint(1,10) > 5:
-                                                    newetype = 118
-                                        elif powerup > 88 and powerup < 91:
-                                            # Armor
-                                            newetype = 117
-                                            if armormax < armorhardmax:
-                                                # 1 in 10 of boost to max armor
-                                                if random.randint(1,10) > 5:
-                                                    newetype = 119
-                                        elif powerup > 90 and powerup < 93:
-                                            # Extra Life
-                                            newetype = 111
-                                        elif powerup > 92 and powerup < 95:
-                                            # Power Up FLamer
-                                            newetype = 112
-                                        elif powerup > 94 and powerup < 97:
-                                            # Power Up Shock
-                                            newetype = 113
-                                        elif powerup > 96 and powerup < 99:
-                                            # Power Up Bio
-                                            newetype = 114
-                                        elif powerup > 97:
-                                            # Power Up Pulse
-                                            newetype = 115
-                                        new_enemy = Enemy(newetype,14,hp,0)
-                                        enemies.add(new_enemy)
-                                        all_sprites.add(new_enemy)
+                                        if 1==1:
+                                            spawnlist = []
+                                            spawnlist.clear()
+                                            for pu in edict.enemydict: # See if enemy is allowable
+                                                #print(1)
+                                                    #print(2)
+                                                if edict.enemydict[pu]["firstspawn"] <= wave: # Wave allowed
+                                                    #print(3)
+                                                    # Don't release weapon upgrades player already has
+                                                    dontadd = False
+                                                    
+                                                    if pu.startswith("e_pu_mgmult"): # Starts with powerup
+                                                        #print("mgmult >= int(pu[-1])", mgmult >= int(pu[-1]))
+                                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
+                                                        if mgmult >= int(pu[-1]):
+                                                            dontadd = True
+                                                    if pu.startswith("e_pu_mgb"): # Starts with powerup
+                                                        #print("mgbounce >= int(pu[-1])", mgbounce >= int(pu[-1]))
+                                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
+                                                        if mgbounce >= int(pu[-1]):
+                                                            dontadd = True
+                                                    if pu.startswith("e_pu_mgammo"): # Starts with powerup
+                                                        #print("mgtype >= int(pu[-1])", mgbounce >= int(pu[-1]))
+                                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
+                                                        if mgtype >= int(pu[-1]):
+                                                            dontadd = True
+                                                    if dontadd == False:
+                                                        i = 1
+                                                        while i <= edict.enemydict[pu]["spawnweight"]: # Likelyhood repeats of entries in list
+                                                            spawnlist.append(pu)
+                                                            #print(4)
+                                                            i += 1
+                                            choices = len(spawnlist)
+                                            
+                                            newetype = spawnlist[random.randint(1,choices) - 1]  # PIck one
+                                            new_enemy = Enemy(newetype,15,edict.enemydict[newetype]["hp"],0)
+                                            enemies.add(new_enemy)
+                                            all_sprites.add(new_enemy)
+                                        else:
+                                            # Create the new enemy, and add it to our sprite groups
+                                            hp = 1
+                                            powerup = random.randint(1,100)
+                                            if powerup < 3 + wave :
+                                                # Blimp1
+                                                newetype = "e_spawn_blimp4"
+                                                hp = 10
+                                            if powerup > 2 + wave and powerup < 5 + wave * 2:
+                                                # Blimp2
+                                                newetype = "e_spawn_blimpa5"
+                                                hp = 20
+                                            if powerup > 4 + wave * 2 and powerup < 7 + wave * 3:
+                                                # Missile Launcher
+                                                newetype = "e_g_misslaunch8"
+                                            if powerup < 85 and powerup > 6 + wave * 3:
+                                                # Missile
+                                                newetype = "e_spawn_umiss1"
+                                            elif powerup > 84 and powerup < 87:
+                                                # Health
+                                                newetype = "e_pu_health116"
+                                                if healthmax < healthhardmax:
+                                                    # 5 in 10 of boost to max health
+                                                    if random.randint(1,10) > 5:
+                                                        newetype = "e_pu_healthmax118"
+                                            elif powerup > 86 and powerup < 89:
+                                                # Armor
+                                                newetype = "e_pu_armor117"
+                                                if armormax < armorhardmax:
+                                                    # 5 in 10 of boost to max armor
+                                                    if random.randint(1,10) > 5:
+                                                        newetype = "e_pu_armormax119"
+                                            elif powerup > 88 and powerup < 93:
+                                                # Extra Life
+                                                newetype = "e_pu_life111"
+                                                # Chance to spawn MG upgrades:
+                                                if random.randint(1,10) > 3:
+                                                    randslot = random.randint(1,3)
+                                                    match randslot:
+                                                        case 1:
+                                                            # Ammo type upgrade
+                                                            if wave > 2:
+                                                                if mgtype < 3:
+                                                                    newetype = "e_pu_mgammo_plasma"
+                                                            elif wave > 1:
+                                                                if mgtype < 2:
+                                                                    newetype = "e_pu_mgammo_laser"
+                                                        case 2:
+                                                            # Bounce upgrade
+                                                            if wave > 2:
+                                                                if mgbounce < 3:
+                                                                    newetype = "e_pu_mgb3"
+                                                            elif wave > 1:
+                                                                if mgbounce < 2:
+                                                                    newetype = "e_pu_mgb2"
+                                                            elif wave == 1:
+                                                                if mgbounce < 0:
+                                                                    newetype = "e_pu_mgb1"
+                                                        case 3:
+                                                            # Multishot upgrade
+                                                            if wave > 3:
+                                                                if mgmult < 7:
+                                                                    newetype = "e_pu_mgmulti7"
+                                                            elif wave > 2:
+                                                                if mgmult < 5:
+                                                                    newetype = "e_pu_mgmulti5"
+                                                            elif wave > 1:
+                                                                if mgmult < 3:
+                                                                    newetype = "e_pu_mgmulti3"
+                                                            elif wave == 1:
+                                                                if mgmult < 2:
+                                                                    newetype = "e_pu_mgmulti2"
+                                                                
+
+                                            elif powerup > 92 and powerup < 95:
+                                                # Power Up FLamer
+                                                newetype = "e_pu_flamer112"
+                                            elif powerup > 94 and powerup < 97:
+                                                # Power Up Shock
+                                                newetype = "e_pu_shock113"
+                                            elif powerup > 96 and powerup < 99:
+                                                # Power Up Bio
+                                                newetype = "e_pu_bio114"
+                                            elif powerup > 97:
+                                                # Power Up Pulse
+                                                newetype = "e_pu_pulsar115"
+                                            new_enemy = Enemy(newetype,14,hp,0)
+                                            enemies.add(new_enemy)
+                                            all_sprites.add(new_enemy)
                                         oops = pygame.sprite.spritecollideany(new_enemy, mountains)
                                         if oops:
-                                            if new_enemy.etype < 7 or new_enemy.etype > 8:
+                                            if new_enemy.etype.startswith("e_g") == False:
                                                 new_enemy.kill()
 
                     # Should we add a new cloud?
@@ -2971,20 +1646,61 @@ while running:
                     elif event.type == ADDBULLET:
                         if player.firebullet > 0 and player.firebullet < 4:
                             # Create the new bullet, and add it to our sprite groups
-                            if triplefire:
-                                new_bullet = Bullet(player.rect.right,player.rect.bottom + 18,1,8)
-                                bullets.add(new_bullet)
-                                all_sprites.add(new_bullet)
-                                new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
-                                bullets.add(new_bullet)
-                                all_sprites.add(new_bullet)
-                                new_bullet = Bullet(player.rect.right,player.rect.bottom - 18,1,8)
-                                bullets.add(new_bullet)
-                                all_sprites.add(new_bullet)
-                            else:
-                                new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
-                                bullets.add(new_bullet)
-                                all_sprites.add(new_bullet)
+                            match mgmult:
+                                case 1:
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                case 2:
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + 9,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom - 9,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                case 3:
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + 18,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom - 18,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                case 5:
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + 36,1,9)
+                                    bullets.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + 18,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom - 18,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + -36,1,10)
+                                    bullets.add(new_bullet)
+                                case 7:
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + 54,1,11)
+                                    bullets.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + 36,1,9)
+                                    bullets.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + 18,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom - 18,1,8)
+                                    bullets.add(new_bullet)
+                                    all_sprites.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + -36,1,10)
+                                    bullets.add(new_bullet)
+                                    new_bullet = Bullet(player.rect.right,player.rect.bottom + -54,1,12)
+                                    bullets.add(new_bullet)
+                            
                             player.firebullet = player.firebullet - 1 
                         elif player.firebullet == 4:
                             # Create the blast bullet, and add it to our sprite groups
@@ -3093,22 +1809,55 @@ while running:
                 bosses = 0
                 bossmode = False
                 for e in enemies:
-                    if enemydict[e.etype]["boss"] == 1:
+                    if edict.enemydict[e.etype]["boss"] == 1:
                         bossmode = True
                         bosses += 1
-                        bhealthmax = enemydict[e.etype]["hp"] / 2 * wave
+                        bhealthmax = edict.enemydict[e.etype]["hp"] / 2 * wave
                         barsizefactor = bhealthmax / 1000
                         barwide = 200 * barsizefactor + 10
                         bosshealthbar((SCREEN_WIDTH / 2 - (barwide // 2)), (bosses * 50), e ,e.hp, bosshealthblink)
                         bosshealthblink = bosshealthblink + 1
                         if bosshealthblink > 20:
                             bosshealthblink = 0
+                # Spawn shower of powerups - the boss is dead
                 # Score being non zero blocks bonus spawn at game beginning after lost bossfight            
                 if bossmode == False and wasbossmode == True and score > 0:
-                    pups = wave * 10
-                    newe = 0
+                    pups = wave * 10 # E to spawn
+                    newe = 0 # E being spawned
+                    spawnlist = []
+                    for pu in edict.enemydict: # See if enemy is allowable
+                        #print(1)
+                        if pu.startswith("e_pu"): # Starts with powerup
+                            #print(2)
+                            if edict.enemydict[pu]["firstspawn"] <= wave: # Wave allowed
+                                #print(3)
+                                i = 1
+                                while i <= edict.enemydict[pu]["spawnweight"]: # Likelyhood repeats of entries in list
+                                    dontadd = False
+                                                    
+                                    if pu.startswith("e_pu_mgmult"): # Starts with powerup
+                                        #print("mgmult >= int(pu[-1])", mgmult >= int(pu[-1]))
+                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
+                                        if mgmult >= int(pu[-1]):
+                                            dontadd = True
+                                    if pu.startswith("e_pu_mgb"): # Starts with powerup
+                                        #print("mgbounce >= int(pu[-1])", mgbounce >= int(pu[-1]))
+                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
+                                        if mgbounce >= int(pu[-1]):
+                                            dontadd = True
+                                    if pu.startswith("e_pu_mgammo"): # Starts with powerup
+                                        #print("mgtype >= int(pu[-1])", mgbounce >= int(pu[-1]))
+                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
+                                        if mgtype >= int(pu[-1]):
+                                            dontadd = True
+                                    if dontadd == False:
+                                        spawnlist.append(pu)
+                                    #print(4)
+                                    i += 1
+                    choices = len(spawnlist)
                     while newe < pups:
-                        newtype = random.randint(111,119)
+                        newtype = spawnlist[random.randint(1,choices) - 1]  # PIck one
+                        hp = 1
                         new_enemy = Enemy(newtype,35,hp,0)
                         enemies.add(new_enemy)
                         all_sprites.add(new_enemy)
@@ -3189,12 +1938,12 @@ while running:
                         player.armor = 50
                         # Cause destruction event for any remaining enemies
                         for i, enemy1 in enumerate(enemies):
-                            if enemy1.etype < 41 or enemy1.etype > 41:
+                            if enemy1.etype != "e_boss_cutboss41":
                                 enemy1.boomcounter = 10
-                                if enemydict[enemy1.etype]["isexplodable"]:
-                                    enemy1.etype = enemydict[enemy1.etype]["isexplodable"]
+                                if edict.enemydict[enemy1.etype]["isexplodable"]:
+                                    enemy1.etype = edict.enemydict[enemy1.etype]["isexplodable"]
                                 else:
-                                    if enemydict[enemy1.etype]["boss"] == False:
+                                    if edict.enemydict[enemy1.etype]["boss"] == False:
                                         enemy1.kill()
                                 score = score + 1
                                 wavecounter = wavecounter + 1                                                           
@@ -3216,135 +1965,166 @@ while running:
                     #    e.kill()
                 crash = pygame.sprite.spritecollideany(player, enemies)
                 if crash:
-                    #if crash.etype == 91:
-                        #print("crash")
-                    if crash.etype < 100:
-                        # Missile or blimp, possibly exploding
-                        collision_sound.play()
-                        # Implement variable damage
-                        damage = random.randint(*enemydict[crash.etype]["damage"])
-                        # if player has armor left
-                        if player.armor > 0:
-                            # Damage armor first
-                            player.armor = player.armor - damage
-                            # If armor exhausted
-                            if player.armor < 0:
-                                # Remove remainder from health
-                                player.hp = + player.hp + player.armor
-                                # Set armor to empty
-                                player.armor = 0
-                        else:
-                            player.hp = player.hp - damage
-                        if player.hp < 1:
-                            # Decrement lives
-                            plives = plives - 1
-                            redflash = True
-                            redflashticks = pygame.time.get_ticks()
-                            # Move player position to hide
-                            player.rect.left = -300
-                            player.rect.top = SCREEN_HEIGHT_NOBOX / 5
-                            # Refill health
-                            player.hp = 100
-                            # Refill armor
-                            player.armor = 50
-                            # Cause destruction event for any remaining enemies
-                            for i, enemy1 in enumerate(enemies):
-                                if enemy1.etype < 41 or enemy1.etype > 41:
-                                    enemy1.boomcounter = 10
-                                    if enemydict[enemy1.etype]["isexplodable"]:
-                                        enemy1.etype = enemydict[enemy1.etype]["isexplodable"]
-                                    else:
-                                        enemy1.kill()
-                                    score = score + 1
-                                    wavecounter = wavecounter + 1                                                           
-                        # If no lives remain, kill player
-                        if plives < 1:
-                            for i, enemy1 in enumerate(enemies):
-                                enemy1.kill()
-                            # Go to start screen
-                            ingame = False
-                    
-                    elif crash.etype == 111:
-                        # Extra Life
-                        plives = plives + 1
-                    elif crash.etype == 112:
-                        # Power Up Flamer
-                        flamer = flamer + 100
-                    elif crash.etype == 113:
-                        # Power Up Shock
-                        shock = shock + 100
-                    elif crash.etype == 114:
-                        # Power Up Bio
-                        bio = bio + 100
-                    elif crash.etype == 115:
-                        # Power Up Pulsar
-                        pulse = pulse + 100
-                    elif crash.etype == 116:
-                        # Power Up Health
-                        player.hp = player.hp + 50
-                        if player.hp > healthmax // 2:
-                            player.hp = healthmax // 2 
-                    elif crash.etype == 117:
-                        # Power Up Armor
-                        player.armor = player.armor + 25
-                        if player.armor > armormax // 2:
-                            player.armor = armormax // 2
-                    elif crash.etype == 118:
-                        # Raise maximum health
-                        healthmax = healthmax + 50
-                        if healthmax > healthhardmax:
-                            healthmax = healthhardmax
-                        # Power Up Health
-                        player.hp = player.hp + 50
-                        if player.hp > healthmax // 2:
-                            player.hp = healthmax // 2  
-                    elif crash.etype == 119:
-                        # Raise maximum armor
-                        armormax = armormax + 25
-                        if armormax > armorhardmax:
-                            armormax = armorhardmax
-                        # Power Up Armor
-                        player.armor = player.armor + 25
-                        if player.armor > armormax // 2:
-                            player.armor = armormax // 2
-
-                    # Remove the Enemy if not boss or tentacle
-                    if enemydict[crash.etype]["boss"] == 0 and crash.etype != 91:
+                    crash.mask = pygame.mask.from_surface(crash.surf)
+                    if pygame.sprite.collide_mask(player, crash):
                         #if crash.etype == 91:
-                        #    print("killed in crash")
-                        crash.kill()
-                    else:
-                        # Player bounces off boss
-                        if player.rect.centerx < crash.rect.centerx:
-                            player.rect.right = crash.rect.left - 50
-                            player.speed = crash.speed + 3
+                            #print("crash")
+                        if edict.enemydict[crash.etype]["ispowerup"] == False:
+                            # Missile or blimp, possibly exploding
+                            collision_sound.play()
+                            # Implement variable damage
+                            damage = random.randint(*edict.enemydict[crash.etype]["damage"])
+                            # if player has armor left
+                            if player.armor > 0:
+                                # Damage armor first
+                                player.armor = player.armor - damage
+                                # If armor exhausted
+                                if player.armor < 0:
+                                    # Remove remainder from health
+                                    player.hp = + player.hp + player.armor
+                                    # Set armor to empty
+                                    player.armor = 0
+                            else:
+                                player.hp = player.hp - damage
+                            if player.hp < 1:
+                                # Decrement lives
+                                plives = plives - 1
+                                redflash = True
+                                redflashticks = pygame.time.get_ticks()
+                                # Move player position to hide
+                                player.rect.left = -300
+                                player.rect.top = SCREEN_HEIGHT_NOBOX / 5
+                                # Refill health
+                                player.hp = 100
+                                # Refill armor
+                                player.armor = 50
+                                # Cause destruction event for any remaining enemies
+                                for i, enemy1 in enumerate(enemies):
+                                    if enemy1.etype != "e_boss_cutboss41":
+                                        enemy1.boomcounter = 10
+                                        if edict.enemydict[enemy1.etype]["isexplodable"]:
+                                            enemy1.etype = edict.enemydict[enemy1.etype]["isexplodable"]
+                                        else:
+                                            enemy1.kill()
+                                        score = score + 1
+                                        wavecounter = wavecounter + 1                                                           
+                            # If no lives remain, kill player
+                            if plives < 1:
+                                for i, enemy1 in enumerate(enemies):
+                                    enemy1.kill()
+                                # Go to start screen
+                                ingame = False
+                        
+                        elif crash.etype == "e_pu_life111":
+                            # Extra Life
+                            plives = plives + 1
+                        elif crash.etype == "e_pu_flamer112":
+                            # Power Up Flamer
+                            flamer = flamer + 100
+                        elif crash.etype == "e_pu_shock113":
+                            # Power Up Shock
+                            shock = shock + 100
+                        elif crash.etype == "e_pu_bio114":
+                            # Power Up Bio
+                            bio = bio + 100
+                        elif crash.etype == "e_pu_pulsar115":
+                            # Power Up Pulsar
+                            pulse = pulse + 100
+                        elif crash.etype == "e_pu_health116":
+                            # Power Up Health
+                            player.hp = player.hp + 50
+                            if player.hp > healthmax // 2:
+                                player.hp = healthmax // 2 
+                        elif crash.etype == "e_pu_armor117":
+                            # Power Up Armor
+                            player.armor = player.armor + 25
+                            if player.armor > armormax // 2:
+                                player.armor = armormax // 2
+                        elif crash.etype == "e_pu_healthmax118":
+                            # Raise maximum health
+                            healthmax = healthmax + 50
+                            if healthmax > healthhardmax:
+                                healthmax = healthhardmax
+                            # Power Up Health
+                            player.hp = player.hp + 50
+                            if player.hp > healthmax // 2:
+                                player.hp = healthmax // 2  
+                        elif crash.etype == "e_pu_armormax119":
+                            # Raise maximum armor
+                            armormax = armormax + 25
+                            if armormax > armorhardmax:
+                                armormax = armorhardmax
+                            # Power Up Armor
+                            player.armor = player.armor + 25
+                            if player.armor > armormax // 2:
+                                player.armor = armormax // 2
+                        elif crash.etype == "e_pu_mgmulti2":
+                            # MG upgrade multifire 2
+                            mgmult = 2
+                        elif crash.etype == "e_pu_mgmulti3":
+                            # MG upgrade multifire 3
+                            mgmult = 3
+                        elif crash.etype == "e_pu_mgmulti5":
+                            # MG upgrade multifire 5
+                            mgmult = 5
+                        elif crash.etype == "e_pu_mgmulti7":
+                            # MG upgrade multifire 7
+                            mgmult = 7
+                        elif crash.etype == "e_pu_mgammo_laser2":
+                            # MG upgrade laser ammo
+                            mgtype = 2
+                        elif crash.etype == "e_pu_mgammo_plasma3":
+                            # MG upgrade plasma ammo
+                            mgtype = 3
+                        elif crash.etype == "e_pu_mgb1":
+                            # MG upgrade bounce ammo
+                            mgbounce = 1
+                        elif crash.etype == "e_pu_mgb2":
+                            # MG upgrade 2 bounce ammo
+                            mgbounce = 2
+                        elif crash.etype == "e_pu_mgb3":
+                            # MG upgrade 3 bounce ammo
+                            mgbounce = 3                            
+                        
+
+
+                        # Remove the Enemy if not boss or tentacle
+                        if edict.enemydict[crash.etype]["boss"] == 0 and crash.etype != 91:
+                            #if crash.etype == 91:
+                            #    print("killed in crash")
+                            crash.kill()
                         else:
-                            player.rect.left = crash.rect.right + 50
-                            player.speed = crash.speed - 3
-                        if player.rect.centery < crash.rect.centery:
-                            player.rect.bottom = crash.rect.top - 50
-                            player.climb = crash.climb - 3
-                        else:
-                            player.rect.top = crash.rect.bottom + 50
-                            player.climb = crash.climb + 3
-                    # Stop any moving sounds and play the collision sound
-                    move_up_sound.stop()
-                    move_down_sound.stop()
-                    shoot_sound.stop()
-                    bio_sound.stop()
-                    shock_sound.stop()
-                    flamer_sound.stop()
-                    powerup_sound.stop()
-                    wavechange_sound.stop()
-                    pulse_sound.stop()
-                    if enemydict[crash.etype]["ispowerup"] == False:
-                        # If hostile
-                        collision_sound.play()
-                    elif crash.etype > 100:
-                        # If powerup
-                        score = score + 25
-                        wavecounter = wavecounter + 1
-                        powerup_sound.play()
+                            # Player bounces off boss
+                            if player.rect.centerx < crash.rect.centerx:
+                                player.rect.right = crash.rect.left - 50
+                                player.speed = crash.speed + 3
+                            else:
+                                player.rect.left = crash.rect.right + 50
+                                player.speed = crash.speed - 3
+                            if player.rect.centery < crash.rect.centery:
+                                player.rect.bottom = crash.rect.top - 50
+                                player.climb = crash.climb - 3
+                            else:
+                                player.rect.top = crash.rect.bottom + 50
+                                player.climb = crash.climb + 3
+                        # Stop any moving sounds and play the collision sound
+                        move_up_sound.stop()
+                        move_down_sound.stop()
+                        shoot_sound.stop()
+                        bio_sound.stop()
+                        shock_sound.stop()
+                        flamer_sound.stop()
+                        powerup_sound.stop()
+                        wavechange_sound.stop()
+                        pulse_sound.stop()
+                        if edict.enemydict[crash.etype]["ispowerup"] == False:
+                            # If hostile
+                            collision_sound.play()
+                        elif edict.enemydict[crash.etype]["ispowerup"]:
+                            # If powerup
+                            score = score + 25
+                            wavecounter = wavecounter + 1
+                            powerup_sound.play()
                 # Check for other collisions, kill colliding enemies and destructable bullets   
                 # ENEMY ENEMY COLLISIONS
                 # Make sure all enemies have rectangles
@@ -3363,41 +2143,41 @@ while running:
                         # De-collide, move smaller
                         #enemy2.rect = enemy2.surf.get_rect()
                         # If enemy2 is smaller and not tentacle or boss
-                        if ((enemy2.rect.height * enemy2.rect.width) < (enemy1.rect.height * enemy1.rect.width)) and enemy2.etype != 91 and enemy2.etype != 41:
+                        if ((enemy2.rect.height * enemy2.rect.width) < (enemy1.rect.height * enemy1.rect.width)) and enemy2.etype != "e_tent_tentacle91" and enemy2.etype != "e_boss_cutboss41":
                             if enemy2.rect.centerx < enemy1.rect.centerx:
                                 enemy2.rect.right = enemy1.rect.left -5
                             else:
                                 enemy2.rect.left = enemy1.rect.right +5
-                        elif enemy1.etype != 91 and enemy1.etype != 41:
+                        elif enemy1.etype != "e_tent_tentacle91" and enemy1.etype != "e_boss_cutboss41":
                             if enemy1.rect.centerx < enemy2.rect.centerx:
                                 enemy1.rect.right = enemy2.rect.left -5
                             else:
                                 enemy1.rect.left = enemy2.rect.right +5
                         
                         # 2 powerups don't hurt eachother
-                        if not(enemydict[enemy1.etype]["ispowerup"] and enemydict[enemy2.etype]["ispowerup"]):
+                        if not(edict.enemydict[enemy1.etype]["ispowerup"] and edict.enemydict[enemy2.etype]["ispowerup"]):
                             collision_sound.play()
-                            if enemydict[enemy1.etype]["isexploded"] == False:
+                            if edict.enemydict[enemy1.etype]["isexploded"] == False:
                                 # is enemy immune?
-                                if enemydict[enemy1.etype]["damenemies"] > 0:
+                                if edict.enemydict[enemy1.etype]["damenemies"] > 0:
                                     enemy1.hp = enemy1.hp - 1
                                     if enemy1.hp < 1:
-                                        if enemydict[enemy1.etype]["isexplodable"]:
-                                            enemy1.etype = enemydict[enemy1.etype]["isexplodable"]
+                                        if edict.enemydict[enemy1.etype]["isexplodable"]:
+                                            enemy1.etype = edict.enemydict[enemy1.etype]["isexplodable"]
                                         else:
                                             enemy1.kill()
-                                        score = score + enemydict[enemy1.etype]["hp"]
+                                        score = score + edict.enemydict[enemy1.etype]["hp"]
                                         wavecounter = wavecounter + 1
-                            if enemydict[enemy2.etype]["isexploded"] == False:                           
+                            if edict.enemydict[enemy2.etype]["isexploded"] == False:                           
                                 # is enemy immune?
-                                if enemydict[enemy2.etype]["damenemies"] > 0:
+                                if edict.enemydict[enemy2.etype]["damenemies"] > 0:
                                     enemy2.hp = enemy2.hp - 1
                                     if enemy2.hp < 1:
-                                        if enemydict[enemy2.etype]["isexplodable"]:
-                                            enemy2.etype = enemydict[enemy2.etype]["isexplodable"]
+                                        if edict.enemydict[enemy2.etype]["isexplodable"]:
+                                            enemy2.etype = edict.enemydict[enemy2.etype]["isexplodable"]
                                         else:
                                             enemy2.kill()
-                                        score = score + enemydict[enemy2.etype]["hp"]
+                                        score = score + edict.enemydict[enemy2.etype]["hp"]
                                         wavecounter = wavecounter + 1
                 # BULLET ENEMY COLLISIONS  
                 # Make sure all enemies have rectangles
@@ -3409,18 +2189,33 @@ while running:
                     # If bullet hits enemy
                     if bullethit:
                         collision_sound.play()
-                        if enemydict[thisenemy.etype]["isexploded"] == False and enemydict[thisenemy.etype]["ispowerup"] == False:
-                            thisenemy.hp -= 1
+                        if edict.enemydict[thisenemy.etype]["isexploded"] == False and edict.enemydict[thisenemy.etype]["ispowerup"] == False:
+                            edam = 1
+                            if bullethit.btype == 1 and mgtype > 1:
+                                if mgtype == 2:
+                                    edam = 2
+                                if mgtype == 3:
+                                    edam == 3
+                            thisenemy.hp -= edam
                             if thisenemy.hp < 1:
-                                if enemydict[thisenemy.etype]["isexplodable"]:
-                                    thisenemy.etype = enemydict[thisenemy.etype]["isexplodable"]
+                                if edict.enemydict[thisenemy.etype]["isexplodable"]:
+                                    thisenemy.etype = edict.enemydict[thisenemy.etype]["isexplodable"]
                                 else:
                                     thisenemy.kill()
-                                score = score + enemydict[thisenemy.etype]["hp"]
+                                score = score + edict.enemydict[thisenemy.etype]["hp"]
                                 wavecounter += 1
                             if bullethit.btype == 1:
                                 # MG bullets go away on impact
-                                bullethit.kill()
+                                if mgtype == 1:
+                                    bullethit.kill()
+                                if mgtype == 2:
+                                    # Laser bullets 50% destroyed
+                                    if random.randint(1,10) > 5:
+                                        bullethit.kill()
+                                if mgtype == 3:
+                                    # Plasma bullets 20% destroyed
+                                    if random.randint(1,10) > 8:
+                                        bullethit.kill()
                             else:
                                 # Large bullets degraded by impacts
                                 bullethit.boomcounter -= 1                            
@@ -3442,7 +2237,7 @@ while running:
                 for i, thismountain in enumerate(mountains):
                     enemyhit = pygame.sprite.spritecollideany(thismountain, enemies)
                     if enemyhit:
-                        if enemyhit.etype > 8 or enemyhit.etype < 7: #cannon sit on mountain, missile launchers stay on ground
+                        if enemyhit.etype.startswith("e_g") == False: #cannon sit on mountain, missile launchers stay on ground
                             # Move enemy up
                             enemyhit.rect.bottom -= 50
                             enemyhit.climb = -3
@@ -3453,17 +2248,17 @@ while running:
                             else:
                                 enemyhit.rect.left = thismountain.rect.right + 10
                                 enemyhit.speed = 6
-                        if enemydict[enemyhit.etype]["isexploded"] == False:
-                            if enemyhit.etype > 8 or enemyhit.etype < 7: #cannon sit on mountain 
+                        if edict.enemydict[enemyhit.etype]["isexploded"] == False:
+                            if enemyhit.etype.startswith("e_g") == False : #cannon sit on mountain  #STARTSWITH this
                                 # If enemy takes damage from mountain collisions 
-                                if enemydict[enemyhit.etype]["dammountain"] > 0:      
+                                if edict.enemydict[enemyhit.etype]["dammountain"] > 0:      
                                     # Calculate partial immunity if applicable                 
-                                    enemyhit.hp = enemyhit.hp - int(100 * enemydict[enemyhit.etype]["dammountain"] / 100)
+                                    enemyhit.hp = enemyhit.hp - int(100 * edict.enemydict[enemyhit.etype]["dammountain"] / 100)
                                     if enemyhit.hp < 0:
-                                        if enemydict[enemyhit.etype]["isexplodable"]:
-                                            enemyhit.etype = enemydict[enemyhit.etype]["isexplodable"]
+                                        if edict.enemydict[enemyhit.etype]["isexplodable"]:
+                                            enemyhit.etype = edict.enemydict[enemyhit.etype]["isexplodable"]
                                         else:
-                                            if enemydict[enemyhit.etype]["isexploded"] == False:
+                                            if edict.enemydict[enemyhit.etype]["isexploded"] == False:
                                                 enemyhit.kill()
                                         score = score + 1
                 if wavecounter > wavegoal or wavecounter == wavegoal:
@@ -3538,6 +2333,16 @@ while running:
                             wave = 1
                             redflash = False
                             greenflash = False
+                            # MG POWERUPS
+                            # 1, 2, 3, 5, 7
+                            mgmult = 1
+                            # 1, 2, 3
+                            mgtype = 1
+                            # 0, 1, 2
+                            mgbounce = 0
+                            # x, y, speed, climb
+                            bounceinheritc = 0
+                            bounceinherits = 0
                             player.hp = 100
                             player.armor = 50  
                             healthmax = 200
@@ -3571,6 +2376,16 @@ while running:
                             wave = 1
                             redflash = False
                             greenflash = False
+                            # MG POWERUPS
+                            # 1, 2, 3, 5, 7
+                            mgmult = 1
+                            # 1, 2, 3
+                            mgtype = 1
+                            # 0, 1, 2
+                            mgbounce = 0
+                            # x, y, speed, climb
+                            bounceinheritc = 0
+                            bounceinherits = 0
                             player.hp = 100
                             player.armor = 50  
                             healthmax = 200
