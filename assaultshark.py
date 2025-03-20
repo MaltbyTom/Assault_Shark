@@ -1175,7 +1175,8 @@ icon = pygame.image.load("Graphics/""icon.png")
 icon.set_colorkey(BLACK, RLEACCEL)
 pygame.display.set_icon(icon)
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+# Display = 0 picks the default monitor, and causes no error with only one monitor 
+screen = pygame.display.set_mode(size=(SCREEN_WIDTH, SCREEN_HEIGHT),display=0)
 pygame.display.set_caption('Assault Shark')
 
 # Preload graphics
