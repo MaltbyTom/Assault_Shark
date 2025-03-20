@@ -1199,22 +1199,22 @@ print(str(jsons) + " JSON file(s) added")
 # Load and play our background music
 # Sound source: http://ccmixter.org/files/Apoxode/59262
 # License: https://creativecommons.org/licenses/by/3.0/
-pygame.mixer.music.load("sounds/Apoxode_-_Electric_1.mp3")
+pygame.mixer.music.load("sounds/apoxode_-_electric_1.mp3")
 pygame.mixer.music.play(loops=-1)
 
 # Load all our sound files
 # Sound sources: Jon Fincher
 # Many new additional sounds sourced from: http://rpg.hamsterrepublic.com/ohrrpgce/Free_Sound_Effects#Battle_Sounds
-move_up_sound = pygame.mixer.Sound("sounds/Rising_putter.ogg")
-move_down_sound = pygame.mixer.Sound("sounds/Falling_putter.ogg")
-shoot_sound = pygame.mixer.Sound("sounds/Shoot.ogg")
-collision_sound = pygame.mixer.Sound("sounds/Small_explosion.ogg")
-bio_sound = pygame.mixer.Sound("sounds/Bio_splat.ogg")
-shock_sound = pygame.mixer.Sound("sounds/Shock_sound2.ogg")
-flamer_sound = pygame.mixer.Sound("sounds/Flamer_sound.ogg")
-powerup_sound = pygame.mixer.Sound("sounds/Power_up.ogg")
-wavechange_sound = pygame.mixer.Sound("sounds/Wave_change.ogg")
-pulse_sound = pygame.mixer.Sound("sounds/Pulse_sound.ogg")
+move_up_sound = pygame.mixer.Sound("sounds/rising_putter.ogg")
+move_down_sound = pygame.mixer.Sound("sounds/falling_putter.ogg")
+shoot_sound = pygame.mixer.Sound("sounds/shoot.ogg")
+collision_sound = pygame.mixer.Sound("sounds/small_explosion.ogg")
+bio_sound = pygame.mixer.Sound("sounds/bio_splat.ogg")
+shock_sound = pygame.mixer.Sound("sounds/shock_sound2.ogg")
+flamer_sound = pygame.mixer.Sound("sounds/flamer_sound.ogg")
+powerup_sound = pygame.mixer.Sound("sounds/power_up.ogg")
+wavechange_sound = pygame.mixer.Sound("sounds/wave_change.ogg")
+pulse_sound = pygame.mixer.Sound("sounds/pulse_sound.ogg")
 
 # Set the base volume for all sounds
 move_up_sound.set_volume(0.5)
