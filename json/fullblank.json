@@ -1,0 +1,89 @@
+{
+    "e_type":{
+        "firstspawn": 1,
+        "spawnweight": 25,
+        "imgname": "missile1.png",
+        "mask": "#FFFFFF",
+        "advancedmovement": false,
+        "randspeed": true,
+        "speed": [
+            5,
+            20
+        ],
+        "randclimb": true,
+        "ishoming": true,
+        "climb": [
+            1,
+            2
+        ],
+        "climbmax": 8,
+        "climbmin": -8,
+        "randcenter": true,
+        "isshooter": false,
+        "ammotype": "e_spawn_hsnek2",
+        "skyburst": false,
+        "isground": false,
+        "islauncher": false,
+        "centerwidth": [
+            0,
+            1
+        ],
+        "centerheight": [
+            0,
+            1
+        ],
+        "isanimated": true,
+        "ticks": 15,
+        "numaniframes": 3,
+        "aniframetimers": [
+            10,
+            5,
+            0
+        ],
+        "aniframes": [
+            "missile1.png",
+            "missile1b.png",
+            "missile1c.png"
+        ],
+        "isexploded": false,
+        "isexplodable": "e_exp_62",
+        "hp": 1,
+        "fired": 0,
+        "ispowerup": false,
+        "damage": [
+            10,
+            20
+        ],
+        "boss": 0,
+        "boomcounter": 20,
+        "damground": 100,
+        "dammountain": 100,
+        "damenemies": 100,
+        "dambullets": 100,
+        "damplayer": 100,
+        "isgun": false,
+        "numexpframes": 3,
+        "expframetimers": [
+            8,
+            5,
+            0
+        ],
+        "expframes": [
+            "ship4xp1.png",
+            "ship4xp2.png",
+            "ship4xp3.png"
+        ],
+        "multishot": false,
+        "burstminmax": [
+            0,
+            1
+        ],
+        "islayer": false,
+        "eggtype": "e_spawn_hsnek2",
+        "multilay": false,
+        "clutchminmax": [
+            0,
+            1
+        ]
+    }
+}
