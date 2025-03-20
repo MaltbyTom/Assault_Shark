@@ -3,18 +3,22 @@
 (Formerly: They Comin)
 
 2D scrolling flight shooter inspired by the aesthetic of 80's arcade games
+
 Written by Tom Maltby, attributions for components follow
+
 www.maltby.org
-currently 3274 lines 
-(original 1380 line game written in one forty hour weekend of coding)
 
 ## Gameplay Gif
 
+New gif coming soon!  The bullet upgrades and tentacle attack are graphically spectacular.
+
 Assault Shark, as of 3/15/25 update:
+
 ![Assault Shark](https://github.com/user-attachments/assets/0baaeea0-21fb-48f9-bb9f-34dddfaa4023)
 
 
 Original 40 hour game while first learning Python:
+
 ![they comin gif](https://github.com/user-attachments/assets/739a6257-07a0-4942-954c-34ba4292b26a)
 
 ## License
@@ -43,7 +47,11 @@ SOFTWARE.
 
 ## Description
 
-Now with boss fights at the end of waves, and reward showers of power ups after each
+Bosses have a special tentacle attack!  Egg laying rocket fish.  3 slots of upgrades
+for the machine gun, each with multiple levels of upgrade.  New enemies can be added
+with just a .json file and images.
+
+Boss fights at the end of each wave, and reward showers of power ups after each
 wave's boss is killed!  This is a huge update.  A highlight is that all enemy and 
 bullet types are now stored in dictionaries, and their behavior is determined from 
 polling those dictionaries.  Also lots more enemy types, animations, explosions, 
@@ -92,7 +100,11 @@ Graphics except white cloud are by me, using Corel and Gimp.
 
 ### Requirements:
 
-pygame-ce 2.5.3 (SDL 2.30.12, Python 3.12.2), pip
+Python 3.12.2
+
+pygame-ce 2.5.3 
+
+pip
 
 ### Step by step instructions:
 
@@ -123,6 +135,23 @@ Python assaultshark.py
 ```
 
 ## Update log:
+
+### 3/19/2025
+* Template for new enemy .json files
+* Added enemies
+* Added egg laying mechanic
+* Added first egg laying enemy (blue rocket fish)
+
+### 3/18/2025
+* Finished .json compatability reworking of dictionaries
+
+### 3/17/2025
+* Finished 3 slots of multi-level machine gun upgrades
+* Improved MG panel display
+
+### 3/16/2025
+* Finished tentacle attack boss special weapon
+* Improved advanced movement
 
 ### 3/14/2025
 * Added bossfight mechanics
