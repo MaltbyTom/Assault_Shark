@@ -5,3 +5,4 @@ pygame-ce==2.5.3
 pyinstaller-hooks-contrib==2025.1
 pywin32-ctypes==0.2.3
 setuptools==75.8.2
+screeninfo==0.8.1
