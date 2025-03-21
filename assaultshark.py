@@ -42,8 +42,25 @@ import os
 import os.path
 import math
 import glob
+from screeninfo import get_monitors
 import xbox360_controller
 import edict # Enemy dictionary module
+#from pygame._sdl2.video import Window
+
+#window = None
+
+
+#def move(Win):
+#    global window
+#    window = Win.from_display_module()
+#    if window.position[0] == screen_positions [0][0] and window.position[1] == screen_positions[0][1]:
+#        window.position = (screen_positions[1][0], screen_positions[1][1])
+#    else:
+#        window.position = (screen_positions[0][0], screen_positions[0][1])
+
+    #window.position = (0, 32)
+
+
 
 
 
@@ -71,6 +88,8 @@ from pygame.locals import (
     RLEACCEL,
     K_F5,
     K_RCTRL, #tilt
+    K_m,
+    K_LCTRL,
 )
 
 
@@ -84,10 +103,50 @@ BLACK = pygame.Color("black")
 WHITE = pygame.Color("white")
 YELLOW = pygame.Color("yellow")
 
+
+screen_nums = []
+screen_positions = []
+screen_sizes = []
+
+def getscreensandsizes():
+    screen_num = 0
+    for m in get_monitors():
+        
+        print(str(m))
+        # Access individual attributes
+        print(f"Monitor name: {m.name}")
+        print(f"Position: x={m.x}, y={m.y}")
+        #print type({m.x})
+        print(f"Size: width={m.width}, height={m.height}")
+        print(f"Is primary: {m.is_primary}")
+        screen_nums.append(screen_num)
+        screen_positions.append((m.x,m.y))
+        screen_sizes.append((m.width,m.height))
+        screen_num += 1
+    #for screen_num in range(screen_count):
+        # Create a temporary window for each screen
+        #temp_root = tkinter.Toplevel(root)
+        #temp_root.withdraw()
+
+        # Get screen width and height
+        #width = temp_root.winfo_screenwidth()
+        #height = temp_root.winfo_screenheight()
+
+        # Store screen size
+        #screen_nums.append(screen_num)
+        #screen_sizes.append((screen_num, width, height))
+
+        # Destroy the temporary window
+        #temp_root.destroy()
+    #root.deiconify()
+    return m
+
 # Define constants for the screen width and height
 root = tkinter.Tk()
-SCREEN_WIDTH = root.winfo_screenwidth() # - 50
-SCREEN_HEIGHT = root.winfo_screenheight() # - 100
+scnums = getscreensandsizes()
+
+SCREEN_WIDTH = int(screen_sizes[0][0])  #root.winfo_screenwidth() # - 50
+SCREEN_HEIGHT = int(screen_sizes[0][1])   #root.winfo_screenheight() # - 100
 SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100
 
 # Define the Sun and Moon object
@@ -1172,11 +1231,12 @@ except pygame.error:
 # Create the screen object
 # First set the icon
 icon = pygame.image.load("graphics/icon.png")
-icon.set_colorkey(BLACK, RLEACCEL)
+icon.set_colorkey(WHITE, RLEACCEL)
 pygame.display.set_icon(icon)
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 # Display = 0 picks the default monitor, and causes no error with only one monitor 
 screen = pygame.display.set_mode(size=(SCREEN_WIDTH, SCREEN_HEIGHT),display=0)
+#screen = pygame.display.set_mode(size=(500, 500),display=1)
 pygame.display.set_caption('Assault Shark')
 
 # Preload graphics
@@ -1394,6 +1454,11 @@ running = True
 # Our main loop
 while running:
     try:
+        #pressed_keys = pygame.key.get_pressed()
+        #if pressed_keys[K_m] and pressed_keys[K_LCTRL]:
+            #print("ctr m pressed")
+            #move(Window)
+            #pygame.display.set_mode(size=(SCREEN_WIDTH, SCREEN_HEIGHT),display=0)
         if pause == True and ingame == True:
             # Look at every event in the queue
             for event in pygame.event.get():
