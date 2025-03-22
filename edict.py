@@ -26,13 +26,13 @@ SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100
 def addjsons():
     added = 0
     # Gets a list of all jsons in the JSON directory
-    jsons = glob.glob ("JSON/*.json")
+    jsons = glob.glob ("json/*.json")
     # Loads all jsons into the enemydict dictionary
     for jsonf in jsons:
         json_name = os.path.basename(jsonf)
         # don't input the template into enemydict
         if json_name != "fullblank.json":
-            with open("JSON/" + json_name, "r") as jsonfile:
+            with open("json/" + json_name, "r") as jsonfile:
                 addtodict = json.load(jsonfile)
                 enemydict.update(addtodict)
                 added += 1
