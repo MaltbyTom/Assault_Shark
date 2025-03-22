@@ -90,6 +90,7 @@ from pygame.locals import (
     K_RCTRL, #tilt
     K_m,
     K_LCTRL,
+    K_l,
 )
 
 
@@ -195,6 +196,7 @@ class Player(pygame.sprite.Sprite):
     tilt = 1
     # Move the sprite based on keypresses
     def update(self, pressed_keys):
+        global buttons
         global jetupdown
         global tilt
         joytilt = False
@@ -991,6 +993,13 @@ pausetext10red = font20.render("Press Start To UnPause - Press Bacl to Quit", 1,
 vaulttext1red = font16.render("This vault is long abandoned.  It's doors are blocked by fallen rock.", 1 , RED)
 vaulttext2red = font16.render("If only you had tools to move the debris and a repair kit to fix the hyperlink!", 1, RED)
 vaulttext3red = font20.render("Press Enter/Start to leave the vault!", 1, RED)
+vaulttext4red = font16.render("Press [S] on keyboard or (A) on controller to set/update savepoint.", 1, RED)
+vaulttext5red = font20.render("Save point set!", 1, RED)
+loadasktextred = font16.render("A cloned assaultshark is available in the cryo-labs!  Press (A) on joystick or [L] on keyboard to restore.", 1, RED)
+loadedtextred = font16.render("Your cloned ship has been fetched from the cryolabs, restored, and made ready.", 1, RED)
+loaded = 0
+
+
 
 def texts(lives, score):
     # gives lives, score, waves, high score
@@ -1008,7 +1017,8 @@ def texts2(flamer, shock, bio, pulse):
 
 def texts3(highscore):
     # on enter to play screen, gives high score
-    
+    #print ("Start screen update happened!")
+    global playscreenupdated
     ptxtoffset = playagametextblack.width / 2
     screen.blit(playagametextblack, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 60))
     screen.blit(playagametextred, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 58))
@@ -1043,8 +1053,23 @@ def texts3(highscore):
     ptxtoffset = pausetext9.width / 2
     screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
     screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
+    loaddataexists = edict.loadgame()
+    #print("From loadgame:")
+    #print(edict.savedict)
+    if loaddataexists > 0:
+        if loaded == 0:
+            ptxtoffset = loadasktextred.width / 2
+            screen.blit(loadasktextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 220))
+        else:
+            ptxtoffset = loadedtextred.width / 2
+            screen.blit(loadedtextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 225))
+
+    playscreenupdated = True
+    
 
 def texts4():
+    #print("Pause screen update happened!")
+    global pausescreenupdated
     #Pause screen    
     ptxtoffset = pausetext5.width / 2
     screen.blit(pausetext5, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 30))
@@ -1075,8 +1100,33 @@ def texts4():
     ptxtoffset = pausetext9.width / 2
     screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
     screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
-
+    pausescreenupdated = True
  
+def readgamedict():
+    global loaded, loaddataexists
+    global plives, score, flamer, shock, bio, pulse, redflash, greenflash, mgmult, mgtype, mgbounce, bounceinheritc, bounceinherits
+    global healthmax, armormax, wavecounter, wavegoal, waveboss, waveendticks, jetupdown, tilt, wave
+    #self.name = "enemy" + edict.enemydict[etype]["imgname"]
+    #print("From readgamedict:")
+    #print(edict.savedict)
+    wave = edict.savedict["savepoint"]["wave"]
+    score = edict.savedict["savepoint"]["score"]
+    ammo = edict.savedict["savepoint"]["ammo"]
+    flamer = ammo[0]
+    shock = ammo[1]
+    bio = ammo[2]
+    pulse = ammo[3]
+    mg  = edict.savedict["savepoint"]["mg"]
+    mgmult = mg[0]
+    mgtype = mg[1]
+    mgbounce = mg[2]
+    plives = edict.savedict["savepoint"]["lives"]
+    player.hp = edict.savedict["savepoint"]["health"]
+    healthmax = edict.savedict["savepoint"]["healthmax"]
+    player.armor = edict.savedict["savepoint"]["armor"]
+    armormax = edict.savedict["savepoint"]["armormax"]
+
+    
 
 healthhardmax = 400
 armorhardmax = 200
@@ -1174,13 +1224,14 @@ def mgbar(left, top):
     #mgbarimg.blit(ximg,(61,0))
 
 def healthbar(left, top, health):
+    #if health > healthmax:
     healthbarborder = pygame.Rect(left + 40, top, healthmax, 30)
     healthbarfilled = pygame.Rect(left + 42, top + 2, int((healthmax - 4) * (health/(healthmax/2))), 26)
     heartimg = get_image("heart.png")
     heartimg.set_colorkey(WHITE, RLEACCEL)
     screen.blit(heartimg, (left,top))
     healthbarmark = pygame.Rect(left + 237, top-3, 1, 33)
-
+    #print(healthmax)
     if health > 70:
         healthbarcolor = GREEN
     elif health > 30:
@@ -1482,6 +1533,7 @@ jetupdown = 1
 tilt = 1
 lastwaveboss = 0
 inportal = False
+didicleanup = True
 # This call creates a .json file with all fields in the dictionary
 # fullrec = edict.gencompleteblank()
 
@@ -1498,6 +1550,61 @@ if os.path.isfile(hsfilename) and os.access(hsfilename, os.R_OK):
         if hs > highscore:
             highscore = hs
 
+loaddataexists = False
+loaddataexists = edict.loadgame()
+
+playscreenupdated = False
+pausescreenupdated = False
+
+def initnewgame():
+    global loaded, loaddataexists
+    global plives, score, flamer, shock, bio, pulse, redflash, greenflash, mgmult, mgtype, mgbounce, bounceinheritc, bounceinherits
+    global healthmax, armormax,wave, wavecounter, wavegoal, waveboss, waveendticks, jetupdown, tilt
+    #print("initnewgame called")
+    loaddataexists = False
+    redflash = False
+    greenflash = False
+    bounceinheritc = 0
+    bounceinherits = 0
+    wavecounter = 0
+    wavegoal = 150
+    waveboss = 0
+    waveendticks = 0
+    jetupdown = 1
+    tilt = 1
+    pygame.mixer.music.play(loops=-1)
+    wavesunmoon.rect.center=(random.randint(100, SCREEN_WIDTH),random.randint(0, SCREEN_HEIGHT_NOBOX),)
+    wavesunmoon.update(wave)
+    player.rect.left = 30
+    player.rect.top = SCREEN_HEIGHT_NOBOX / 5
+    if loaded:
+        # Use loaded dictionary
+        readgamedict()
+    else:
+        #Normal game start
+        # MG POWERUPS
+        # 1, 2, 3, 5, 7
+        mgmult = 1
+        # 1, 2, 3
+        mgtype = 1
+        # 0, 1, 2
+        mgbounce = 0
+        # x, y, speed, climb
+        plives = 3
+        score = 0
+        flamer = 100
+        shock = 100
+        bio = 100
+        pulse = 100
+        wave = 1
+        player.hp = 100
+        player.armor = 50  
+        #print("reset")
+        healthmax = 200
+        armormax = 100
+    # New game has started, game loaded flag reset
+    loaded = 0
+
 # Variable to keep our main loop running - false is exit condition
 running = True
 
@@ -1510,15 +1617,19 @@ while running:
             #move(Window)
             #pygame.display.set_mode(size=(SCREEN_WIDTH, SCREEN_HEIGHT),display=0)
         if pause == True and ingame == True:
+            # This is the 'paused' part of the game clock loop
             if inportal == True:
                 # This is the 'in the vault' stub
+                # 'In the vault' is a substate of paused
                 screen.fill(BLACK)
                 screen.blit(vaulttext1red, (SCREEN_WIDTH / 2 - vaulttext1red.width, 140))
                 screen.blit(vaulttext2red, (SCREEN_WIDTH / 2 - vaulttext2red.width, 180))
                 screen.blit(vaulttext3red, (SCREEN_WIDTH / 2 - vaulttext3red.width, SCREEN_HEIGHT/2))
-                player.rect.right += 200
+                player.rect.bottom = 200
+                player.rect.left = 10
             else:
-                texts4()
+                if pausescreenupdated == False:
+                    texts4()
             # Look at every event in the queue
             for event in pygame.event.get():
                 # Did the user hit a key?
@@ -1550,6 +1661,10 @@ while running:
             pygame.display.flip()
         else:
             if ingame:
+                # This is the primary play section of the main clock loop
+                playscreenupdated = False
+                pausescreenupdated = False
+                didicleanup = False
                 #pressed_keysq = pygame.key.get_pressed()
                 #if pressed_keysq == K_p:
                 #    pause = True
@@ -2036,6 +2151,7 @@ while running:
                         # If portal!
                         if crash.name.startswith("portal") and player.rect.left < crash.rect.left and player.rect.top > crash.rect.top + 25:
                             #player has gone through portal
+                            portalmountain = crash
                             inportal = True
                             pause = True
                         else:
@@ -2378,7 +2494,7 @@ while running:
                 if wavecounter > wavegoal or wavecounter == wavegoal:
                     if bossmode == False:
                         waveendticks += 1
-                    if len(enemies) == 0 or waveendticks > 150:
+                    if len(enemies) == 0 or waveendticks > 250:
                         # Set up next wave
                         jetupdown = 1
                         tilt = 1
@@ -2415,63 +2531,45 @@ while running:
                 # Ensure we maintain a 30 frames per second rate
                 clock.tick(30)
             else:
+                # This is the Startup and Between Games part of the clock loop.
                 # Get rid of any remaining sprites except sunmoon and player
                 # Park on start screen
-                pygame.mixer.music.stop()
-                for i, enemy1 in enumerate(enemies):
-                    enemy1.kill()
-                for i, bullet1 in enumerate(bullets):
-                    bullet1.kill()
-                for i, cloud1 in enumerate(clouds):
-                    cloud1.kill()       
-                for i, mountain1 in enumerate(mountains):
-                    mountain1.kill()
-                # Update highscore
-                if score > highscore:
-                    highscore = score
+
+                # If cleanup hasn't happened, clean up
+                if didicleanup == False:
+                    pygame.mixer.music.stop()
+                    for i, enemy1 in enumerate(enemies):
+                        enemy1.kill()
+                    for i, bullet1 in enumerate(bullets):
+                        bullet1.kill()
+                    for i, cloud1 in enumerate(clouds):
+                        cloud1.kill()       
+                    for i, mountain1 in enumerate(mountains):
+                        mountain1.kill()
+                    # Update highscore
+                    if score > highscore:
+                        highscore = score
+                        didicleanup = True                       
+                    loaddataexists = edict.loadgame()
                 # Look at every event in the queue
                 for event in pygame.event.get():
                     # Did the user hit a key or joystick button?
+                    #if nojoy != False:
+                    buttons = controller.get_buttons()
+                    pressed_keys = pygame.key.get_pressed()
+                    if buttons[0] == 1 or pressed_keys[K_l] == True:
+                        #print("load click")
+                        if loaddataexists == True:
+                            loaded = True                                        
+                            screen.fill((135, 206, 250))
+                            texts3(highscore)
                     if event.type == pygame.JOYBUTTONDOWN:
                         if event.button == xbox360_controller.START:
                             # Press Enter to Play
                             # Reinitialize gamestate at start
+                            initnewgame()
                             ingame = True
-                            pause = False
-                            plives = 3
-                            score = 0
-                            flamer = 100
-                            shock = 100
-                            bio = 100
-                            pulse = 100
-                            wave = 1
-                            redflash = False
-                            greenflash = False
-                            # MG POWERUPS
-                            # 1, 2, 3, 5, 7
-                            mgmult = 1
-                            # 1, 2, 3
-                            mgtype = 1
-                            # 0, 1, 2
-                            mgbounce = 0
-                            # x, y, speed, climb
-                            bounceinheritc = 0
-                            bounceinherits = 0
-                            player.hp = 100
-                            player.armor = 50  
-                            healthmax = 200
-                            armormax = 100
-                            wavecounter = 0
-                            wavegoal = 150
-                            waveboss = 0
-                            waveendticks = 0
-                            jetupdown = 1
-                            tilt = 1
-                            pygame.mixer.music.play(loops=-1)
-                            wavesunmoon.rect.center=(random.randint(100, SCREEN_WIDTH),random.randint(0, SCREEN_HEIGHT_NOBOX),)
-                            wavesunmoon.update(wave)
-                            player.rect.left = 30
-                            player.rect.top = SCREEN_HEIGHT_NOBOX / 5
+                            pause = False                           
                         if event.button == xbox360_controller.BACK:
                             # Prepare for exit
                             running = False           
@@ -2481,40 +2579,7 @@ while running:
                             # Reinitialize gamestate at start
                             ingame = True
                             pause = False
-                            plives = 3
-                            score = 0
-                            flamer = 100
-                            shock = 100
-                            bio = 100
-                            pulse = 100
-                            wave = 1
-                            redflash = False
-                            greenflash = False
-                            # MG POWERUPS
-                            # 1, 2, 3, 5, 7
-                            mgmult = 1
-                            # 1, 2, 3
-                            mgtype = 1
-                            # 0, 1, 2
-                            mgbounce = 0
-                            # x, y, speed, climb
-                            bounceinheritc = 0
-                            bounceinherits = 0
-                            player.hp = 100
-                            player.armor = 50  
-                            healthmax = 200
-                            armormax = 100
-                            wavecounter = 0
-                            wavegoal = 150
-                            waveboss = 0
-                            waveendticks = 0
-                            pygame.mixer.music.play(loops=-1)
-                            wavesunmoon.rect.center=(random.randint(100, SCREEN_WIDTH),random.randint(0, SCREEN_HEIGHT_NOBOX),)
-                            wavesunmoon.update(wave)
-                            player.rect.left = 30
-                            player.rect.top = SCREEN_HEIGHT_NOBOX / 5
-                            jetupdown = 1
-                            tilt = 1
+                            initnewgame()
 
                         elif event.key == K_ESCAPE:
                             # Prepare for exit
@@ -2523,10 +2588,12 @@ while running:
                     # Did the user click the window close button? If so, stop the loop
                     elif event.type == QUIT:
                         running = False
-                # Set Background for start screen     
-                screen.fill((135, 206, 250))
                 # Draw Enter to Play, Esc to Exit, High Score
-                texts3(highscore)
+                if playscreenupdated == False:                   
+                    # Set Background for start screen     
+                    screen.fill((135, 206, 250))
+                    texts3(highscore)
+                
                 # Flip everything to the display
                 pygame.display.flip()
                 # Ensure we maintain a 30 frames per second rate

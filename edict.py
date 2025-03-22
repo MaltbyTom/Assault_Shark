@@ -21,7 +21,24 @@ YELLOW = pygame.Color("yellow")
 root = tkinter.Tk()
 SCREEN_WIDTH = root.winfo_screenwidth() # - 50
 SCREEN_HEIGHT = root.winfo_screenheight() # - 100
-SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100
+SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100   
+
+def loadgame():
+    added = 0
+    # Gets a list of all jsons in the JSON directory
+    jsons = glob.glob ("json/savepoint/*.json")
+    # Loads all jsons into the enemydict dictionary
+    for jsonf in jsons:
+        json_name = os.path.basename(jsonf)
+        # only input the savepoint into savedict
+        if json_name == "savepoint.json":
+            #savedict = {}
+            with open("json/savepoint/" + json_name, "r") as jsonfile:
+                addtodict = json.load(jsonfile)
+                savedict.update(addtodict)
+                added += 1
+            #print(savedict)
+    return added
 
 def addjsons():
     added = 0
@@ -57,7 +74,10 @@ def addjsons():
     #with open("JSON/fullblank.json", "w") as file:
         #json.dump(blankrecord, file, indent=4)
     #return len(blankrecord)
-            
+
+savedict = {
+    "stuff": 1
+}  
 
 # Fill a nested dictionary of enemies by etype
 enemydict = {

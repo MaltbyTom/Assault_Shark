@@ -1,0 +1,23 @@
+{
+    "savepoint":{
+        "wave": 7,
+        "score": 999,
+        "ammo": [
+            99,
+            99,
+            99,
+            99
+        ],
+        "mg":[
+            7,
+            3,
+            3
+        ],
+        "lives": 9,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 100,
+        "armormax": 200
+    }
+
+}
