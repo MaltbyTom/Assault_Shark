@@ -290,23 +290,59 @@ class Player(pygame.sprite.Sprite):
             
         return(self)                
 
+portalaniticks = 0
+portalctr = 0
+gatehouse = False
+portal = False
+offset = 0
+
 # Define the mountain object extending pygame.sprite.Sprite
 # Use an image for a better looking sprite
 class Mountain(pygame.sprite.Sprite):
     def __init__(self):
+        global gatehouse
+        global portal
+        global portalaniticks
+        global portalctr
+        global offset
         super(Mountain, self).__init__()
-        if wave < 3:
-            self.mountnum = str(random.randint(1,2))
-        elif wave < 5:
-            self.mountnum = str(random.randint(1,4))
+        if gatehouse == False:
+            if wave < 3:
+                self.mountnum = str(random.randint(1,2))
+            elif wave < 5:
+                self.mountnum = str(random.randint(1,4))
+            else:
+            #if 1 == 1:
+                self.mountnum = str(random.randint(1,6))
+                if int(self.mountnum) > 4:
+                    if random.randint(1,2) == 2:
+                        gatehouse = True
+                        if random.randint(1,2) == 2:
+                            portal = True
+                        # Create the new gatehouse, and add it to our sprite groups
+                        offset = 160
+                        new_mountain = Mountain()
+                        mountains.add(new_mountain)
+                        all_sprites.add(new_mountain)            
+            self.surf = get_image("mountain" + self.mountnum + ".png")
+            self.name = "mountain" + self.mountnum + ".png"
         else:
-            self.mountnum = str(random.randint(1,6))
-        self.surf = get_image("mountain" + self.mountnum + ".png")
-        
-        self.name = "mountain" + "mountain" + self.mountnum + ".png"
+            if portal == True:                
+                self.surf = get_image("gatehousewarp.png")
+                self.name = "portal" + str(portalctr) + ".png"
+                portalctr += 1
+                
+            else:
+                self.surf = get_image("gatehouseclosed.png")
+                self.name = "gatehouse" + str(portalctr) + ".png"
+                portalctr += 1
+                   
         self.surf.set_colorkey(WHITE, RLEACCEL)
         # Starts on the bottom, off the screen to the right
-        self.rect = self.surf.get_rect(bottomleft=(SCREEN_WIDTH + 30, SCREEN_HEIGHT_NOBOX),)
+        self.rect = self.surf.get_rect(bottomleft=(SCREEN_WIDTH + 210 - offset, SCREEN_HEIGHT_NOBOX),)
+        offset = 0
+        portal = False
+        gatehouse = False
         if (random.randint(1,100) + (wave * wave)) > 90: 
                 # Spawn gun on rock, more likely in later waves
                 new_enemy = Enemy("e_g_cannon7",14,1,self)
@@ -316,8 +352,18 @@ class Mountain(pygame.sprite.Sprite):
     # Move the mountain based on a constant speed
     # Remove it when it passes the left edge of the screen
     def update(self):
+        global portalaniticks
         self.rect.move_ip(-5, 0)
         # if off left edge, kill
+        if self.name.startswith("portal"):
+            portalaniticks += 1
+            if portalaniticks == 3:
+                self.surf = get_image("gatehousewarpa.png")
+                self.surf.set_colorkey(WHITE, RLEACCEL)
+            if portalaniticks == 6:
+                self.surf = get_image("gatehousewarp.png")
+                self.surf.set_colorkey(WHITE, RLEACCEL)
+                portalaniticks = 0
         if self.rect.right < 0:
             self.kill()
 
@@ -942,6 +988,9 @@ pausetext7red = font16.render("Flying: Left Stick - Up, Down, Left, Right -- Til
 pausetext8red = font16.render("Weapons: Right Trigger - Machine Gun, A - Flamer, X - Shock Shield, B - Pulsar, Y - Bio Blast", 1, RED)
 pausetext9red = font16.render("Start - Play / Pause / Unpause, Back - Quit ", 1, RED)
 pausetext10red = font20.render("Press Start To UnPause - Press Bacl to Quit", 1, RED)
+vaulttext1red = font16.render("This vault is long abandoned.  It's doors are blocked by fallen rock.", 1 , RED)
+vaulttext2red = font16.render("If only you had tools to move the debris and a repair kit to fix the hyperlink!", 1, RED)
+vaulttext3red = font20.render("Press Enter/Start to leave the vault!", 1, RED)
 
 def texts(lives, score):
     # gives lives, score, waves, high score
@@ -1367,7 +1416,7 @@ pygame.time.set_timer(ADDCLOUD, 1000)
 ADDBULLET = pygame.USEREVENT + 3
 pygame.time.set_timer(ADDBULLET, 50)
 ADDMOUNTAIN = pygame.USEREVENT + 4
-pygame.time.set_timer(ADDMOUNTAIN, 2000)
+pygame.time.set_timer(ADDMOUNTAIN, 4000)
 #MOVESUNMOON = pygame.USEREVENT + 4
 #pygame.time.set_timer(MOVESUNMOON, 20000)
 
@@ -1432,6 +1481,7 @@ tentacleattack = False
 jetupdown = 1
 tilt = 1
 lastwaveboss = 0
+inportal = False
 # This call creates a .json file with all fields in the dictionary
 # fullrec = edict.gencompleteblank()
 
@@ -1460,6 +1510,15 @@ while running:
             #move(Window)
             #pygame.display.set_mode(size=(SCREEN_WIDTH, SCREEN_HEIGHT),display=0)
         if pause == True and ingame == True:
+            if inportal == True:
+                # This is the 'in the vault' stub
+                screen.fill(BLACK)
+                screen.blit(vaulttext1red, (SCREEN_WIDTH / 2 - vaulttext1red.width, 140))
+                screen.blit(vaulttext2red, (SCREEN_WIDTH / 2 - vaulttext2red.width, 180))
+                screen.blit(vaulttext3red, (SCREEN_WIDTH / 2 - vaulttext3red.width, SCREEN_HEIGHT/2))
+                player.rect.right += 200
+            else:
+                texts4()
             # Look at every event in the queue
             for event in pygame.event.get():
                 # Did the user hit a key?
@@ -1473,6 +1532,7 @@ while running:
                     if event.key == K_RETURN:
                         # Press Enter to Play
                         # unpause
+                        inportal = False
                         pause = False
                         pygame.mixer.music.play(loops=-1)
                     elif event.key == K_ESCAPE:
@@ -1486,7 +1546,7 @@ while running:
                     running = False
             # Set Background for start screen     
             #screen.fill((135, 206, 250))
-            texts4()
+            
             pygame.display.flip()
         else:
             if ingame:
@@ -1499,29 +1559,11 @@ while running:
                     if event.type == pygame.JOYBUTTONDOWN:
                         if event.button == xbox360_controller.START:
                             pause = True
-                            pygame.mixer.music.stop()
-                        if event.button == xbox360_controller.BACK:
-                            ingame = False 
-                            for i, enemy1 in enumerate(enemies):
-                                enemy1.kill()
-                            for i, bullet1 in enumerate(bullets):
-                                bullet1.kill()
-                            for i, cloud1 in enumerate(clouds):
-                                cloud1.kill()                
-                            for i, mountain1 in enumerate(mountains):
-                                mountain1.kill()                              
+                            pygame.mixer.music.stop()                  
                     if event.type == KEYDOWN:
                         # Was it the Escape key? If so, stop the loop
                         if event.key == K_ESCAPE:
-                            ingame = False        
-                            for i, enemy1 in enumerate(enemies):
-                                enemy1.kill()
-                            for i, bullet1 in enumerate(bullets):
-                                bullet1.kill()
-                            for i, cloud1 in enumerate(clouds):
-                                cloud1.kill()                
-                            for i, mountain1 in enumerate(mountains):
-                                mountain1.kill()
+                            pause = True 
                         elif event.key == K_RETURN:
                             pause = True
                             pygame.mixer.music.stop()
@@ -1991,34 +2033,40 @@ while running:
                 if crash:
                     crash.mask = pygame.mask.from_surface(crash.surf)
                     if pygame.sprite.collide_mask(player, crash):
-                        # Decrement lives
-                        plives = plives - 1
-                        redflash = True
-                        redflashticks = pygame.time.get_ticks()
-                        # Move player position to hide
-                        player.rect.left = -300
-                        player.rect.top = SCREEN_HEIGHT_NOBOX / 5
-                        # Refill health
-                        player.hp = 100
-                        # Refill armor
-                        player.armor = 50
-                        # Cause destruction event for any remaining enemies
-                        for i, enemy1 in enumerate(enemies):
-                            if enemy1.etype != "e_boss_cutboss41":
-                                enemy1.boomcounter = 10
-                                if edict.enemydict[enemy1.etype]["isexplodable"]:
-                                    enemy1.etype = edict.enemydict[enemy1.etype]["isexplodable"]
-                                else:
-                                    if edict.enemydict[enemy1.etype]["boss"] == False:
-                                        enemy1.kill()
-                                score = score + 1
-                                wavecounter = wavecounter + 1                                                           
-                        # If no lives remain, kill player
-                        if plives < 1:
+                        # If portal!
+                        if crash.name.startswith("portal") and player.rect.left < crash.rect.left and player.rect.top > crash.rect.top + 25:
+                            #player has gone through portal
+                            inportal = True
+                            pause = True
+                        else:
+                            # Decrement lives
+                            plives = plives - 1
+                            redflash = True
+                            redflashticks = pygame.time.get_ticks()
+                            # Move player position to hide
+                            player.rect.left = -300
+                            player.rect.top = SCREEN_HEIGHT_NOBOX / 5
+                            # Refill health
+                            player.hp = 100
+                            # Refill armor
+                            player.armor = 50
+                            # Cause destruction event for any remaining enemies
                             for i, enemy1 in enumerate(enemies):
-                                enemy1.kill()
-                            # Go to start screen
-                            ingame = False
+                                if enemy1.etype != "e_boss_cutboss41":
+                                    enemy1.boomcounter = 10
+                                    if edict.enemydict[enemy1.etype]["isexplodable"]:
+                                        enemy1.etype = edict.enemydict[enemy1.etype]["isexplodable"]
+                                    else:
+                                        if edict.enemydict[enemy1.etype]["boss"] == False:
+                                            enemy1.kill()
+                                    score = score + 1
+                                    wavecounter = wavecounter + 1                                                           
+                            # If no lives remain, kill player
+                            if plives < 1:
+                                for i, enemy1 in enumerate(enemies):
+                                    enemy1.kill()
+                                # Go to start screen
+                                ingame = False
 
                 # Check if any enemies have collided with the player
                 # PLAYER ENEMY COLLISIONS
