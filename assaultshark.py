@@ -45,6 +45,7 @@ import glob
 from screeninfo import get_monitors
 import xbox360_controller
 import edict # Enemy dictionary module
+import boxi # Box making module
 #from pygame._sdl2.video import Window
 
 #window = None
@@ -149,6 +150,7 @@ scnums = getscreensandsizes()
 SCREEN_WIDTH = int(screen_sizes[0][0])  #root.winfo_screenwidth() # - 50
 SCREEN_HEIGHT = int(screen_sizes[0][1])   #root.winfo_screenheight() # - 100
 SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100
+boxi.screensetup(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_HEIGHT_NOBOX)
 
 # Define the Sun and Moon object
 class SunMoon(pygame.sprite.Sprite):
@@ -995,8 +997,8 @@ vaulttext2red = font16.render("If only you had tools to move the debris and a re
 vaulttext3red = font20.render("Press Enter/Start to leave the vault!", 1, RED)
 vaulttext4red = font16.render("Press [S] on keyboard or (A) on controller to set/update savepoint.", 1, RED)
 vaulttext5red = font20.render("Save point set!", 1, RED)
-loadasktextred = font16.render("A cloned assaultshark is available in the cryo-labs!  Press (A) on joystick or [L] on keyboard to restore.", 1, RED)
-loadedtextred = font16.render("Your cloned ship has been fetched from the cryolabs, restored, and made ready.", 1, RED)
+loadasktextred = font16.render("A cloned assaultshark is available in the cryo-labs!  Press (A) on joystick or [L] on keyboard to restore", 1, RED)
+loadedtextred = font16.render("Your cloned ship has been fetched from the cryolabs, restored, and made ready", 1, RED)
 loaded = 0
 
 
@@ -1059,10 +1061,22 @@ def texts3(highscore):
     if loaddataexists > 0:
         if loaded == 0:
             ptxtoffset = loadasktextred.width / 2
-            screen.blit(loadasktextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 220))
+            ptxtlft = SCREEN_WIDTH / 2 - ptxtoffset
+            boxi.boxi(screen,loadasktextred,SCREEN_HEIGHT / 2 - 220, ptxtlft, 3, BLACK, 2, RED, 0, 0)
+            #loadborder = pygame.Rect(ptxtlft - 8, SCREEN_HEIGHT / 2 - 224, ptxtoffset * 2 + 8, 22)
+            #pygame.draw.rect(screen, RED, loadborder, 0, 2)
+            #loadbox = pygame.Rect(ptxtlft - 6, SCREEN_HEIGHT / 2 - 222, ptxtoffset * 2 + 4, 18 )
+            #pygame.draw.rect(screen, BLACK, loadbox, 0, 2)
+            #screen.blit(loadasktextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 220))
         else:
             ptxtoffset = loadedtextred.width / 2
-            screen.blit(loadedtextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 225))
+            ptxtlft = SCREEN_WIDTH / 2 - ptxtoffset
+            boxi.boxi(screen,loadedtextred,SCREEN_HEIGHT / 2 - 220, ptxtlft, 3, BLACK, 2, RED, 0, 0) 
+            #loadborder = pygame.Rect(ptxtlft - 8, SCREEN_HEIGHT / 2 - 224, ptxtoffset * 2 + 8, 22)
+            #pygame.draw.rect(screen, RED, loadborder, 0, 2)
+            #loadbox = pygame.Rect(ptxtlft - 6, SCREEN_HEIGHT / 2 - 222, ptxtoffset * 2 + 4, 18 )
+            #pygame.draw.rect(screen, BLACK, loadbox, 0, 2)
+            #screen.blit(loadedtextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 220))
 
     playscreenupdated = True
     
@@ -1124,7 +1138,12 @@ def readgamedict():
     player.hp = edict.savedict["savepoint"]["health"]
     healthmax = edict.savedict["savepoint"]["healthmax"]
     player.armor = edict.savedict["savepoint"]["armor"]
-    armormax = edict.savedict["savepoint"]["armormax"]
+    armormax = edict.savedict["savepoint"]["armormax"]    
+    if wave > 1:
+        wavct = 1
+        while wavct < wave:
+            wavegoal = wavegoal + ((wavct + 1) * (wavct + 1) * 10) + 100
+            wavct = wavct + 1
 
     
 
@@ -1597,11 +1616,13 @@ def initnewgame():
         bio = 100
         pulse = 100
         wave = 1
+        wavegoal = 150
         player.hp = 100
         player.armor = 50  
         #print("reset")
         healthmax = 200
         armormax = 100
+
     # New game has started, game loaded flag reset
     loaded = 0
 
@@ -1622,6 +1643,7 @@ while running:
                 # This is the 'in the vault' stub
                 # 'In the vault' is a substate of paused
                 screen.fill(BLACK)
+                
                 screen.blit(vaulttext1red, (SCREEN_WIDTH / 2 - vaulttext1red.width, 140))
                 screen.blit(vaulttext2red, (SCREEN_WIDTH / 2 - vaulttext2red.width, 180))
                 screen.blit(vaulttext3red, (SCREEN_WIDTH / 2 - vaulttext3red.width, SCREEN_HEIGHT/2))
