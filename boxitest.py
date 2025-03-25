@@ -13,6 +13,56 @@ import glob
 # Iomport os for files
 import os
 
+from screeninfo import get_monitors
+
+screen_nums = []
+screen_positions = []
+screen_sizes = []
+
+def getscreensandsizes():
+    screen_num = 0
+    for m in get_monitors():
+        
+        print(str(m))
+        # Access individual attributes
+        print(f"Monitor name: {m.name}")
+        print(f"Position: x={m.x}, y={m.y}")
+        #print type({m.x})
+        print(f"Size: width={m.width}, height={m.height}")
+        print(f"Is primary: {m.is_primary}")
+        screen_nums.append(screen_num)
+        screen_positions.append((m.x,m.y))
+        screen_sizes.append((m.width,m.height))
+        screen_num += 1
+    #for screen_num in range(screen_count):
+        # Create a temporary window for each screen
+        #temp_root = tkinter.Toplevel(root)
+        #temp_root.withdraw()
+
+        # Get screen width and height
+        #width = temp_root.winfo_screenwidth()
+        #height = temp_root.winfo_screenheight()
+
+        # Store screen size
+        #screen_nums.append(screen_num)
+        #screen_sizes.append((screen_num, width, height))
+
+        # Destroy the temporary window
+        #temp_root.destroy()
+    #root.deiconify()
+    return m
+
+# Define constants for the screen width and height
+scnums = getscreensandsizes()
+
+SCREEN_WIDTH = int(screen_sizes[0][0])  #root.winfo_screenwidth() # - 50
+SCREEN_HEIGHT = int(screen_sizes[0][1])   #root.winfo_screenheight() # - 100
+SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100
+# Setup the window we'll use for drawing
+screen = pygame.display.set_mode([800, 800])
+
+boxi.screensetup(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_HEIGHT_NOBOX)
+
 from pygame.locals import (
     K_ESCAPE, #Quit
     K_DOWN,   #Steering
@@ -66,7 +116,6 @@ font75 = pygame.font.Font("fonts/arcade_r.ttf", 75)
 clock = pygame.time.Clock()
 
 # Cache repeated text renders
-textitem = font20.render("A text object", 1, BLACK)
 
 # Preload graphics
 def get_image(key):
@@ -75,8 +124,7 @@ def get_image(key):
     return image_cache[key]
 
 
-# Setup the window we'll use for drawing
-screen = pygame.display.set_mode([800, 800])
+
 
 image_cache = {}
 # Gets a list of all images in the graphics directory
@@ -89,11 +137,15 @@ for image in images:
 # Preload JSON enemies
 jsons = edict.addjsons()
 print(str(jsons) + " JSON file(s) added")
+
 invent = {
     "arrows:": 30,
     "torches": 5,
     "gp:": 37
 }
+
+textitem = font20.render("A text object", 1, BLACK)
+
 item = get_image("shell3c.png")
 shells = {
     1: {"image": item,
@@ -103,12 +155,15 @@ shells = {
     3: {"image": item,
     }
 }
-savenamesc = {}
-shellsc = {}
+#savenamesc = {}
+#shellsc = {}
 # returns number of saved games
 listsize = edict.loadgame()
 # Add rendered versions of savenames to dictionary
-renderedtext = boxi.rendertext(edict.savedict, font20, RED)
+# Add a dictionary key "render" containing renders of the text keys
+renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
+# A larger dict file for comparison
+#renderedtext = boxi.rendertextdic(edict.enemydict, font20, RED)
 
 
 screen.fill((255, 255, 255))
@@ -123,17 +178,15 @@ while running:
         # Initialize some boxis
         if issetup == False:
             # Demo text boxi
-            textitemboxi = boxi.boxi(screen, textitem, 100, 100, 0, BLUE, 2, BLACK, 0, 0)
+            textitemboxi = boxi.boxi(screen, textitem, 100, 400, 0, BLUE, 2, BLACK, 0, 0)
+            textitemboxi.register()
             # Column of savenames in boxis
-            savesc = boxi.cboxiscroll(screen,renderedtext,"render",300,400,1,WHITE,1,BLUE,0,0,3)
-            for sel in savesc.cdict:
-                # Select the first save game
-                if savesc.cdict[sel]["boxi"].row == 0:
-                    savesc.cdict[sel]["boxi"].selected = True 
-                    # Draw the highlight
-                    savesc.cdict[sel]["boxi"].draw(screen)
-            # Initialize a column and row of boxis of shell pictures
+            savesc = boxi.cboxiscroll(screen,renderedtext,"render",300,400,1,WHITE,1,BLUE,0,0,7,displayboxi1 = textitemboxi, displaykey1 = "wave", displayfont = font20, displaycolor = BLACK )
+            savesc.register()
+            # Pictures of a shell enemy
             shellsc = boxi.cboxi(screen, shells, "image", 40, 140, 1, BLACK, 1, RED,0,0)
+            shellsc.register()
+
             boxi.rboxi(screen, shells, "image", 600, 50, 1, BLACK, 1, RED,0,0)
             # skip setup in future
             issetup = True
@@ -156,6 +209,9 @@ while running:
             
             if event.key == K_UP:
                 savesc.selectprev()
+    
+    screen.fill((255, 255, 255))
+    boxi.drawregcontrols()
     clock.tick(30)
 
     # Flip the display
