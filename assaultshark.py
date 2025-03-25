@@ -1355,7 +1355,17 @@ def get_image(key):
         image_cache[key] = pygame.image.load("graphics/" + key).convert()
     return image_cache[key]
 
-d
+image_cache = {}
+# Gets a list of all images in the graphics directory
+images = glob.glob ("Graphics/*.png")
+# Loads all images into the image_cache dictionary
+for image in images:
+    img_name = os.path.basename(image)
+    get_image(img_name)
+
+# Preload JSON enemies
+jsons = edict.addjsons()
+print(str(jsons) + " JSON file(s) added")
 
 # Load and play our background music
 # Sound source: http://ccmixter.org/files/Apoxode/59262

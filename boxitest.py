@@ -103,38 +103,60 @@ shells = {
     3: {"image": item,
     }
 }
+savenamesc = {}
+shellsc = {}
+# returns number of saved games
 listsize = edict.loadgame()
+# Add rendered versions of savenames to dictionary
 renderedtext = boxi.rendertext(edict.savedict, font20, RED)
+
+
+screen.fill((255, 255, 255))
+issetup = False
 # Run until the user asks us to quit
 running = True
 while running:
     # Did the user click the window close button?
     for event in pygame.event.get():
         # Fill the background with white
-        screen.fill((255, 255, 255))
         # Consistent objects go here
-        boxi.boxi(screen, textitem, 100, 100, 0, BLUE, 2, BLACK, 0, 0)
-        boxi.cboxi(screen,renderedtext,"render",300,400,1,WHITE,1,BLUE,0,0)
-        boxi.cboxi(screen, shells, "image", 40, 450, 1, BLACK, 1, RED,0,0)
-        boxi.rboxi(screen, shells, "image", 600, 50, 1, BLACK, 1, RED,0,0)
+        # Initialize some boxis
+        if issetup == False:
+            # Demo text boxi
+            textitemboxi = boxi.boxi(screen, textitem, 100, 100, 0, BLUE, 2, BLACK, 0, 0)
+            # Column of savenames in boxis
+            savesc = boxi.cboxiscroll(screen,renderedtext,"render",300,400,1,WHITE,1,BLUE,0,0,3)
+            for sel in savesc.cdict:
+                # Select the first save game
+                if savesc.cdict[sel]["boxi"].row == 0:
+                    savesc.cdict[sel]["boxi"].selected = True 
+                    # Draw the highlight
+                    savesc.cdict[sel]["boxi"].draw(screen)
+            # Initialize a column and row of boxis of shell pictures
+            shellsc = boxi.cboxi(screen, shells, "image", 40, 140, 1, BLACK, 1, RED,0,0)
+            boxi.rboxi(screen, shells, "image", 600, 50, 1, BLACK, 1, RED,0,0)
+            # skip setup in future
+            issetup = True
 
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == xbox360_controller.START:
                 pause = False
-                pygame.mixer.music.play(loops=-1)
+                #pygame.mixer.music.play(loops=-1)
             if event.button == xbox360_controller.BACK:
                 ingame = False
         if event.type == KEYDOWN:
             if event.key == K_RETURN:
-                #item = textitem
+                
                 print("boxi!")
                 boxi.boxi(screen,item,5, 15, 1, BLACK, 1, YELLOW, 0, 0)
-    # Ensure we maintain a 30 frames per second rate
+            if event.key == K_DOWN:
+                savesc.selectnext()
+            
+            if event.key == K_UP:
+                savesc.selectprev()
     clock.tick(30)
-    # Draw a solid circle in the center
-    pygame.draw.circle(screen, (0, 0, 255), (250, 250), 75)
 
     # Flip the display
     pygame.display.flip()
