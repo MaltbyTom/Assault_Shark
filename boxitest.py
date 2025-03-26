@@ -1,4 +1,17 @@
 # Test surface for boxi.py
+# Tom Maltby 2025
+#
+# Joystick handling imported under MIT license:
+#  Copyright (c) 2017 Jon Cooper
+#
+#  pygame-xbox360controller.
+#  Documentation, related files, and licensing can be found at
+#
+#      <https://github.com/joncoop/pygame-xbox360controller>.
+#  Thanks to Jon Cooper, simpler than reinventing the wheel
+# 
+#  The screeninfo module is by authors = ["Marcin Kurczewski <rr-@sakuya.pl>"]
+#  The github is at "https://github.com/rr-/screeninfo", the license is MIT, again many thanks!
 
 # Import and initialize the pygame library
 import pygame
@@ -12,7 +25,7 @@ import xbox360_controller
 import glob
 # Iomport os for files
 import os
-
+# This is really useful for controlling what screen size you wind up measuring
 from screeninfo import get_monitors
 
 screen_nums = []
@@ -123,7 +136,15 @@ def get_image(key):
         image_cache[key] = pygame.image.load("graphics/" + key).convert()
     return image_cache[key]
 
+# Set some Boxi defaults to pass with *parameters
 
+renderedtext = boxi.rendertextdic(edict.enemydict, font20, RED)
+
+textitem = font20.render("A text object", 1, BLACK)
+# parameters for default boxi call with rendered text object
+boxidef1 = (screen, textitem, 100, 400, 0, BLUE, 2, BLACK, 0, 0)
+# parameters for a scrolling column of boxes, dictionary driven, with linked fields by key displayed
+cboxiscdef1 = (screen, renderedtext, "render", 300, 400, 1, WHITE, 1, BLUE, 0, 0, 7)
 
 
 image_cache = {}
@@ -144,7 +165,6 @@ invent = {
     "gp:": 37
 }
 
-textitem = font20.render("A text object", 1, BLACK)
 
 item = get_image("shell3c.png")
 shells = {
@@ -161,9 +181,9 @@ shells = {
 listsize = edict.loadgame()
 # Add rendered versions of savenames to dictionary
 # Add a dictionary key "render" containing renders of the text keys
-renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
+#renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
 # A larger dict file for comparison
-#renderedtext = boxi.rendertextdic(edict.enemydict, font20, RED)
+renderedtext = boxi.rendertextdic(edict.enemydict, font20, RED)
 
 
 screen.fill((255, 255, 255))
@@ -178,27 +198,35 @@ while running:
         # Initialize some boxis
         if issetup == False:
             # Demo text boxi
-            textitemboxi = boxi.boxi(screen, textitem, 100, 400, 0, BLUE, 2, BLACK, 0, 0)
+            textitemboxi = boxi.boxi(*boxidef1)
+            #textitemboxi = boxi.boxi(screen, textitem, 100, 400, 0, BLUE, 2, BLACK, 0, 0)
             textitemboxi.register()
             # Column of savenames in boxis
-            savesc = boxi.cboxiscroll(screen,renderedtext,"render",300,400,1,WHITE,1,BLUE,0,0,7,displayboxi1 = textitemboxi, displaykey1 = "wave", displayfont = font20, displaycolor = BLACK )
+            savesc = boxi.cboxiscroll(*cboxiscdef1, displayboxi1 = textitemboxi, displaykey1 = "imgname", displayfont = font20, displaycolor = BLACK )
+            #savesc = boxi.cboxiscroll(screen,renderedtext,"render",300,400,1,WHITE,1,BLUE,0,0,7,displayboxi1 = textitemboxi, displaykey1 = "imgname", displayfont = font20, displaycolor = BLACK )
+            
+            #savesc = boxi.cboxiscroll(screen,renderedtext,"render",300,400,1,WHITE,1,BLUE,0,0,7,displayboxi1 = textitemboxi, displaykey1 = "wave", displayfont = font20, displaycolor = BLACK )
             savesc.register()
             # Pictures of a shell enemy
             shellsc = boxi.cboxi(screen, shells, "image", 40, 140, 1, BLACK, 1, RED,0,0)
+            # Register for redraw events
             shellsc.register()
-
+            # This row of boxis is not registered and will be covered by the timer based screen fill event.  
+            # Other controls will be redrawn if they have called their register method.
             boxi.rboxi(screen, shells, "image", 600, 50, 1, BLACK, 1, RED,0,0)
             # skip setup in future
             issetup = True
-
+        # Always recognize the close program button
         if event.type == pygame.QUIT:
             running = False
+        # Joystick events
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == xbox360_controller.START:
                 pause = False
                 #pygame.mixer.music.play(loops=-1)
             if event.button == xbox360_controller.BACK:
                 ingame = False
+        # Keyboard events
         if event.type == KEYDOWN:
             if event.key == K_RETURN:
                 
@@ -209,8 +237,9 @@ while running:
             
             if event.key == K_UP:
                 savesc.selectprev()
-    
+    # Screen refresh at timer
     screen.fill((255, 255, 255))
+    # Registered controls are redrawn
     boxi.drawregcontrols()
     clock.tick(30)
 

@@ -25,7 +25,9 @@
 #
 #      <https://github.com/joncoop/pygame-xbox360controller>.
 #  Thanks to Jon Cooper, simpler than reinventing the wheel
- 
+# 
+#  The screeninfo module is by authors = ["Marcin Kurczewski <rr-@sakuya.pl>"]
+#  The github is at "https://github.com/rr-/screeninfo", the license is MIT, again many thanks!
 
 # Import the pygame module
 # Import random for random numbers
