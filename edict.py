@@ -27,17 +27,20 @@ def loadgame():
     added = 0
     # Gets a list of all jsons in the JSON directory
     jsons = glob.glob ("json/savepoint/*.json")
-    # Loads all jsons into the enemydict dictionary
+    # Loads all jsons into the savedict dictionary
+    
     for jsonf in jsons:
         json_name = os.path.basename(jsonf)
         # only input the savepoint into savedict
-        if json_name == "savepoint.json":
-            #savedict = {}
+        if json_name.startswith("savepoint"):
             with open("json/savepoint/" + json_name, "r") as jsonfile:
                 addtodict = json.load(jsonfile)
                 savedict.update(addtodict)
+                #print(json_name)
+                #print(addtodict)
                 added += 1
-            #print(savedict)
+    #print("savedict")
+    #print(savedict)
     return added
 
 def addjsons():
@@ -76,7 +79,6 @@ def addjsons():
     #return len(blankrecord)
 
 savedict = {
-    "stuff": 1
 }  
 
 # Fill a nested dictionary of enemies by etype

@@ -1,19 +1,19 @@
 {
-    "savepoint":{
-        "wave": 7,
-        "score": 872,
+    "savepointACK":{
+        "wave": 89,
+        "score": 783,
         "ammo": [
-            99,
-            99,
-            99,
-            99
+            199,
+            199,
+            199,
+            199
         ],
         "mg":[
             7,
             3,
             3
         ],
-        "lives": 9,
+        "lives": 5,
         "health": 200,
         "healthmax": 400,
         "armor": 100,

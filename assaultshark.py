@@ -25,7 +25,9 @@
 #
 #      <https://github.com/joncoop/pygame-xbox360controller>.
 #  Thanks to Jon Cooper, simpler than reinventing the wheel
- 
+# 
+#  The screeninfo module is by authors = ["Marcin Kurczewski <rr-@sakuya.pl>"]
+#  The github is at "https://github.com/rr-/screeninfo", the license is MIT, again many thanks!
 
 # Import the pygame module
 # Import random for random numbers
@@ -1056,6 +1058,7 @@ def texts3(highscore):
     screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
     screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
     loaddataexists = edict.loadgame()
+    #print(loaddataexists)
     #print("From loadgame:")
     #print(edict.savedict)
     if loaddataexists > 0:
@@ -1063,20 +1066,10 @@ def texts3(highscore):
             ptxtoffset = loadasktextred.width / 2
             ptxtlft = SCREEN_WIDTH / 2 - ptxtoffset
             boxi.boxi(screen,loadasktextred,SCREEN_HEIGHT / 2 - 220, ptxtlft, 3, BLACK, 2, RED, 0, 0)
-            #loadborder = pygame.Rect(ptxtlft - 8, SCREEN_HEIGHT / 2 - 224, ptxtoffset * 2 + 8, 22)
-            #pygame.draw.rect(screen, RED, loadborder, 0, 2)
-            #loadbox = pygame.Rect(ptxtlft - 6, SCREEN_HEIGHT / 2 - 222, ptxtoffset * 2 + 4, 18 )
-            #pygame.draw.rect(screen, BLACK, loadbox, 0, 2)
-            #screen.blit(loadasktextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 220))
         else:
             ptxtoffset = loadedtextred.width / 2
             ptxtlft = SCREEN_WIDTH / 2 - ptxtoffset
             boxi.boxi(screen,loadedtextred,SCREEN_HEIGHT / 2 - 220, ptxtlft, 3, BLACK, 2, RED, 0, 0) 
-            #loadborder = pygame.Rect(ptxtlft - 8, SCREEN_HEIGHT / 2 - 224, ptxtoffset * 2 + 8, 22)
-            #pygame.draw.rect(screen, RED, loadborder, 0, 2)
-            #loadbox = pygame.Rect(ptxtlft - 6, SCREEN_HEIGHT / 2 - 222, ptxtoffset * 2 + 4, 18 )
-            #pygame.draw.rect(screen, BLACK, loadbox, 0, 2)
-            #screen.blit(loadedtextred, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 220))
 
     playscreenupdated = True
     
@@ -1366,7 +1359,7 @@ def get_image(key):
 
 image_cache = {}
 # Gets a list of all images in the graphics directory
-images = glob.glob ("graphics/*.png")
+images = glob.glob ("Graphics/*.png")
 # Loads all images into the image_cache dictionary
 for image in images:
     img_name = os.path.basename(image)
@@ -2581,7 +2574,7 @@ while running:
                     pressed_keys = pygame.key.get_pressed()
                     if buttons[0] == 1 or pressed_keys[K_l] == True:
                         #print("load click")
-                        if loaddataexists == True:
+                        if loaddataexists > 0:
                             loaded = True                                        
                             screen.fill((135, 206, 250))
                             texts3(highscore)
@@ -2615,7 +2608,6 @@ while running:
                     # Set Background for start screen     
                     screen.fill((135, 206, 250))
                     texts3(highscore)
-                
                 # Flip everything to the display
                 pygame.display.flip()
                 # Ensure we maintain a 30 frames per second rate
