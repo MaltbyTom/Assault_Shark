@@ -98,6 +98,13 @@ from pygame.locals import (
     K_l,
 )
 
+# holds preloaded images
+image_cache = {}
+# Preload graphics - only load graphics once.  We don't need much on this side.
+def get_image(key):
+    if not key in image_cache:
+        image_cache[key] = pygame.image.load("graphics/" + key).convert()
+    return image_cache[key]
 # Control registry, just a list of controls that get the self.register() function called
 regcontrols = []
 # Button/Keypress registry for the active control to list recievable keypresses
@@ -525,7 +532,7 @@ class Cboxiscroll():
                     thisboxi.thing = self.source[b][self.secondkey]
                 visctr += 1
             bct += 1
-        self.frame = Boxicontrolframe(left, top, width, height, 8, GRAY, 4, BLACK, self)
+        self.frame = Boxicontrolframe(left, top - 15, width, height + 30, 8, GRAY, 4, BLACK, self)
         self.draw()
 
     def draw(self):
@@ -542,10 +549,18 @@ class Cboxiscroll():
             numdown = self.lastrow - self.lastvis
             if numup > 0:
                 upcol = DKGREEN
+                # Blit a green arrow
+                newsurf = get_image("uparrow.png")
+                newsurf.set_colorkey(WHITE, RLEACCEL)
+                self.target.blit(newsurf,(self.left + self.width - 50, self.cdict[0]["boxi"].top - 30))
             else:
                 upcol = DKGRAY
             renderup = font8.render(str(numup) + " more above", 1, upcol)
             if numdown > 0:
+                # Blit a green arrow
+                newsurf = get_image("downarrow.png")
+                newsurf.set_colorkey(WHITE, RLEACCEL)
+                self.target.blit(newsurf,(self.left + self.width - 50, self.bottom + 10))
                 downcol = DKGREEN
             else:
                 downcol = DKGRAY
