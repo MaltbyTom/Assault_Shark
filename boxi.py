@@ -165,6 +165,22 @@ def tabcontrols(forward):
         currentfocuscontrol.frame.bordercolor = gotfocuscolor
         drawregcontrols()
 
+def mousehandler(mpos):
+    global currentfocuscontrol
+    global currentfocustab
+    stuff = False    
+    print("mouse2",mpos)
+    for control in regcontrols:
+        if hasattr(control, "tabord") and control.tabord is not None:
+            if control.frame.rectborder.collidepoint(mpos):
+                currentfocuscontrol = control
+                currentfocustab = control.tabord
+                control.frame.bordercolor = gotfocuscolor
+                for controls in regcontrols:
+                    if currentfocuscontrol is not control:
+                        control.frame.bordercolor = nofocuscolor
+    drawregcontrols()
+
 
 # The basic building block
 class Boxi():
@@ -203,7 +219,10 @@ class Boxi():
         self.partofcboxi = 0
         self.partofrboxi = 0
         # This is the surface in the Boxi
-        self.thing = None
+        if "thing" in kwargs:
+            self.thing = kwargs["thing"]
+        else:
+            self.thing = None
         # .target is the first non-keyword optional argument
         if len(args) > 0:
             self.target = args[0]
@@ -252,6 +271,7 @@ class Boxicontrolframe(Boxi):
         image = pygame.Surface([width,height], pygame.SRCALPHA)
         image = image.convert_alpha()
         self.thing = image
+        
         #self.draw()
 
     def draw(self):
@@ -270,8 +290,67 @@ class Boxicontrolframe(Boxi):
         pygame.draw.rect(self.target, self.boxcolor, self.rectbox)
         # This blits the image / rendered text for the top, or inside, surface
         self.target.blit(self.thing, (self.left + self.wmod, self.top + self.hmod))
-        
 
+class Boxibutton(Boxi):
+    # This is a class of boxi with a button.  Planned followups are Cboxi/Rboxi types with option buttons,
+    # regular button bars, animated buttons, etc.
+    def __init__(self, x, y, width, height, border, color, border2, color2, getbuttonpressed, tabord, buttext, target, *args, **kwargs):
+        
+        self.buttextrend = rendertext(buttext, font16, BLACK)
+        # Checks for optional butimage parameter
+        self.thing = self.buttextrend
+        if "butimage" in kwargs:
+            stuff = False
+        self.left = x
+        self.top = y
+        width = self.buttextrend.width
+        height = self.buttextrend.height
+        
+        super().__init__(x, y, width, height, border, color, border2, color2, thing = self.thing)
+        self.getbuttonpressed = getbuttonpressed
+        self.tabord = tabord
+        self.buttext = buttext
+        self.tabord = tabord
+        self.target = target
+        self.frame = Boxicontrolframe(x, y, width, height, 8, GRAY, 4, BLACK, self)
+        self.draw()
+
+    def draw(self):        
+        # Draw the frame
+        self.frame.draw()
+        # Redraw the boxi
+        # Redraw the boxi
+        hmod = (self.height - self.thing.height) // 2
+        wmod = ((self.width - self.thing.width) // 2)
+        # Set offsets for thing from box - procedurally used for sizing for largest thing in columns - cboxi - or rows - rboxi
+        self.wmod = wmod
+        self.hmod = hmod
+        # The 'selected' change in bordersize is reflected in selborder vs rectborder
+        # This draws the three stacked rectangles, bottom first
+        if self.selected == False:
+            pygame.draw.rect(self.target, self.bordercolor, self.rectborder)
+        else:
+            pygame.draw.rect(self.target, self.bordercolor, self.selborder)
+        pygame.draw.rect(self.target, self.boxcolor, self.rectbox)
+        # This blits the image / rendered text for the top, or inside, surface
+        self.target.blit(self.thing, (self.left + self.wmod, self.top + self.hmod))
+        #return super().draw()
+    
+    def register(self):
+        super().register()
+        # Register desired keypresses to be delivered if this control has focus
+        regbuttons [self.tabord] = {"self": self, "buttons": [K_SPACE,]} # Spacebar presses the button if it has focus
+    
+    def updatebuttons(self, eventkey):
+        if eventkey == K_SPACE:
+            self.buttonpressed(self.getbuttonpressed)
+
+    def buttonpressed(self, butfunc):
+        # This will be the event hook for pressing the button.
+        stuff = False
+        return butfunc()
+    
+        
 class Cboxi(pygame.Rect):
     # Basic class for columns of boxis, selectable 
     def __init__(self, cdict, target, source, secondkey, top, left, height, width):
@@ -409,13 +488,20 @@ class Rboxipicwheels(Rboxi):
         self.textstr = "AAA" # Starting value from rdict{}
         self.wheelopts = wheelopts
     # Super calls use the parent class's method
+
     def draw(self):
         self.textstr = ""
         wheel = 1
         while wheel <= len(self.source):
             self.textstr += self.source[wheel]["lit"]
             wheel += 1
-        return super().draw() 
+        # Draw the frame
+        self.frame.draw()
+        # Then the column of boxis
+        for sel, value in self.rdict.items():
+            self.rdict[sel]["boxi"].draw()
+        # Redraw the selected boxi last for highlighting
+        self.rdict[self.selectedcol]["boxi"].draw()
 
     def register(self): 
         # The self.register method enrolls the control in the update redraw call drawregcontrols().
@@ -708,6 +794,10 @@ def boxi(target, thing, destytop, destxleft, border, backcolor, border2, borderc
     if "tabord" in kwargs:
         loadbox.tabord = kwargs["tabord"]
     return loadbox
+
+def boxibutton(x, y, width, height, border, color, border2, color2, getbuttonpressed, tabord, buttext, target, *args, **kwargs):
+    createdbutton = Boxibutton(x, y, width, height, border, color, border2, color2, getbuttonpressed, tabord, buttext, target, *args, **kwargs)
+    return createdbutton
 
 def cboxi(target, things, secondkey, destytop, destxleft, border, backcolor, border2, bordercolor, maxh, maxw, *args, **kwargs):
     # Constructor function for columns of boxi - Cboxi objects

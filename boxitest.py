@@ -16,7 +16,7 @@
 #  If you want to learn about the use of Boxis, defaults are set around line 140, and calls to the library start around line 190.
 #  Until that point we are including, loading resources to display, setting up screens, delaring fonts, colors, etc.
 #
-#  The code is thoughtfully commented, but some users may want to wait till a more comprehensive documentation wiki takes shape.  This 
+#  The code is thoughtfully commented, but some users may want to wait until a more comprehensive documentation wiki takes shape.  This 
 #  is an ongoing project, and I want to bang out several more advanced controls for a screen or two of good looking solid functioning
 #  demonstration purposes before I build a big wiki.  Right now my time is better spent expanding and commenting.
 
@@ -35,7 +35,12 @@ import os
 # This library is really useful for controlling what screen size you wind up measuring
 # Boxi has no unique need for it, but it is part of my standard environment pack
 from screeninfo import get_monitors
+# Import random for random numbers
+import random
+# Import mouse
+import pygame.mouse
 
+# Initialize lists for monitor detection / setup
 screen_nums = []
 screen_positions = []
 screen_sizes = []
@@ -93,6 +98,10 @@ from pygame.locals import (
     K_m,
     K_LCTRL,
     K_l,
+    MOUSEBUTTONDOWN,
+    MOUSEWHEEL,
+    MOUSEBUTTONUP,
+    MOUSEMOTION
 )
 
 # Define Colors
@@ -115,10 +124,26 @@ font50 = pygame.font.Font("fonts/arcade_r.ttf", 50)
 font60 = pygame.font.Font("fonts/arcade_r.ttf", 60)
 font75 = pygame.font.Font("fonts/arcade_r.ttf", 75)
 
-
-
 # Setup the clock for a decent framerate
 clock = pygame.time.Clock()
+
+# Functions for Boxibuttons:
+a1 = 0
+a2 = 0
+a3 = 0
+def randomizebutton():
+    global a1
+    global a2
+    global a3
+    print("button!")
+    a1 = 72 + random.randint(1, 72)
+    a2 = 72 + random.randint(1, 72)
+    a3 = 72 + random.randint(1, 72)
+    # This sets up an animation event in the while running loop
+
+# Animation timers
+isanioverflag = True
+isaniover = 0
 
 # Cache repeated text renders
 
@@ -131,6 +156,7 @@ def get_image(key):
 # Set some Boxi defaults to pass with *parameters
 
 # First stuff for them to hold
+
 # This creates a key of a rendering of the text of primary key in the dictionary to be sorted
 # returns number of saved games
 listsize = edict.loadgame()
@@ -139,8 +165,10 @@ listsize = edict.loadgame()
 renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
 # A larger dict file for comparison
 renderedtext2 = boxi.rendertextdic(edict.enemydict, font20, RED)
+
 # A default rendered text item to display in a Boxi
 textitem = font20.render("A text object", 1, BLACK)
+
 # Initials defaults
 initialfont = font50
 initialfcolor = BLACK
@@ -157,17 +185,19 @@ ctr = 48
 while ctr < 58:
     initialspos [ctr] = {"lit": chr(ctr), "ren": initialfont.render(chr(ctr), 1, initialfcolor)}
     ctr += 1
+
 # Now parameter lists for *params...
-# parameters for default boxi call with rendered text object
+# parameters for default boxi call with rendered text object - these will be extra field displays for the savegame Cboxiscroll
 boxidef1 = (screen, textitem, 100, 400, 0, BLUE, 2, BLACK, 0, 0)
 boxidef2 = (screen, textitem, 130, 400, 0, BLUE, 2, BLACK, 0, 0)
 boxidef3 = (screen, textitem, 160, 400, 0, BLUE, 2, BLACK, 0, 0)
 # parameters for a scrolling column of boxes, dictionary driven, with linked fields by key displayed
 cboxiscdef1 = (screen, renderedtext, "render", 300, 400, 1, WHITE, 1, BLUE, 0, 0, 7)
+
 # parameters for the rboxipicwheels row for entering three initials video game style
 # initialspos{} is the dictionary of options per wheel, with the ascii character literal and its rendering for
 # all allowable ascii characters.  initialsdef{} is the default values of A, A, A.
-initrboxidef = (screen, initialsdef, "ren", 200, 200, 3, YELLOW, 2, BLACK, initialspos, 0, 0)
+initrboxidef = (screen, initialsdef, "ren", 100, 220, 3, YELLOW, 2, BLACK, initialspos, 0, 0)
 
 
 image_cache = {}
@@ -182,12 +212,6 @@ for image in images:
 jsons = edict.addjsons()
 print(str(jsons) + " JSON file(s) added")
 
-invent = {
-    "arrows:": 30,
-    "torches": 5,
-    "gp:": 37
-}
-
 # Small dictionary of pictures
 item = get_image("shell3.png")
 item2 = get_image("shell3b.png")
@@ -200,12 +224,13 @@ shells = {
     3: {"image": item3,
     }
 }
-#savenamesc = {}
-#shellsc = {}
 
-
+# White screen surface
 screen.fill((255, 255, 255))
+
+# Not setup yet, runs the setup when the running loop begins
 issetup = False
+
 # Run until the user asks us to quit
 running = True
 while running:
@@ -231,8 +256,12 @@ while running:
             savesc.register()
             # rboxi for initials
             initialsrboxi = boxi.rboxipicwheels(*initrboxidef, tabord = 2)
-            #initialsrboxi = boxi.rboxi(*initrboxidef)
+            # And we register the new control
             initialsrboxi.register()
+            # Boxibutton for randomizing initials - this passes a function hook for the button pressed event
+            randomizeinitsboxibutton = boxi.boxibutton(150, 50, 100, 30, 3, YELLOW, 3, BLACK, randomizebutton, 5, "Randomize Initials", screen)
+            # And we register the new control
+            randomizeinitsboxibutton.register()
             # Column of Boxis with pictures of a shell enemy
             shellsc = boxi.cboxi(screen, shells, "image", 40, 40, 1, BLACK, 1, RED,0,0, tabord = 3)
             # Register for redraw events
@@ -291,10 +320,45 @@ while running:
             if event.key == K_LEFT:
                 stuff = False
                 #initialsrboxi.selectprev() 
+        if event.type == MOUSEBUTTONDOWN:
+            mousepos = pygame.mouse.get_pos()
+            print("mouse!", mousepos)
+            boxi.mousehandler(mousepos)
     # Screen refresh at timer
     #screen.fill((255, 255, 255))
     # Registered controls are redrawn
     #boxi.drawregcontrols()
+    
+    if a1 > 0 or a2 > 0 or a3 > 0:
+        isanioverflag = False
+        isaniover = 3
+        if a1 > 0:
+            a1 -= 1
+            initialsrboxi.selectedcol = 0
+            initialsrboxi.turnwheeldown()
+            initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
+        if a2 > 0:
+            a2 -= 1
+            initialsrboxi.selectedcol = 1
+            initialsrboxi.turnwheeldown()
+            initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
+        if a3 > 0:
+            a3 -= 1
+            initialsrboxi.selectedcol = 2
+            initialsrboxi.turnwheeldown()
+            initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
+    else:
+        isaniover -=1
+        if isaniover < 1:
+            isanioverflag = True
+            initialsrboxi.rdict[0]["boxi"].selected = False
+            initialsrboxi.rdict[1]["boxi"].selected = False
+            initialsrboxi.rdict[2]["boxi"].selected = True
+            initialsrboxi.selectedcol = 2
+            initialsrboxi.draw()
+            #initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
+
+    # boxi.drawregcontrols
     clock.tick(30)
 
     # Flip the display
