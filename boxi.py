@@ -2,7 +2,7 @@
 # Box Intelligence for Pygame
 # The boxi.py Library:
 # An UI constructor toolkit
-# Tom Maltby 2025
+# (c) Tom Maltby 2025
 # Code and graphics
 
 #__________________________________________
@@ -31,6 +31,8 @@
 # 
 #  The screeninfo module is by authors = ["Marcin Kurczewski <rr-@sakuya.pl>"]
 #  The github is at "https://github.com/rr-/screeninfo", the license is MIT, again many thanks!
+#
+# Arcade font from https://www.dafont.com/arcade-ya.font , by Yuji Adachi, listed as 100% free
 
 
 import pygame
@@ -72,7 +74,7 @@ def screensetup(sw, sh, sh_nb):
 
 from pygame.locals import (
     K_ESCAPE, #Quit
-    K_TAB, #Tab between controls
+    K_TAB, # Tab between controls
     K_RSHIFT, # For reverse direction of tab through focus
     K_LSHIFT, # For reverse direction of tab through focus
     K_DOWN,   #Steering
@@ -424,7 +426,6 @@ class Rboxipicwheels(Rboxi):
         #super().register()
 
     def updatebuttons(self, eventkey):
-        print(eventkey)
         if eventkey == K_LEFT:
             self.selectprev()
         if eventkey == K_RIGHT:

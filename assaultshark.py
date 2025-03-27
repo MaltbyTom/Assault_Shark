@@ -1058,7 +1058,7 @@ def texts3(highscore):
     screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
     screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
     loaddataexists = edict.loadgame()
-    print(loaddataexists)
+    #print(loaddataexists)
     #print("From loadgame:")
     #print(edict.savedict)
     if loaddataexists > 0:

@@ -33,7 +33,7 @@ import glob
 # Iomport os for files
 import os
 # This library is really useful for controlling what screen size you wind up measuring
-# Boxi has no need for it, but it is part of my standard environment pack
+# Boxi has no unique need for it, but it is part of my standard environment pack
 from screeninfo import get_monitors
 
 screen_nums = []
@@ -268,14 +268,12 @@ while running:
                     boxi.tabcontrols(True) # True sets forward: Tab w/o Shift
                 # Iterate tab order
             # See if a control has focus, and if so if it has registered for the event.key
+            # If it has registered the keystroke and has focus, deliver the keystroke to the control. 
             if boxi.currentfocuscontrol:
-                print(1)
                 if boxi.regbuttons[boxi.currentfocustab]:
-                    print(2)
                     print(boxi.regbuttons)
                     print(boxi.regbuttons[boxi.currentfocustab]["buttons"])
                     if event.key in boxi.regbuttons[boxi.currentfocustab]["buttons"]:
-                        print(3)
                         boxi.currentfocuscontrol.updatebuttons(event.key)
             if event.key == K_DOWN:
                 stuff = False
