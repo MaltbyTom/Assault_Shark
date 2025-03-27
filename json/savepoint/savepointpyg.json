@@ -1,7 +1,7 @@
 {
-    "savepoint99":{
-        "wave": 8,
-        "score": 1812,
+    "savepointPyG":{
+        "wave": 15,
+        "score": 1514,
         "ammo": [
             199,
             199,
@@ -13,7 +13,7 @@
             3,
             3
         ],
-        "lives": 11,
+        "lives": 8,
         "health": 200,
         "healthmax": 400,
         "armor": 100,

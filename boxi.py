@@ -1,21 +1,24 @@
-# The boxi.py Library:
 # The BoxiPyG project, v0.3
 # Box Intelligence for Pygame
+# The boxi.py Library:
 # An UI constructor toolkit
 # Tom Maltby 2025
 # Code and graphics
 
-#________________________________________
-#__________,,,,,,,,,,,,,,_____/\_________
-#________/ooooooooooooooo\___/|^\""\,,,__
-#___/\/\/OOOOOOOOOOOOOOOOOOOOOOOOO*OOOO:_
-#_______|OOOOOOOOOOOOOOOOOOOOOOOOOOOO/"__
-#_______|OOOOOOOOOOOOOOOOOOOOOO/_""""____
-#________\OOOOOOOOOOOOOOOOOOOO|__________
-#_________\OOOOOO/""""""""\OOO\__________
-#__________|O\\O|__________\O\O|_________
-#__________|U||U|__________|U|U|_________
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#__________________________________________
+#__________,,,,,,,,,,,,,,_____/\___________
+#________/ooooooooooooooo\___/|^\""\,,,____
+#___/\/\/OOOOOOOOOOOOOOOOOOOOOOOOO*OO(m)___
+#_______|OOOOOOOOOOOOOOOOOOOOOOOOOOO/""____
+#_______|OOOOOOOOOOOOOOOOOOOOOO/_"""_______
+#________\OOOOOOOOOOOOOOOOOOOO|____________
+#_________\OOOOOO/""""""""\OOO\____________
+#__________|O\\O|__________\O\O|___________
+#__________|U||U|__________|U|U|___________
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# MIT License
+# Please credit where used
 
 # Joystick handling imported under MIT license:
 #  Copyright (c) 2017 Jon Cooper
@@ -67,31 +70,92 @@ def screensetup(sw, sh, sh_nb):
     SCREEN_HEIGHT = sh
     SCREEN_HEIGHT_NOBOX = sh_nb
 
+from pygame.locals import (
+    K_ESCAPE, #Quit
+    K_TAB, #Tab between controls
+    K_RSHIFT, # For reverse direction of tab through focus
+    K_LSHIFT, # For reverse direction of tab through focus
+    K_DOWN,   #Steering
+    K_LEFT,
+    K_RIGHT,
+    K_UP,
+    K_SPACE,  #MG
+    K_x,  #Flamer
+    K_c,  #shock shield
+    K_v,  #pulsar
+    K_b,  #bio blaster
+    K_RETURN,  #Start game
+    K_q,
+    K_p,  #pause
+    K_F1, #help
+    KEYDOWN,
+    QUIT,
+    RLEACCEL,
+    K_F5,
+    K_RCTRL, #tilt
+    K_m,
+    K_LCTRL,
+    K_l,
+)
+
 # Control registry, just a list of controls that get the self.register() function called
 regcontrols = []
+# Button/Keypress registry for the active control to list recievable keypresses
+regbuttons = {}
+# Settings for tabfocus to know where to deliver keypresses/joystick buttons
+currentfocustab = None
+currentfocuscontrol = None
+# Defaults for color of frame border for focus/no focus
+gotfocuscolor = YELLOW
+nofocuscolor = BLACK
 
 # Draws registered controls
 def drawregcontrols():
     for control in regcontrols:
         control.draw()
 
-# Focus on the next control in the tab order
+# Focus on the next/previous control in the tab order
 def tabcontrols(forward):
+    global currentfocuscontrol
+    global currentfocustab
+    oldfocuscontrol = None
     # Iterate to find the next control
+    index = 0
+    taborder = []
     for control in regcontrols:
-        if hasattr(control, "tabord"):
-            if control.tabord > itabmax:
-                itabmax = control.tabord
-                
+        if hasattr(control, "tabord") and control.tabord is not None:
+            taborder.append ({"tabord": control.tabord, "control": control})
+    if len(taborder) > 0:  # If controls with a tab order exist
+        taborder.sort(key=lambda x: x["tabord"])
+        if currentfocustab is not None:
+            testindex = 0
+            for item in taborder:
+                if item["tabord"] == currentfocustab:
+                    index = testindex
+                    oldfocuscontrol = item["control"]
+                testindex += 1
+            if forward: 
+                index += 1
+                if index > len(taborder) - 1:
+                    index = 0
+            else:
+                index -= 1
+                if index < 0:
+                    index = len(taborder) - 1
+        else: # If taborder is currently None
+            if forward:
+                index = 0
+            else:
+                index = len(taborder) - 1
+        # Remove old focus
+        if oldfocuscontrol is not None:
+            oldfocuscontrol.frame.bordercolor = nofocuscolor
+        # Set focus
+        currentfocustab = taborder[index]["tabord"]
+        currentfocuscontrol = taborder[index]["control"]
+        currentfocuscontrol.frame.bordercolor = gotfocuscolor
+        drawregcontrols()
 
-    # Move the selection boxi
-    # Moving the selection boxi should set a focus global flag which is used to direct events through the focusmanager
-    if forward == False:
-        # Iterate backwards through the tab order as per shift-tab
-        stuff = False
-    else:
-        # Iterate forwards through the tab order
-        stuff == True
 
 # The basic building block
 class Boxi():
@@ -106,6 +170,7 @@ class Boxi():
 
         super(Boxi, self).__init__()
         # Initialize the boxi
+        self.tabord = None
         self.rectsurf = pygame.Rect(x,y,width,height)
         self.rectbox = pygame.Rect(x - border, y - border, width + (2 * border), height + (2 * border))
         self.boxcolor = color
@@ -135,6 +200,7 @@ class Boxi():
             self.target = args[0]
         else:
             self.target = None
+        #self.draw()
 
     def draw(self):
         # Redraw the boxi
@@ -155,16 +221,19 @@ class Boxi():
 
     
     def register(self):
-        # The self.register method enrolls the control in the update redraw cycle.
+        # The self.register method enrolls the control in the update redraw call drawregcontrols().
         # Only registered controls are programatically redrawn at update.
         regcontrols.append(self)
 
 
 class Boxicontrolframe(Boxi):
     # A class of Boxi that multi-boxi advanced controls are and reside in
+    # This frame is individual to the  advanced control and created by the control's init
+    # Its instaces draw methods are called by the resident control's draw method
 
-    def __init__(self, x, y, width, height, border, color, border2, color2, control):
+    def __init__(self, x, y, width, height, border, color, border2, color2, control, *args, **kwargs):
         super().__init__(x, y, width, height, border, color, border2, color2)
+        self.tabord = None
         self.control = control
         self.left = control.left
         self.top = control.top
@@ -174,6 +243,7 @@ class Boxicontrolframe(Boxi):
         image = pygame.Surface([width,height], pygame.SRCALPHA)
         image = image.convert_alpha()
         self.thing = image
+        #self.draw()
 
     def draw(self):
         # Make sure size is as control
@@ -192,13 +262,16 @@ class Boxicontrolframe(Boxi):
         # This blits the image / rendered text for the top, or inside, surface
         self.target.blit(self.thing, (self.left + self.wmod, self.top + self.hmod))
         
- 
 
 class Cboxi(pygame.Rect):
     # Basic class for columns of boxis, selectable 
     def __init__(self, cdict, target, source, secondkey, top, left, height, width):
         super(Cboxi, self).__init__()
-        stuff = False
+        self.tabord = None
+        self.top = top
+        self.left = left
+        self.height = height
+        self.width = width
         self.cdict = cdict
         self.target = target
         self.source = source
@@ -207,6 +280,9 @@ class Cboxi(pygame.Rect):
         self.selectedrow = 0
         self.frame = Boxicontrolframe(left, top, width, height, 8, GRAY, 4, BLACK, self)
         self.cdict[0]["boxi"].draw()
+        self.rows = len(self.cdict)
+        self.lastrow = self.rows - 1
+        self.draw()
 
     def draw(self):
         # Draw the frame
@@ -218,55 +294,187 @@ class Cboxi(pygame.Rect):
         self.cdict[self.selectedrow]["boxi"].draw()
    
     def register(self):
-        # The self.register method enrolls the control in the update redraw cycle.
+        # The self.register method enrolls the control in the update redraw call drawregcontrols().
         # Only registered controls are programatically redrawn at update.
-        regcontrols.append(self)       
+        regcontrols.append(self)
+        # Register desired keypresses to be delivered if this control has focus
+        regbuttons [self.tabord] = {"self": self, "buttons": [K_UP, K_DOWN]}
+
+    def updatebuttons(self, eventkey):
+        if eventkey == K_UP:
+            self.selectprev()
+        if eventkey == K_DOWN:
+            self.selectnext()
     
     def selectnext(self):
-        stuff = False
-        # Select next boxi down in column of boxis/savegames/items...
-        newselect = False
-        for sel, value in self.source.items():
-            if self.source[sel]["my_boxi"].selected == True: 
-                selectedrow = self.source[sel]["my_boxi"].row
-                if selectedrow < len(self.source) - 1:
-                    self.source[sel]["my_boxi"].selected = False
-                    self.source[sel]["my_boxi"].draw()
-                    selectedrow += 1
-                    newselect = True
-        if newselect == True:
-            # Selection changed, redraw this column of boxis
-            for sel, value in self.source.items():
-                if self.source[sel]["my_boxi"].row == selectedrow:
-                    self.source[sel]["my_boxi"].selected = True
-                    selectedboxi = sel
-                self.source[sel]["my_boxi"].draw(self.target)
-            # Redraw the selected boxi last for highlighting
-            self.source[selectedboxi]["my_boxi"].draw(self.target)
-        self.selectedrow = selectedrow
+        # Select next boxi down in column
+        # Checks if at last displayed item: if not, move selection down
+        if self.selectedrow < self.lastrow:
+            self.cdict[self.selectedrow]["boxi"].selected = False
+            self.selectedrow += 1
+            self.cdict[self.selectedrow]["boxi"].selected = True
+        # Selection changed, redraw this column of boxis
+        self.draw()
     
     def selectprev(self):
+        # Select previous Boxi in column
+        # Checks if at first displayed item: if not, move selection up
+        if self.selectedrow > 0:
+            self.cdict[self.selectedrow]["boxi"].selected = False
+            self.selectedrow -= 1
+            self.cdict[self.selectedrow]["boxi"].selected = True
+        # Selection changed, redraw this column of boxis
+        self.draw()
+        
+    
+class Rboxi(pygame.Rect):
+    # Basic class for rows of boxis, selectable 
+    def __init__(self, rdict, target, source, secondkey, top, left, height, width):
+        super(Rboxi, self).__init__()
+        self.tabord = None
+        self.top = top
+        self.left = left
+        self.height = height
+        self.width = width
         stuff = False
-        # Select next boxi up in column of boxis/savegames/items...
-        newselect = False
-        for sel, value in self.source.items():
-            if self.source[sel]["my_boxi"].selected == True: 
-                selectedrow = self.source[sel]["my_boxi"].row
-                if selectedrow > 0:
-                    self.source[sel]["my_boxi"].selected = False
-                    self.source[sel]["my_boxi"].draw()
-                    selectedrow -= 1
-                    newselect = True
-        if newselect == True:
-            # Selection changed, redraw this column of boxis
-            for sel, value in self.source.items():
-                if self.source[sel]["my_boxi"].row == selectedrow:
-                    self.source[sel]["my_boxi"].selected = True
-                    selectedboxi = sel
-                self.source[sel]["my_boxi"].draw()
-            # Redraw the selected boxi last for highlighting
-            self.source[selectedboxi]["my_boxi"].draw()
-        self.selectedrow = selectedrow
+        self.rdict = rdict
+        self.target = target
+        self.source = source
+        self.secondkey = secondkey
+        self.rdict[0]["boxi"].selected = True
+        self.selectedcol = 0
+        self.frame = Boxicontrolframe(left, top, width, height, 8, GRAY, 4, BLACK, self)
+        self.rdict[0]["boxi"].draw()
+        self.cols = len(self.rdict)
+        self.lastcol = self.cols - 1
+        self.draw()
+
+    def draw(self):
+        # Draw the frame
+        self.frame.draw()
+        # Then the column of boxis
+        for sel, value in self.rdict.items():
+            self.rdict[sel]["boxi"].draw()
+        # Redraw the selected boxi last for highlighting
+        self.rdict[self.selectedcol]["boxi"].draw()
+   
+    def register(self):
+        # The self.register method enrolls the control in the update redraw call drawregcontrols().
+        # Only registered controls are programatically redrawn at update.
+        regcontrols.append(self)  
+        # Register desired keypresses to be delivered if this control has focus
+        regbuttons [self.tabord] = {"self": self, "buttons": [K_LEFT, K_RIGHT]}
+
+    def updatebuttons(self, eventkey):
+        if eventkey == K_LEFT:
+            self.selectprev()
+        if eventkey == K_RIGHT:
+            self.selectnext()   
+    
+    def selectnext(self):
+        # Select next boxi right in row of boxis
+        # Checks if at last displayed item: if not, move selection right
+        if self.selectedcol < self.lastcol:
+            self.rdict[self.selectedcol]["boxi"].selected = False
+            self.selectedcol += 1
+            self.rdict[self.selectedcol]["boxi"].selected = True
+        # Selection changed, redraw this column of boxis
+        self.draw()
+    
+    def selectprev(self):
+        # Select previous boxi left in row of boxis
+        # Checks if at first displayed item: if not, move selection left
+        if self.selectedcol > 0:
+            self.rdict[self.selectedcol]["boxi"].selected = False
+            self.selectedcol -= 1
+            self.rdict[self.selectedcol]["boxi"].selected = True
+        # Selection changed, redraw this column of boxis
+        self.draw()
+
+class Rboxipicwheels(Rboxi):
+    # A row of boxis, each with a picture which are vertically scrollable.
+    # I am using it for arcade style initial entry; it could just as easily be the
+    # wheels of a slot machine.
+    def __init__(self, rdict, target, source, secondkey, top, left, height, width, wheelopts):
+        super().__init__(rdict, target, source, secondkey, top, left, height, width)
+        self.textstr = "AAA" # Starting value from rdict{}
+        self.wheelopts = wheelopts
+    # Super calls use the parent class's method
+    def draw(self):
+        self.textstr = ""
+        wheel = 1
+        while wheel <= len(self.source):
+            self.textstr += self.source[wheel]["lit"]
+            wheel += 1
+        return super().draw() 
+
+    def register(self): 
+        # The self.register method enrolls the control in the update redraw call drawregcontrols().
+        # Only registered controls are programatically redrawn at update.
+        regcontrols.append(self)  
+        # Register desired keypresses to be delivered if this control has focus
+        regbuttons [self.tabord] = {"self": self, "buttons": {K_LEFT, K_RIGHT, K_UP, K_DOWN}}
+        #super().register()
+
+    def updatebuttons(self, eventkey):
+        print(eventkey)
+        if eventkey == K_LEFT:
+            self.selectprev()
+        if eventkey == K_RIGHT:
+            self.selectnext()   
+        if eventkey == K_UP:
+            self.turnwheelup()
+        if eventkey == K_DOWN:
+            self.turnwheeldown()
+
+    def selectnext(self):
+        return super().selectnext()
+    
+    def selectprev(self):
+        return super().selectprev()
+    
+    def turnwheelup(self):
+        # iterate through wheelopts{}, refreshing rdict{} for the current wheel, then redraw
+        # Initial settings of source: = {1: {"lit": "A", "ren": rendera, "val": 65}, 2: {"lit": "A", "ren": rendera, "val": 65}, 3:{"lit": "A", "ren": rendera, "val": 65}}
+        # Ascii value of "A" - capitals are 65 to 90, numbers are 48 to 57, but we want the numbers to appear after the letters
+        # Programatic settings of wheelopts, per allowable ascii value of ctr:
+        # initialspos [ctr] = {"lit": chr(ctr), "ren": initialfont.render(chr(ctr), 1, initialfcolor)}
+        wheel = self.selectedcol + 1
+        startascii = self.source[wheel]["val"]
+        # We add 1, then move to allowable sections as neccessary
+        newascii = startascii + 1
+        if newascii > 90:
+            newascii = 48
+        if newascii < 65 and newascii > 57:
+            newascii = 65
+        # Now update dictionary and wheel
+        self.source[wheel]["val"] = newascii
+        self.source[wheel]["lit"] = self.wheelopts[newascii]["lit"]  
+        self.source[wheel]["ren"] = self.wheelopts[newascii]["ren"]
+        self.rdict[wheel - 1]["boxi"].thing = self.source[wheel]["ren"]
+        self.rdict[wheel - 1]["boxi"].draw()
+        
+    def turnwheeldown(self):
+        # iterate through wheelopts{}, refreshing rdict{} for the current wheel, then redraw
+        # Initial settings of source: = {1: {"lit": "A", "ren": rendera, "val": 65}, 2: {"lit": "A", "ren": rendera, "val": 65}, 3:{"lit": "A", "ren": rendera, "val": 65}}
+        # Ascii value of "A" - capitals are 65 to 90, numbers are 48 to 57, but we want the numbers to appear after the letters
+        # Programatic settings of wheelopts, per allowable ascii value of ctr:
+        # initialspos [ctr] = {"lit": chr(ctr), "ren": initialfont.render(chr(ctr), 1, initialfcolor)}
+        wheel = self.selectedcol + 1
+        startascii = self.source[wheel]["val"]
+        # We add 1, then move to allowable sections as neccessary
+        newascii = startascii - 1
+        if newascii < 48:
+            newascii = 90
+        if newascii < 65 and newascii > 57:
+            newascii = 57
+        # Now update dictionary and wheel
+        self.source[wheel]["val"] = newascii
+        self.source[wheel]["lit"] = self.wheelopts[newascii]["lit"]  
+        self.source[wheel]["ren"] = self.wheelopts[newascii]["ren"]
+        self.rdict[wheel - 1]["boxi"].thing = self.source[wheel]["ren"]
+        self.rdict[wheel - 1]["boxi"].draw()
+
 
 class Cboxiscroll():
     # A scrolling column of boxis, fed by a dictionary class, and linkable to display surfaces to show extra data fields from the dictionary
@@ -318,7 +526,7 @@ class Cboxiscroll():
                 visctr += 1
             bct += 1
         self.frame = Boxicontrolframe(left, top, width, height, 8, GRAY, 4, BLACK, self)
-
+        self.draw()
 
     def draw(self):
         # Refresh the cboxiscroll onscreen
@@ -329,7 +537,7 @@ class Cboxiscroll():
         self.cdict[self.selectedrow]["boxi"].draw()
         # Calculate and draw the scrolling labels if all items not displayed
         # Other display options could go here, such as a border slider or a framing-slot index bar
-        if self.numvis < self.lastrow:
+        if self.numvis - 1 < self.lastrow:
             numup = self.firstvis
             numdown = self.lastrow - self.lastvis
             if numup > 0:
@@ -367,14 +575,20 @@ class Cboxiscroll():
             self.displayboxi3.thing = rendertext(str(self.displaykey3) +":  "+ str(dispval), self.displayfont, self.displaycolor)
             self.displayboxi3.draw()
 
-
     def register(self):
-        # The self.register method enrolls the control in the update redraw cycle.
+        # The self.register method enrolls the control in the update redraw call drawregcontrols().
         # Only registered controls are programatically redrawn at update.
         regcontrols.append(self)
+        # Register desired keypresses to be delivered if this control has focus
+        regbuttons [self.tabord] = {"self": self, "buttons": [K_UP, K_DOWN]}
+
+    def updatebuttons(self, eventkey):
+        if eventkey == K_UP:
+            self.selectprev()
+        if eventkey == K_DOWN:
+            self.selectnext()
     
     def selectnext(self):
-        stuff = False
         # Select next boxi down in column
         # If slippage
         if self.cdict[self.selectedrow]["boxi"].selected == False:
@@ -448,6 +662,8 @@ class Cboxiscroll():
             bct += 1
         self.draw()
 
+
+
 # Now the constructor functions.  Each of these creates an object of class, so boxi(params...) creates a Boxi, cboxi(params...) --> Cboxi, etc
 
 def boxi(target, thing, destytop, destxleft, border, backcolor, border2, bordercolor, ovhi, ovwid, *args, **kwargs ):
@@ -472,10 +688,12 @@ def boxi(target, thing, destytop, destxleft, border, backcolor, border2, borderc
     loadbox.target = target
     # Draw the boxi
     loadbox.draw()
-    target.blit(thing, (destxleft + wmod, destytop + hmod))
+    # Checks for optional tab order parameter
+    if "tabord" in kwargs:
+        loadbox.tabord = kwargs["tabord"]
     return loadbox
 
-def cboxi(target, things, secondkey, destytop, destxleft, border, backcolor, border2, bordercolor, maxh, maxw):
+def cboxi(target, things, secondkey, destytop, destxleft, border, backcolor, border2, bordercolor, maxh, maxw, *args, **kwargs):
     # Constructor function for columns of boxi - Cboxi objects
     maxwid = 0
     maxhi = 0
@@ -502,18 +720,22 @@ def cboxi(target, things, secondkey, destytop, destxleft, border, backcolor, bor
             things[b]["my_boxi"].row = bct
             columnofboxis[bct] = {"boxi": thisboxi, "key": b, "picture": things[b][secondkey]}
         bct += 1
-    createdcboxi = Cboxi(columnofboxis, target, things, secondkey, destytop - (border + border2), destxleft - (border + border2), (bct * maxhi + border + border2) + 2*(border + border2), maxwid + (2 * (border + border2)) )
+    createdcboxi = Cboxi(columnofboxis, target, things, secondkey, destytop - (border + border2), destxleft - (border + border2), (bct * maxhi) + 3*(border + border2), maxwid + (2 * (border + border2)) )
     bct = 0
     for b in columnofboxis:
         columnofboxis[bct]["boxi"].partofcboxi = createdcboxi
         bct += 1
+    # Checks for optional tab order parameter
+    if "tabord" in kwargs:
+        createdcboxi.tabord = kwargs["tabord"]
     return createdcboxi
     
 
-def rboxi(target, things, secondkey, destytop, destxleft, border, backcolor, border2, bordercolor, maxh, maxw):
-    # rboxi is from an early version and very simple.  A row of boxis, or an Rboxi object.
+def rboxi(target, things, secondkey, destytop, destxleft, border, backcolor, border2, bordercolor, maxh, maxw, *args, **kwargs):
+    #  Constructor function for rows of boxi - Rboxi objects
     maxwid = 0
     maxhi = 0
+    rowofboxis = {}
     for key, thing in things.items():
         if secondkey in things[key]:
             if things[key][secondkey].width > maxwid:
@@ -528,9 +750,61 @@ def rboxi(target, things, secondkey, destytop, destxleft, border, backcolor, bor
     hmod = 0
     bct = 0
     for b, thing in things.items():
-        if secondkey in things[key]:
-            boxi(target, things[b][secondkey], destytop, destxleft + (bct * (maxwid + border + border2)), border, backcolor, border2, bordercolor, maxhi, maxwid)
+        if secondkey in things[b]:
+            thisboxi = boxi(target, things[b][secondkey], destytop, destxleft + (bct * (maxwid + border + border2)), border, backcolor, border2, bordercolor, maxhi, maxwid)            
+            things[b]["my_boxi"] =  thisboxi 
+            things[b]["my_boxi"].col = bct           
+            rowofboxis[bct] = {"boxi": thisboxi, "key": b, "picture": things[b][secondkey]}
         bct += 1
+    # This iterates and puts thing of iterably 'b' things into Boxi objects in the row.
+    createdrboxi = Rboxi(rowofboxis, target, things, secondkey, destytop - (border + border2), destxleft -(border + border2), maxhi + (2 * (border + border2)), (len(rowofboxis) * maxwid) + 3*(border + border2))
+    bct = 0
+    for b in rowofboxis:
+        rowofboxis[bct]["boxi"].partofrboxi = createdrboxi
+        bct += 1
+    
+    # Checks for optional tab order parameter
+    if "tabord" in kwargs:
+        createdrboxi.tabord = kwargs["tabord"]
+    return createdrboxi
+
+
+def rboxipicwheels(target, things, secondkey, destytop, destxleft, border, backcolor, border2, bordercolor, wheeloptsdic, maxh, maxw, *args, **kwargs):
+    #  Constructor function for rows of boxi - Rboxi objects
+    maxwid = 0
+    maxhi = 0
+    rowofboxis = {}
+    for key, thing in things.items():
+        if secondkey in things[key]:
+            if things[key][secondkey].width > maxwid:
+                maxwid = things[key][secondkey].width
+            if things[key][secondkey].height > maxhi:
+                maxhi = things[key][secondkey].height
+        else:
+            if things[key].width > maxwid:
+                maxwid = things[key].width
+            if things[key].height > maxhi:
+                maxhi = things[key].height
+    hmod = 0
+    bct = 0
+    for b, thing in things.items():
+        if secondkey in things[b]:
+            thisboxi = boxi(target, things[b][secondkey], destytop, destxleft + (bct * (maxwid + border + border2)), border, backcolor, border2, bordercolor, maxhi, maxwid)            
+            things[b]["my_boxi"] =  thisboxi 
+            things[b]["my_boxi"].col = bct           
+            rowofboxis[bct] = {"boxi": thisboxi, "key": b, "picture": things[b][secondkey]}
+        bct += 1
+    # This iterates and puts thing of iterably 'b' things into Boxi objects in the row.
+    createdrboxi = Rboxipicwheels(rowofboxis, target, things, secondkey, destytop - (border + border2), destxleft -(border + border2), maxhi + (2 * (border + border2)), (len(rowofboxis) * maxwid) + 3*(border + border2), wheeloptsdic)
+    bct = 0
+    for b in rowofboxis:
+        rowofboxis[bct]["boxi"].partofrboxi = createdrboxi
+        bct += 1
+    # Checks for optional tab order parameter
+    if "tabord" in kwargs:
+        createdrboxi.tabord = kwargs["tabord"]
+    return createdrboxi
+
 
 def cboxiscroll(target, things, secondkey, destytop, destxleft, border, backcolor, border2, bordercolor, maxh, maxw, numvis, *args, **kwargs):
     # Scrolling column of boxes: numvis is the number of elements to display
@@ -591,8 +865,11 @@ def cboxiscroll(target, things, secondkey, destytop, destxleft, border, backcolo
         
         target.blit(renderup, (destxleft, destytop - 12))
         target.blit(renderdown, (destxleft, destytop + (bct * (maxhi + border + border2)) + 2))
+    createdcboxi.draw()
     
     # Connect optional display boxis for extra fields in the dictionary entry
+    # These boxis are set to another key in the displayed dictionary, for instance to show lives, wave/level and score
+    # as a user scrolls through save games.
     if "displayfont" in kwargs:
         createdcboxi.displayfont = kwargs["displayfont"]
 
