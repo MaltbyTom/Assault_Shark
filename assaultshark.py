@@ -2569,25 +2569,25 @@ while running:
                 # Look at every event in the queue
                 for event in pygame.event.get():
                     # Did the user hit a key or joystick button?
-                    #if nojoy != False:
-                    buttons = controller.get_buttons()
-                    pressed_keys = pygame.key.get_pressed()
-                    if buttons[0] == 1 or pressed_keys[K_l] == True:
-                        #print("load click")
-                        if loaddataexists > 0:
-                            loaded = True                                        
-                            screen.fill((135, 206, 250))
-                            texts3(highscore)
-                    if event.type == pygame.JOYBUTTONDOWN:
-                        if event.button == xbox360_controller.START:
-                            # Press Enter to Play
-                            # Reinitialize gamestate at start
-                            initnewgame()
-                            ingame = True
-                            pause = False                           
-                        if event.button == xbox360_controller.BACK:
-                            # Prepare for exit
-                            running = False           
+                    if nojoy != False:
+                        #buttons = controller.get_buttons()
+                        pressed_keys = pygame.key.get_pressed()
+                        if pressed_keys[K_l] == True:
+                            #print("load click")
+                            if loaddataexists > 0:
+                                loaded = True                                        
+                                screen.fill((135, 206, 250))
+                                texts3(highscore)
+                        #if event.type == pygame.JOYBUTTONDOWN:
+                            #if event.button == xbox360_controller.START:
+                                # Press Enter to Play
+                                # Reinitialize gamestate at start
+                                #initnewgame()
+                                #ingame = True
+                                #pause = False                           
+                            #if event.button == xbox360_controller.BACK:
+                                # Prepare for exit
+                                #running = False           
                     if event.type == KEYDOWN:
                         if event.key == K_RETURN:
                             # Press Enter to Play

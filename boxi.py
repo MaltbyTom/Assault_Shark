@@ -176,9 +176,11 @@ def mousehandler(event, button, mpos):
     etype = event.type
     print("mouse2",mpos)
     if etype == MOUSEBUTTONDOWN and button == 1:
+        numfound = 0
         for control in regcontrols:
             if hasattr(control, "tabord") and control.tabord is not None:
                 if control.frame.rectborder.collidepoint(mpos):
+                    numfound += 1
                     currentfocuscontrol = control
                     currentfocustab = control.tabord
                     control.frame.bordercolor = gotfocuscolor
@@ -187,6 +189,9 @@ def mousehandler(event, button, mpos):
                 else:
                     control.frame.bordercolor = nofocuscolor
                     control.draw()
+        if numfound == 0:
+            currentfocuscontrol = None
+            currentfocustab = None
     if etype == MOUSEWHEEL:
         if hasattr(currentfocuscontrol, "mouseevent"):
             currentfocuscontrol.mouseevent(etype, button, mpos)
@@ -517,6 +522,18 @@ class Rboxi(pygame.Rect):
         # Selection changed, redraw this column of boxis
         self.draw()
 
+    def mouseevent(self, etype, button, mpos):       
+        # This will parse mouse events specific to the control.
+        # Giving focus to the clicked control is handled by the mouse event handler.
+        if etype == MOUSEBUTTONDOWN and button == 1:
+            for sel, value in self.rdict.items():
+                if self.rdict[sel]["boxi"].rectsurf.collidepoint(mpos):
+                    self.rdict[sel]["boxi"].selected = True
+                    self.selectedcol = sel
+                else:
+                    self.rdict[sel]["boxi"].selected = False
+
+
 class Rboxipicwheels(Rboxi):
     # A row of boxis, each with a picture which are vertically scrollable.
     # I am using it for arcade style initial entry; it could just as easily be the
@@ -537,7 +554,12 @@ class Rboxipicwheels(Rboxi):
         self.frame.draw()
         # Then the column of boxis
         for sel, value in self.rdict.items():
+            if sel != self.selectedcol:
+                self.rdict[sel]["boxi"].selected = False
+            else:
+                self.rdict[sel]["boxi"].selected = True
             self.rdict[sel]["boxi"].draw()
+
         # Redraw the selected boxi last for highlighting
         self.rdict[self.selectedcol]["boxi"].draw()
 
@@ -606,6 +628,22 @@ class Rboxipicwheels(Rboxi):
         self.source[wheel]["ren"] = self.wheelopts[newascii]["ren"]
         self.rdict[wheel - 1]["boxi"].thing = self.source[wheel]["ren"]
         self.rdict[wheel - 1]["boxi"].draw()
+        
+    def mouseevent(self, etype, button, mpos):       
+        # This will parse mouse events specific to the control.
+        # Giving focus to the clicked control is handled by the mouse event handler.
+        if etype == MOUSEBUTTONDOWN and button == 1:
+            for sel, value in self.rdict.items():
+                if self.rdict[sel]["boxi"].rectsurf.collidepoint(mpos):
+                    self.rdict[sel]["boxi"].selected = True
+                    self.selectedcol = sel
+                else:
+                    self.rdict[sel]["boxi"].selected = False
+        if etype == MOUSEWHEEL:
+            if mpos[1] > 0:
+                self.turnwheelup()
+            else:
+                self.turnwheeldown()
 
 
 class Cboxiscroll():

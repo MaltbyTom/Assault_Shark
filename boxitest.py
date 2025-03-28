@@ -358,7 +358,7 @@ while running:
             initialsrboxi.rdict[0]["boxi"].selected = False
             initialsrboxi.rdict[1]["boxi"].selected = False
             initialsrboxi.rdict[2]["boxi"].selected = True
-            initialsrboxi.selectedcol = 2
+            #initialsrboxi.selectedcol = 2
             initialsrboxi.draw()
             #initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
 
