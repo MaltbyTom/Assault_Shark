@@ -188,11 +188,11 @@ while ctr < 58:
 
 # Now parameter lists for *params...
 # parameters for default boxi call with rendered text object - these will be extra field displays for the savegame Cboxiscroll
-boxidef1 = (screen, textitem, 100, 400, 0, BLUE, 2, BLACK, 0, 0)
-boxidef2 = (screen, textitem, 130, 400, 0, BLUE, 2, BLACK, 0, 0)
-boxidef3 = (screen, textitem, 160, 400, 0, BLUE, 2, BLACK, 0, 0)
+boxidef1 = (screen, textitem, 30, 500, 0, BLUE, 2, BLACK, 0, 0)
+boxidef2 = (screen, textitem, 60, 500, 0, BLUE, 2, BLACK, 0, 0)
+boxidef3 = (screen, textitem, 90, 500, 0, BLUE, 2, BLACK, 0, 0)
 # parameters for a scrolling column of boxes, dictionary driven, with linked fields by key displayed
-cboxiscdef1 = (screen, renderedtext, "render", 300, 400, 1, WHITE, 1, BLUE, 0, 0, 7)
+cboxiscdef1 = (screen, renderedtext, "render", 160, 510, 1, WHITE, 1, BLUE, 0, 0, 7)
 
 # parameters for the rboxipicwheels row for entering three initials video game style
 # initialspos{} is the dictionary of options per wheel, with the ascii character literal and its rendering for
@@ -322,8 +322,12 @@ while running:
                 #initialsrboxi.selectprev() 
         if event.type == MOUSEBUTTONDOWN:
             mousepos = pygame.mouse.get_pos()
-            print("mouse!", mousepos)
-            boxi.mousehandler(mousepos)
+            print("mouse!", event.type, mousepos, event.button, event)
+            boxi.mousehandler(event, event.button, mousepos)
+        if event.type == MOUSEWHEEL:
+            boxi.mousehandler(event, 0, (0, event.y))
+            print("mousewheel!", event.y)
+            #stuff = False
     # Screen refresh at timer
     #screen.fill((255, 255, 255))
     # Registered controls are redrawn

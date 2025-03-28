@@ -36,6 +36,7 @@
 
 
 import pygame
+import pygame.mouse
 
 
 
@@ -98,6 +99,10 @@ from pygame.locals import (
     K_m,
     K_LCTRL,
     K_l,
+    MOUSEBUTTONDOWN,
+    MOUSEMOTION,
+    MOUSEBUTTONUP,
+    MOUSEWHEEL
 )
 
 # holds preloaded images
@@ -165,20 +170,27 @@ def tabcontrols(forward):
         currentfocuscontrol.frame.bordercolor = gotfocuscolor
         drawregcontrols()
 
-def mousehandler(mpos):
+def mousehandler(event, button, mpos):
     global currentfocuscontrol
     global currentfocustab
-    stuff = False    
+    etype = event.type
     print("mouse2",mpos)
-    for control in regcontrols:
-        if hasattr(control, "tabord") and control.tabord is not None:
-            if control.frame.rectborder.collidepoint(mpos):
-                currentfocuscontrol = control
-                currentfocustab = control.tabord
-                control.frame.bordercolor = gotfocuscolor
-                for controls in regcontrols:
-                    if currentfocuscontrol is not control:
-                        control.frame.bordercolor = nofocuscolor
+    if etype == MOUSEBUTTONDOWN and button == 1:
+        for control in regcontrols:
+            if hasattr(control, "tabord") and control.tabord is not None:
+                if control.frame.rectborder.collidepoint(mpos):
+                    currentfocuscontrol = control
+                    currentfocustab = control.tabord
+                    control.frame.bordercolor = gotfocuscolor
+                    if hasattr(control, "mouseevent"):
+                        control.mouseevent(etype, button, mpos)
+                else:
+                    control.frame.bordercolor = nofocuscolor
+                    control.draw()
+    if etype == MOUSEWHEEL:
+        if hasattr(currentfocuscontrol, "mouseevent"):
+            currentfocuscontrol.mouseevent(etype, button, mpos)
+
     drawregcontrols()
 
 
@@ -334,6 +346,7 @@ class Boxibutton(Boxi):
         pygame.draw.rect(self.target, self.boxcolor, self.rectbox)
         # This blits the image / rendered text for the top, or inside, surface
         self.target.blit(self.thing, (self.left + self.wmod, self.top + self.hmod))
+        
         #return super().draw()
     
     def register(self):
@@ -349,6 +362,15 @@ class Boxibutton(Boxi):
         # This will be the event hook for pressing the button.
         stuff = False
         return butfunc()
+    
+    def mouseevent(self, etype, button, mpos):
+        # This will parse mouse events specific to the control.
+        # Giving focus to the clicked control is handled by the mouse event handler.
+        if etype == MOUSEBUTTONDOWN and button == 1:
+            if self.rectsurf.collidepoint(mpos):
+                self.buttonpressed(self.getbuttonpressed)
+
+        stuff = False
     
         
 class Cboxi(pygame.Rect):
@@ -413,7 +435,23 @@ class Cboxi(pygame.Rect):
             self.cdict[self.selectedrow]["boxi"].selected = True
         # Selection changed, redraw this column of boxis
         self.draw()
-        
+
+    def mouseevent(self, etype, button, mpos):       
+        # This will parse mouse events specific to the control.
+        # Giving focus to the clicked control is handled by the mouse event handler.
+        if etype == MOUSEBUTTONDOWN and button == 1:
+            for sel, value in self.cdict.items():
+                if self.cdict[sel]["boxi"].rectsurf.collidepoint(mpos):
+                    self.cdict[sel]["boxi"].selected = True
+                    self.selectedrow = sel
+                else:
+                    self.cdict[sel]["boxi"].selected = False
+        if etype == MOUSEWHEEL:
+            if mpos[1] > 0:
+                self.selectprev()
+            else:
+                self.selectnext()
+                    
     
 class Rboxi(pygame.Rect):
     # Basic class for rows of boxis, selectable 
@@ -764,6 +802,23 @@ class Cboxiscroll():
             bct += 1
         self.draw()
 
+    def mouseevent(self, etype, button, mpos):       
+        # This will parse mouse events specific to the control.
+        # Giving focus to the clicked control is handled by the mouse event handler.
+        
+        if etype == MOUSEBUTTONDOWN and button == 1:
+            for sel, value in self.cdict.items():
+                if self.cdict[sel]["boxi"].rectsurf.collidepoint(mpos):
+                    self.cdict[sel]["boxi"].selected = True
+                    self.selectedrow = sel
+                else:
+                    self.cdict[sel]["boxi"].selected = False
+        if self is currentfocuscontrol:
+            if etype == MOUSEWHEEL:
+                if mpos[1] > 0:
+                    self.selectprev()
+                else:
+                    self.selectnext()
 
 
 # Now the constructor functions.  Each of these creates an object of class, so boxi(params...) creates a Boxi, cboxi(params...) --> Cboxi, etc
