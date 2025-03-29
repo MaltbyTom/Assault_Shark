@@ -287,6 +287,7 @@ class Boxicontrolframe(Boxi):
         image = pygame.Surface([width,height], pygame.SRCALPHA)
         image = image.convert_alpha()
         self.thing = image
+        self.pressedshadow = False
         
         #self.draw()
 
@@ -328,6 +329,8 @@ class Boxibutton(Boxi):
         self.buttext = buttext
         self.tabord = tabord
         self.target = target
+        self.rectborder.top = self.rectbox.top
+        self.rectborder.left = self.rectbox.left
         self.frame = Boxicontrolframe(x, y, width, height, 8, GRAY, 4, BLACK, self)
         self.draw()
 
@@ -373,6 +376,9 @@ class Boxibutton(Boxi):
         if etype == MOUSEBUTTONDOWN and button == 1:
             if self.rectsurf.collidepoint(mpos):
                 self.buttonpressed(self.getbuttonpressed)
+                self.rectborder.top = self.rectbox.top - self.border2
+                self.rectborder.left = self.rectbox.left - self.border2
+                self.pressedshadow = True
 
         stuff = False
     

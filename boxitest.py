@@ -258,7 +258,7 @@ while running:
             # And we register the new control
             initialsrboxi.register()
             # Boxibutton for randomizing initials - this passes a function hook for the button pressed event
-            randomizeinitsboxibutton = boxi.boxibutton(150, 50, 100, 30, 3, YELLOW, 3, BLACK, randomizebutton, 5, "Randomize Initials", screen)
+            randomizeinitsboxibutton = boxi.boxibutton(150, 50, 100, 30, 3, YELLOW, 1, BLACK, randomizebutton, 5, "Randomize Initials", screen)
             # And we register the new control
             randomizeinitsboxibutton.register()
             # Column of Boxis with pictures of a shell enemy
@@ -320,6 +320,14 @@ while running:
             boxi.mousehandler(event, event.button, mousepos)
         if event.type == MOUSEWHEEL:
             boxi.mousehandler(event, 0, (0, event.y))
+        if event.type == MOUSEBUTTONUP:
+            # This unshadows any buttons that were in a pressed/shadowed state
+            for control in boxi.regcontrols:
+                if hasattr(control, "pressedshadow") and control.pressedshadow == True:
+                    control.rectborder.top = control.rectbox.top 
+                    control.rectborder.left = control.rectbox.left 
+                    control.draw()
+
     # Registered controls are redrawn
     #boxi.drawregcontrols()
     # This is an animation handler for the initials rboxi's randomize initials function, called by the rboxi button above.
