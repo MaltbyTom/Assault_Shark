@@ -1,5 +1,15 @@
 # Test surface for boxi.py
-# Tom Maltby 2025
+# (c)Tom Maltby 2025
+#
+# This is a test surface to display some sample BoxyPyg controls.  It demonstrates usage, declarations, animation handling, etc.
+#
+# The BoxiPyg project is an opensource UI contstruction toolkit library.  It leverages class inheritance from a basic Boxi object
+# consisting of three pygame.rect objects and some associated properties and methods to quickly create new custom controls for your 
+# projects.  It does not yet have a WYSIWYG abstraction layer or a wiki for documentation, however once I add a few more sample
+# controls, these additions are planned.
+#
+# Usage is free under the MIT license, just please credit me in your project.  I hope it brings general satisfaction and quick
+# versatile customization to your work in Pygame.
 #
 # Joystick handling imported under MIT license:
 #  Copyright (c) 2017 Jon Cooper
@@ -138,7 +148,10 @@ def randomizebutton():
     a1 = 72 + random.randint(1, 72)
     a2 = 72 + random.randint(1, 72)
     a3 = 72 + random.randint(1, 72)
-    # This sets up an animation event in the while running loop
+    # This sets up an animation event for the randomization of the 'AAA' initials style control in the while running loop.
+    # The control generates a three character text string, intended for use with high scores and save games.
+    # Mostly I stuck this in because I realized that it was the only piece missing from a slot machine style wheel of pictures
+    # display - it is fun and cool looking, which are generally good things in a game UI.
 
 # Animation timers
 isanioverflag = True
@@ -301,20 +314,12 @@ while running:
                         boxi.currentfocuscontrol.updatebuttons(event.key)
             if event.key == K_DOWN:
                 stuff = False
-                #savesc.selectnext()
-                #shellsc.selectnext()
-                #initialsrboxi.turnwheeldown()
             if event.key == K_UP:
                 stuff = False
-                #initialsrboxi.turnwheelup()
-                #shellsc.selectprev()
-                #savesc.selectprev()
             if event.key == K_RIGHT:
                 stuff = False
-                #initialsrboxi.selectnext()
             if event.key == K_LEFT:
                 stuff = False
-                #initialsrboxi.selectprev() 
         if event.type == MOUSEBUTTONDOWN:
             mousepos = pygame.mouse.get_pos()
             boxi.mousehandler(event, event.button, mousepos)
@@ -328,7 +333,8 @@ while running:
                     control.rectborder.left = control.rectbox.left 
                     control.draw()
 
-    # Registered controls are redrawn
+    # This line - boxi.drawregcontrols() - causes registered controls to be redrawn - right now not needed, 
+    # but included as a comment so that it can be applied as desired.
     #boxi.drawregcontrols()
     # This is an animation handler for the initials rboxi's randomize initials function, called by the rboxi button above.
     # It serves no vital purpose, but displays the scrolling of the initials as if it were a slot machine, which is fun.
