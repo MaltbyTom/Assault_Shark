@@ -135,7 +135,6 @@ def randomizebutton():
     global a1
     global a2
     global a3
-    print("button!")
     a1 = 72 + random.randint(1, 72)
     a2 = 72 + random.randint(1, 72)
     a3 = 72 + random.randint(1, 72)
@@ -285,11 +284,9 @@ while running:
         # Keyboard events
         if event.type == KEYDOWN:
             if event.key == K_RETURN:
-                
-                print("boxi!")
-                boxi.boxi(screen,item,5, 15, 1, BLACK, 1, YELLOW, 0, 0)
+                stuff = False
             if event.key == K_TAB:
-                
+                # Switch through controls according to tab order
                 pressed_keys = pygame.key.get_pressed()
                 if pressed_keys[K_RSHIFT] == True or pressed_keys[K_LSHIFT] == True:
                     boxi.tabcontrols(False) # Shift-Tab goes back in taborder
@@ -300,8 +297,6 @@ while running:
             # If it has registered the keystroke and has focus, deliver the keystroke to the control. 
             if boxi.currentfocuscontrol:
                 if boxi.regbuttons[boxi.currentfocustab]:
-                    print(boxi.regbuttons)
-                    print(boxi.regbuttons[boxi.currentfocustab]["buttons"])
                     if event.key in boxi.regbuttons[boxi.currentfocustab]["buttons"]:
                         boxi.currentfocuscontrol.updatebuttons(event.key)
             if event.key == K_DOWN:
@@ -322,17 +317,13 @@ while running:
                 #initialsrboxi.selectprev() 
         if event.type == MOUSEBUTTONDOWN:
             mousepos = pygame.mouse.get_pos()
-            print("mouse!", event.type, mousepos, event.button, event)
             boxi.mousehandler(event, event.button, mousepos)
         if event.type == MOUSEWHEEL:
             boxi.mousehandler(event, 0, (0, event.y))
-            print("mousewheel!", event.y)
-            #stuff = False
-    # Screen refresh at timer
-    #screen.fill((255, 255, 255))
     # Registered controls are redrawn
     #boxi.drawregcontrols()
-    
+    # This is an animation handler for the initials rboxi's randomize initials function, called by the rboxi button above.
+    # It serves no vital purpose, but displays the scrolling of the initials as if it were a slot machine, which is fun.
     if a1 > 0 or a2 > 0 or a3 > 0:
         isanioverflag = False
         isaniover = 3
@@ -358,11 +349,8 @@ while running:
             initialsrboxi.rdict[0]["boxi"].selected = False
             initialsrboxi.rdict[1]["boxi"].selected = False
             initialsrboxi.rdict[2]["boxi"].selected = True
-            #initialsrboxi.selectedcol = 2
             initialsrboxi.draw()
-            #initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
 
-    # boxi.drawregcontrols
     clock.tick(30)
 
     # Flip the display

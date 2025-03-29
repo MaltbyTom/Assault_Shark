@@ -174,7 +174,6 @@ def mousehandler(event, button, mpos):
     global currentfocuscontrol
     global currentfocustab
     etype = event.type
-    print("mouse2",mpos)
     if etype == MOUSEBUTTONDOWN and button == 1:
         numfound = 0
         for control in regcontrols:
