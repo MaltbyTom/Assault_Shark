@@ -17,7 +17,12 @@
 #__________|U||U|__________|U|U|___________
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-# MIT License
+
+# The BoxiPyg project is an opensource UI contstruction toolkit library.  It leverages class inheritance from a basic Boxi object
+# consisting of three pygame.rect objects and some associated properties and methods to quickly create new custom controls for your 
+# projects.  It does not yet have a WYSIWYG abstraction layer or a wiki for documentation, however once I add a few more sample
+# controls, these additions are planned.
+# Free usage under MIT License
 # Please credit where used
 
 # Joystick handling imported under MIT license:
@@ -862,6 +867,78 @@ class Cboxiscroll():
                     self.selectprev()
                 else:
                     self.selectnext()
+
+
+class Cboxiscrollmlinetext():
+    # A scrolling column of boxis, fed by a dictionary class, and linkable to display surfaces to show extra data fields from the dictionary
+    # Set up on boxitest to display savegames or enemy types
+    def __init__(self, dispstr, font, fontcolor, target, tabord, top, left, height, width):
+        super(Cboxiscrollmlinetext, self).__init__()
+        self.top = top
+        self.left = left
+        self.height = height
+        self.width = width
+        self.target = target
+        self.tabord = tabord
+        # Parse dispstr into appropriate length lines, ideally ending in a space, otherwise with an added hyphen
+        linelist = []
+        txtlinelist = []
+        # establish a guess at character width from average of first three
+        testr = rendertext(dispstr[1:3], font, fontcolor)
+        testw = testr.width // 3
+        # if desired line length allows less than three characters, expand the field anyway
+        if self.width < testw:
+            self.width = testw
+        # project a guess at how many characters fit in a line of desired length in this font
+        approx = self.width//testw
+        linestart = 0
+        eol = False
+        while eol == False:
+            # Slice a substring of the approximate size
+            teststr = dispstr[linestart:linestart + approx]
+            testr = rendertext(teststr, font, fontcolor)
+            # If the string is too wide, prune back to the last space
+            if testr.width > self.width: 
+                #Count backwards to a space
+                fromend = 0
+                gotline = False
+                while gotline == False:
+                    # When space found, terminate the line there
+                    if teststr[len(teststr) - fromend - 1] == " ":
+                        testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
+                        # If this segment isn't too wide, and ends with a space, call it a line
+                        if testr.width < self.width:
+                            # Declare success in the line making loop
+                            teststr[0:len(teststr) - fromend - 1]
+                            gotline = True
+                    # Increment fromend
+                    fromend += 1          
+                    # Exception for lines composed entirely of non space characters longer than desired width
+                    # Incurred when we iterate through the line without finding a space
+                    if fromend + 1 > len(teststr):
+                        exactlen = False
+                        fromend = 0
+                        while exactlen == False:
+                        # iterate to one character short of desired width and end in hyphen
+                            testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
+                            if testr.width < self.width:
+                                teststr = teststr[0:len(teststr) - fromend - 2] + "-"
+                                testr = rendertext(teststr[0:len(teststr) - fromend - 2] + "-", font, fontcolor)
+                                exactlen = True
+                # Set the start of the next line!
+                linestart = linestart + len(teststr) - fromend - 1
+                # Add the line of rendered text to the list of rendered lines
+                linelist.append(testr)
+                txtlinelist.append(teststr)
+            # If not longer than desired line, and not to end of dispstr, add 5 characters and try again
+            elif linestart + approx < len(dispstr):
+                approx = approx + 5
+            # If last characters, and not too long, make last line
+            else: 
+                txtlinelist.append(teststr)
+                linelist.append(testr)
+                eol = True
+
 
 
 # Now the constructor functions.  Each of these creates an object of class, so boxi(params...) creates a Boxi, cboxi(params...) --> Cboxi, etc

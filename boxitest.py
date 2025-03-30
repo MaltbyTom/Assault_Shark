@@ -122,6 +122,7 @@ GRAY = pygame.Color("gray")
 BLACK = pygame.Color("black")
 WHITE = pygame.Color("white")
 YELLOW = pygame.Color("yellow")
+LIGHTBLUE = pygame.Color("lightblue1")
 
 pygame.init()
 
@@ -157,7 +158,7 @@ def randomizebutton():
 isanioverflag = True
 isaniover = 0
 
-# Cache repeated text renders
+dispstr = "This is a big text string, such as I would use for plot dumps, conversations, etc.  It should be evealuated by control width and font size, and fed into a scrolling multiline display.  The last noble Assault Shark pilot perserveres in their daily struggle aginst the sky jet minions and their kleptofacist groundling artillery support."
 
 # Preload graphics - called by image cache for all pngs in the graphics directory
 def get_image(key):
@@ -200,9 +201,9 @@ while ctr < 58:
 
 # Now parameter lists for *params...
 # parameters for default boxi call with rendered text object - these will be extra field displays for the savegame Cboxiscroll
-boxidef1 = (screen, textitem, 30, 500, 0, BLUE, 2, BLACK, 0, 0)
-boxidef2 = (screen, textitem, 60, 500, 0, BLUE, 2, BLACK, 0, 0)
-boxidef3 = (screen, textitem, 90, 500, 0, BLUE, 2, BLACK, 0, 0)
+boxidef1 = (screen, textitem, 30, 500, 0, LIGHTBLUE, 2, BLACK, 0, 0)
+boxidef2 = (screen, textitem, 60, 500, 0, LIGHTBLUE, 2, BLACK, 0, 0)
+boxidef3 = (screen, textitem, 90, 500, 0, LIGHTBLUE, 2, BLACK, 0, 0)
 # parameters for a scrolling column of boxes, dictionary driven, with linked fields by key displayed
 cboxiscdef1 = (screen, renderedtext, "render", 160, 510, 1, WHITE, 1, BLUE, 0, 0, 7)
 
