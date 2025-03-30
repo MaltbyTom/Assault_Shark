@@ -887,8 +887,8 @@ class Cboxiscrollmlinetext():
         testr = rendertext(dispstr[1:3], font, fontcolor)
         testw = testr.width // 3
         # if desired line length allows less than three characters, expand the field anyway
-        if self.width < testw:
-            self.width = testw
+        if self.width < testw * 3:
+            self.width = testw * 3
         # project a guess at how many characters fit in a line of desired length in this font
         approx = self.width//testw
         linestart = 0
@@ -938,6 +938,7 @@ class Cboxiscrollmlinetext():
                 txtlinelist.append(teststr)
                 linelist.append(testr)
                 eol = True
+        # Now we have a dictionary of appropriately sized renders
 
 
 
@@ -1174,6 +1175,69 @@ def cboxiscroll(target, things, secondkey, destytop, destxleft, border, backcolo
     # Function returns the object
     return createdcboxi
 
+
+def ltextcboxiscroll(dispstr, font, fontcolor, target, tabord, destytop, destxleft, height, width, border, backcolor, border2, bordercolor, maxh, maxw, *args, **kwargs):
+    # Large text body setup for scrolling column of boxes: numvis is the number of elements to display
+    # The corresponding Cboxiscroll class has scrolldown and scrollup events triggered by moving selection
+    txtlinedict  = renderlargetext(dispstr, font, fontcolor, target, tabord, destytop, destxleft, height, width)
+    maxwid = 0
+    maxhi = 0
+    columnofboxis = {}
+    things = txtlinedict
+    secondkey = "render"
+    # Find largest item for sizing
+    for key, thing in things.items():
+        if secondkey in things[key]:
+            if things[key][secondkey].width > maxwid:
+                maxwid = things[key][secondkey].width
+            if things[key][secondkey].height > maxhi:
+                maxhi = things[key][secondkey].height
+        else:
+            if things[key].width > maxwid:
+                maxwid = things[key].width
+            if things[key].height > maxhi:
+                maxhi = things[key].height
+    hmod = 0
+    bct = 0 # This counts the underlying dictionary entries
+    visctr = 0 # This counts iterations for filling the visible Boxi objects
+    numvis = height//maxhi
+    for b, thing in things.items():
+        if visctr < numvis:
+            if secondkey in things[b]:
+                thisboxi = boxi(target, things[b][secondkey], destytop + (bct * (maxhi + border + border2)), destxleft, border, backcolor, border2, bordercolor, maxhi, maxwid)
+                things[b]["my_boxi"] =  thisboxi 
+                things[b]["my_boxi"].row = bct
+                columnofboxis[bct] = {"boxi": thisboxi, "key": b, "bct": bct, "picture": things[b][secondkey]}
+        bct += 1
+        visctr += 1
+    tab = tabord
+    yextraborder = 10
+    if numvis > len(columnofboxis):
+        numvis = len(columnofboxis)
+    createdcboxi = Cboxiscroll(columnofboxis, target, things, secondkey, numvis, tab, destytop - border - border2 - yextraborder, destxleft - border - border2, (numvis * (maxhi + border + border2)) + (2 * (border + border2)) + (2 * yextraborder), maxwid + (2 * (border + border2)))
+    
+    # Iteration counter labels Boxi objects as part of the Cboxi object
+    bct = 0
+    for b in columnofboxis:
+        columnofboxis[bct]["boxi"].partofcboxi = createdcboxi
+        bct += 1
+
+    if numvis < len(things):    
+        # Add scrolling labels for offscreen record size in both directions if more items than displayed
+        numup = 0
+        numdown = len(things) - numvis
+        renderup = font8.render(str(numup) + " more above", 1, GRAY)
+        if numdown > 0:
+            downcol = GREEN
+        else:
+            downcol = GRAY
+        renderdown = font8.render(str(numdown) + " more below", 1, GREEN)
+        
+        target.blit(renderup, (destxleft, destytop - 12))
+        target.blit(renderdown, (destxleft, destytop + (bct * (maxhi + border + border2)) + 2))
+    createdcboxi.draw()
+    return createdcboxi
+
 # Render an individual string in given font, color
 def rendertext(text, font, color):
     return font.render(text, 1, color)
@@ -1183,3 +1247,99 @@ def rendertextdic(textdic, font, color):
     for key, value in textdic.items():
         textdic[key]["render"] = font.render(key, 1, color)
     return textdic
+
+def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height, width):
+    
+        # Parse dispstr into appropriate length lines, ideally ending in a space, otherwise with an added hyphen
+        linelist = []
+        txtlinelist = []
+        txtlinedict = {}
+        line = 0
+
+        # establish a guess at character width from average of first three
+        testr = rendertext(dispstr[0:9], font, fontcolor)
+        testw = testr.width // 10
+        # if desired line length allows less than three characters, expand the field anyway
+        if width < testw * 10:
+            width = testw * 10
+        # project a guess at how many characters fit in a line of desired length in this font
+        approx = width//testw
+        linestart = 0
+        eol = False
+        while eol == False:
+            hyphenated = False
+            # Slice a substring of the approximate size
+            teststr = dispstr[linestart:linestart + approx]
+            while ord(teststr[0]) == 32:
+                linestart = linestart + 1
+                teststr = dispstr[linestart:linestart + approx]               
+            print(teststr)
+            testr = rendertext(teststr, font, fontcolor)
+            # If the string is too wide, prune back to the last space
+            if testr.width > width: 
+                origteststr = teststr
+                print ("testrw", testr.width, ">", width)
+                #Count backwards to a space
+                fromend = 0
+                print("fromend 0")
+                gotline = False
+                while gotline == False:
+                    # When space found, terminate the line there
+                    print("unsuccessful test char = " + teststr[len(teststr) - fromend - 1]) 
+                    if ord(teststr[len(teststr) - fromend - 1]) == 32:
+                        print("successful test char = " + teststr[len(teststr) - fromend - 1]) 
+                        testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
+                        teststr = teststr[0:len(teststr) - fromend - 1]
+                        # If this segment isn't too wide, and ends with a space, call it a line 
+                        print ("inside: testrw", testr.width, ">?", width)
+                        if testr.width < width:
+                            # Declare success in the line making loop
+                            teststr[0:len(teststr) - fromend - 1] # Hopefully includes the space
+                            print(teststr)
+                            gotline = True
+                            print("gotline!")
+                    # Increment fromend
+                    print("fromend + 1")
+                    fromend += 1          
+                    # Exception for lines composed entirely of non space characters longer than desired width
+                    # Incurred when we iterate through the line without finding a space
+                    if fromend + 1 > len(origteststr):
+                        exactlen = False
+                        print("exactlen is False!")
+                        fromend = 0
+                        while exactlen == False:
+                        # iterate to one character short of desired width and end in hyphen
+                            testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
+                            if testr.width < width:
+                                teststr = teststr[0:len(teststr) - fromend - 3] + "- "
+                                hyphenated = True
+                                print(teststr)
+                                testr = rendertext(teststr[0:len(teststr) - fromend - 2] + "-", font, fontcolor)
+                                exactlen = True
+                # Set the start of the next line!
+                if hyphenated == True:
+                    linestart = linestart + len(teststr) - 1
+                else:
+                    linestart = linestart + len(teststr)  + 1 # - fromend - 1
+                # Add the line of rendered text to the list of rendered lines
+                linelist.append(testr)
+                txtlinelist.append(teststr)
+                txtlinedict[line] = {"txt": teststr, "render": testr}
+                line += 1
+            # If not longer than desired line, and not to end of dispstr, add 5 characters and try again
+            elif linestart + approx < len(dispstr):
+                approx = approx + 5
+                print + 5
+            # If last characters, and not too long, make last line
+            else: 
+                txtlinelist.append(teststr)
+                linelist.append(testr)
+                txtlinedict[line] = {"txt": teststr, "render": testr}
+                line += 1
+                eol = True
+        # Now we have a dictionary of appropriately sized renders
+
+        print(txtlinelist)
+        for foo in txtlinelist:
+            print(foo)
+        return txtlinedict

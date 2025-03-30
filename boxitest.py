@@ -158,7 +158,7 @@ def randomizebutton():
 isanioverflag = True
 isaniover = 0
 
-dispstr = "This is a big text string, such as I would use for plot dumps, conversations, etc.  It should be evealuated by control width and font size, and fed into a scrolling multiline display.  The last noble Assault Shark pilot perserveres in their daily struggle aginst the sky jet minions and their kleptofacist groundling artillery support."
+dispstr = "This is a big chunk of text string, such as I would use for plot dumps, conversations, etc.  It should be evaluated by control width and font size, and fed into a scrolling multiline display.  The last noble Assault Shark pilot perserveres in their daily struggle aginst the sky jet minions and their kleptofacist groundling artillery support."
 
 # Preload graphics - called by image cache for all pngs in the graphics directory
 def get_image(key):
@@ -283,6 +283,10 @@ while running:
             # Other controls will be redrawn if they have called their register method.
             somerboxi = boxi.rboxi(screen, shells, "image", 600, 50, 1, BLACK, 1, RED,0,0, tabord = 4)
             somerboxi.register()
+            # Set up the large text cboxiscroll with its own constructor function
+            #renddispstr = boxi.renderlargetext(dispstr, font15, BLUE, screen, 6, 0,0, 400, 600)
+            ltextsc = boxi.ltextcboxiscroll(dispstr, font15, BLUE, screen, 6, 225, 150, 275, 325, 1, WHITE, 2, LIGHTBLUE, 0, 0)
+            ltextsc.register()
             # skip setup in future
             issetup = True
         # Always recognize the close program button
