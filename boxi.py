@@ -225,7 +225,10 @@ class Boxi():
         self.row = 0
         self.column = 0
         self.selected = False
-        self.selgrow = 2 # self.selgrow is the border growth when selected
+        if "selgrow" in kwargs:
+            self.selgrow = kwargs["selgrow"]
+        else:
+            self.selgrow = 2 # self.selgrow is the border growth when selected
         self.selborder = pygame.Rect(x - border - border2 - self.selgrow, y - border - border2 - self.selgrow, width + (2 * border) + (2 * border2) + (2 * self.selgrow), height + (2 * border) + (2 * border2) + (2 * self.selgrow))
         self.left = x
         self.top = y
@@ -661,7 +664,6 @@ class Cboxiscroll():
     # Set up on boxitest to display savegames or enemy types
     def __init__(self, cdict, target, source, secondkey, numvis, tabord, top, left, height, width):
         super(Cboxiscroll, self).__init__()
-        stuff = False
         self.tabord = tabord
         self.cdict = cdict
         self.target = target
@@ -869,79 +871,6 @@ class Cboxiscroll():
                     self.selectnext()
 
 
-class Cboxiscrollmlinetext():
-    # A scrolling column of boxis, fed by a dictionary class, and linkable to display surfaces to show extra data fields from the dictionary
-    # Set up on boxitest to display savegames or enemy types
-    def __init__(self, dispstr, font, fontcolor, target, tabord, top, left, height, width):
-        super(Cboxiscrollmlinetext, self).__init__()
-        self.top = top
-        self.left = left
-        self.height = height
-        self.width = width
-        self.target = target
-        self.tabord = tabord
-        # Parse dispstr into appropriate length lines, ideally ending in a space, otherwise with an added hyphen
-        linelist = []
-        txtlinelist = []
-        # establish a guess at character width from average of first three
-        testr = rendertext(dispstr[1:3], font, fontcolor)
-        testw = testr.width // 3
-        # if desired line length allows less than three characters, expand the field anyway
-        if self.width < testw * 3:
-            self.width = testw * 3
-        # project a guess at how many characters fit in a line of desired length in this font
-        approx = self.width//testw
-        linestart = 0
-        eol = False
-        while eol == False:
-            # Slice a substring of the approximate size
-            teststr = dispstr[linestart:linestart + approx]
-            testr = rendertext(teststr, font, fontcolor)
-            # If the string is too wide, prune back to the last space
-            if testr.width > self.width: 
-                #Count backwards to a space
-                fromend = 0
-                gotline = False
-                while gotline == False:
-                    # When space found, terminate the line there
-                    if teststr[len(teststr) - fromend - 1] == " ":
-                        testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
-                        # If this segment isn't too wide, and ends with a space, call it a line
-                        if testr.width < self.width:
-                            # Declare success in the line making loop
-                            teststr[0:len(teststr) - fromend - 1]
-                            gotline = True
-                    # Increment fromend
-                    fromend += 1          
-                    # Exception for lines composed entirely of non space characters longer than desired width
-                    # Incurred when we iterate through the line without finding a space
-                    if fromend + 1 > len(teststr):
-                        exactlen = False
-                        fromend = 0
-                        while exactlen == False:
-                        # iterate to one character short of desired width and end in hyphen
-                            testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
-                            if testr.width < self.width:
-                                teststr = teststr[0:len(teststr) - fromend - 2] + "-"
-                                testr = rendertext(teststr[0:len(teststr) - fromend - 2] + "-", font, fontcolor)
-                                exactlen = True
-                # Set the start of the next line!
-                linestart = linestart + len(teststr) - fromend - 1
-                # Add the line of rendered text to the list of rendered lines
-                linelist.append(testr)
-                txtlinelist.append(teststr)
-            # If not longer than desired line, and not to end of dispstr, add 5 characters and try again
-            elif linestart + approx < len(dispstr):
-                approx = approx + 5
-            # If last characters, and not too long, make last line
-            else: 
-                txtlinelist.append(teststr)
-                linelist.append(testr)
-                eol = True
-        # Now we have a dictionary of appropriately sized renders
-
-
-
 # Now the constructor functions.  Each of these creates an object of class, so boxi(params...) creates a Boxi, cboxi(params...) --> Cboxi, etc
 
 def boxi(target, thing, destytop, destxleft, border, backcolor, border2, bordercolor, ovhi, ovwid, *args, **kwargs ):
@@ -958,7 +887,10 @@ def boxi(target, thing, destytop, destxleft, border, backcolor, border2, borderc
     else:
         ovwid = thing.width
     # Create the Boxi
-    loadbox = Boxi(destxleft, destytop, ovwid, ovhi, border, backcolor, border2, bordercolor)
+    if "selgrow" in kwargs:
+        loadbox = Boxi(destxleft, destytop, ovwid, ovhi, border, backcolor, border2, bordercolor, selgrow = kwargs["selgrow"])
+    else:
+        loadbox = Boxi(destxleft, destytop, ovwid, ovhi, border, backcolor, border2, bordercolor)
     loadbox.surf = thing
     loadbox.hmod = hmod
     loadbox.wmod = wmod
@@ -1070,14 +1002,15 @@ def rboxipicwheels(target, things, secondkey, destytop, destxleft, border, backc
     hmod = 0
     bct = 0
     for b, thing in things.items():
+        leftnudge = (bct * (maxwid + 2 * border + 2 * border2))
         if secondkey in things[b]:
-            thisboxi = boxi(target, things[b][secondkey], destytop, destxleft + (bct * (maxwid + border + border2)), border, backcolor, border2, bordercolor, maxhi, maxwid)            
+            thisboxi = boxi(target, things[b][secondkey], destytop, destxleft + leftnudge, border, backcolor, border2, bordercolor, maxhi, maxwid)            
             things[b]["my_boxi"] =  thisboxi 
             things[b]["my_boxi"].col = bct           
             rowofboxis[bct] = {"boxi": thisboxi, "key": b, "picture": things[b][secondkey]}
         bct += 1
     # This iterates and puts thing of iterably 'b' things into Boxi objects in the row.
-    createdrboxi = Rboxipicwheels(rowofboxis, target, things, secondkey, destytop - (border + border2), destxleft -(border + border2), maxhi + (2 * (border + border2)), (len(rowofboxis) * maxwid) + 3*(border + border2), wheeloptsdic)
+    createdrboxi = Rboxipicwheels(rowofboxis, target, things, secondkey, destytop - (border + border2), destxleft -(border + border2), maxhi + (2 * (border + border2)), (len(rowofboxis) * maxwid) + (len(things) + 3)*(border + border2), wheeloptsdic)
     bct = 0
     for b in rowofboxis:
         rowofboxis[bct]["boxi"].partofrboxi = createdrboxi
@@ -1134,21 +1067,6 @@ def cboxiscroll(target, things, secondkey, destytop, destxleft, border, backcolo
         columnofboxis[bct]["boxi"].partofcboxi = createdcboxi
         bct += 1
 
-    if numvis < len(things):    
-        # Add scrolling labels for offscreen record size in both directions if more items than displayed
-        numup = 0
-        numdown = len(things) - numvis
-        renderup = font8.render(str(numup) + " more above", 1, GRAY)
-        if numdown > 0:
-            downcol = GREEN
-        else:
-            downcol = GRAY
-        renderdown = font8.render(str(numdown) + " more below", 1, GREEN)
-        
-        target.blit(renderup, (destxleft, destytop - 12))
-        target.blit(renderdown, (destxleft, destytop + (bct * (maxhi + border + border2)) + 2))
-    createdcboxi.draw()
-    
     # Connect optional display boxis for extra fields in the dictionary entry
     # These boxis are set to another key in the displayed dictionary, for instance to show lives, wave/level and score
     # as a user scrolls through save games.
@@ -1171,6 +1089,8 @@ def cboxiscroll(target, things, secondkey, destytop, destxleft, border, backcolo
 
     if "displaycolor" in kwargs:
         createdcboxi.displaycolor = kwargs["displaycolor"]
+
+    createdcboxi.draw()
     
     # Function returns the object
     return createdcboxi
@@ -1179,6 +1099,8 @@ def cboxiscroll(target, things, secondkey, destytop, destxleft, border, backcolo
 def ltextcboxiscroll(dispstr, font, fontcolor, target, tabord, destytop, destxleft, height, width, border, backcolor, border2, bordercolor, maxh, maxw, *args, **kwargs):
     # Large text body setup for scrolling column of boxes: numvis is the number of elements to display
     # The corresponding Cboxiscroll class has scrolldown and scrollup events triggered by moving selection
+    # Default behaviour is to adjust sizing slightly based on element size.  In cramped circumstances, a version
+    # may need created which runs these logic chains backwards to adapt the elements to the requested size.
     txtlinedict  = renderlargetext(dispstr, font, fontcolor, target, tabord, destytop, destxleft, height, width)
     maxwid = 0
     maxhi = 0
@@ -1204,7 +1126,7 @@ def ltextcboxiscroll(dispstr, font, fontcolor, target, tabord, destytop, destxle
     for b, thing in things.items():
         if visctr < numvis:
             if secondkey in things[b]:
-                thisboxi = boxi(target, things[b][secondkey], destytop + (bct * (maxhi + border + border2)), destxleft, border, backcolor, border2, bordercolor, maxhi, maxwid)
+                thisboxi = boxi(target, things[b][secondkey], destytop + (bct * (maxhi + border + border2)), destxleft, border, backcolor, border2, bordercolor, maxhi, maxwid, selgrow = 1)
                 things[b]["my_boxi"] =  thisboxi 
                 things[b]["my_boxi"].row = bct
                 columnofboxis[bct] = {"boxi": thisboxi, "key": b, "bct": bct, "picture": things[b][secondkey]}
@@ -1221,31 +1143,28 @@ def ltextcboxiscroll(dispstr, font, fontcolor, target, tabord, destytop, destxle
     for b in columnofboxis:
         columnofboxis[bct]["boxi"].partofcboxi = createdcboxi
         bct += 1
-
-    if numvis < len(things):    
-        # Add scrolling labels for offscreen record size in both directions if more items than displayed
-        numup = 0
-        numdown = len(things) - numvis
-        renderup = font8.render(str(numup) + " more above", 1, GRAY)
-        if numdown > 0:
-            downcol = GREEN
-        else:
-            downcol = GRAY
-        renderdown = font8.render(str(numdown) + " more below", 1, GREEN)
-        
-        target.blit(renderup, (destxleft, destytop - 12))
-        target.blit(renderdown, (destxleft, destytop + (bct * (maxhi + border + border2)) + 2))
-    createdcboxi.draw()
     return createdcboxi
 
 # Render an individual string in given font, color
+# Trim the extra line spacing of font rendering from the bottom
 def rendertext(text, font, color):
-    return font.render(text, 1, color)
+    r = font.render(text, 1, color)
+    r = r.subsurface(0, 0, r.width, r.height - (r.height//5))
+    return r
+
+# Render initials for the initial wheel
+# Remove unbalanced font space from right and botttom
+def renderinits(text,font,color):  
+    r = font.render(text, 1, color)
+    r = r.subsurface(0,0,r.width - (r.width//8), r.height - (r.height//3.5))
+    return r
 
 # Render a dictionary of text items, add "render" key to it containing images of the text
 def rendertextdic(textdic, font, color):
     for key, value in textdic.items():
-        textdic[key]["render"] = font.render(key, 1, color)
+        r = font.render(key, 1, color)
+        r = r.subsurface(0,0,r.width, r.height - (r.height//5))
+        textdic[key]["render"] = r
     return textdic
 
 def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height, width):
@@ -1255,7 +1174,8 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
         txtlinelist = []
         txtlinedict = {}
         line = 0
-
+        # account for frame borders
+        width = width - 20
         # establish a guess at character width from average of first three
         testr = rendertext(dispstr[0:9], font, fontcolor)
         testw = testr.width // 10
@@ -1270,6 +1190,7 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
             hyphenated = False
             # Slice a substring of the approximate size
             teststr = dispstr[linestart:linestart + approx]
+            # Clear leading spaces
             while ord(teststr[0]) == 32:
                 linestart = linestart + 1
                 teststr = dispstr[linestart:linestart + approx]               
@@ -1292,9 +1213,9 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
                         teststr = teststr[0:len(teststr) - fromend - 1]
                         # If this segment isn't too wide, and ends with a space, call it a line 
                         print ("inside: testrw", testr.width, ">?", width)
-                        if testr.width < width:
+                        if testr.width <= width:
                             # Declare success in the line making loop
-                            teststr[0:len(teststr) - fromend - 1] # Hopefully includes the space
+                            #teststr[0:len(teststr) - fromend - 1] # Hopefully includes the space
                             print(teststr)
                             gotline = True
                             print("gotline!")
@@ -1311,14 +1232,16 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
                         # iterate to one character short of desired width and end in hyphen
                             testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
                             if testr.width < width:
-                                teststr = teststr[0:len(teststr) - fromend - 3] + "- "
+                                teststr = teststr[0:len(teststr) - fromend - 2] + "- "
                                 hyphenated = True
                                 print(teststr)
-                                testr = rendertext(teststr[0:len(teststr) - fromend - 2] + "-", font, fontcolor)
+                                testr = rendertext(teststr[0:len(teststr)], font, fontcolor)
                                 exactlen = True
+                                gotline = True
+                            fromend += 1
                 # Set the start of the next line!
                 if hyphenated == True:
-                    linestart = linestart + len(teststr) - 1
+                    linestart = linestart + len(teststr) - 2
                 else:
                     linestart = linestart + len(teststr)  + 1 # - fromend - 1
                 # Add the line of rendered text to the list of rendered lines

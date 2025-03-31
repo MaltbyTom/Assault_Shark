@@ -127,6 +127,7 @@ LIGHTBLUE = pygame.Color("lightblue1")
 pygame.init()
 
 pygame.font.init()
+font12 = pygame.font.Font("fonts/arcade_r.ttf", 12)
 font15 = pygame.font.Font("fonts/arcade_r.ttf", 15)
 font16 = pygame.font.Font("fonts/arcade_r.ttf", 16)
 font20 = pygame.font.Font("fonts/arcade_r.ttf", 20)
@@ -186,17 +187,19 @@ textitem = font20.render("A text object", 1, BLACK)
 initialfont = font50
 initialfcolor = BLACK
 # Dictionary for initial wheel positions
-rendera = initialfont.render("A", 1, initialfcolor)
+rendera = boxi.renderinits("A",initialfont, initialfcolor)
+#rendera = rendera.subsurface(0,0,rendera.width - rendera.width//8, rendera.height)
+#rendera = initialfont.render("A", 1, initialfcolor)
 initialsdef = {1: {"lit": "A", "ren": rendera, "val": 65}, 2: {"lit": "A", "ren": rendera, "val": 65}, 3:{"lit": "A", "ren": rendera, "val": 65}}
 # Programatically make an allowable ascii dictionary
 initialspos = {}
 ctr = 65 # Ascii value of "A" - capitals are 65 to 90, numbers are 48 to 57, but we want the numbers to appear after the letters
 while ctr < 91:
-    initialspos [ctr] = {"lit": chr(ctr), "ren": initialfont.render(chr(ctr), 1, initialfcolor)}
+    initialspos [ctr] = {"lit": chr(ctr), "ren": boxi.renderinits(chr(ctr), initialfont, initialfcolor)}
     ctr += 1
 ctr = 48
 while ctr < 58:
-    initialspos [ctr] = {"lit": chr(ctr), "ren": initialfont.render(chr(ctr), 1, initialfcolor)}
+    initialspos [ctr] = {"lit": chr(ctr), "ren": boxi.renderinits(chr(ctr), initialfont, initialfcolor)}
     ctr += 1
 
 # Now parameter lists for *params...
@@ -210,7 +213,7 @@ cboxiscdef1 = (screen, renderedtext, "render", 160, 510, 1, WHITE, 1, BLUE, 0, 0
 # parameters for the rboxipicwheels row for entering three initials video game style
 # initialspos{} is the dictionary of options per wheel, with the ascii character literal and its rendering for
 # all allowable ascii characters.  initialsdef{} is the default values of A, A, A.
-initrboxidef = (screen, initialsdef, "ren", 100, 220, 3, YELLOW, 2, BLACK, initialspos, 0, 0)
+initrboxidef = (screen, initialsdef, "ren", 100, 220, 2, YELLOW, 1, BLACK, initialspos, 0, 0)
 
 
 image_cache = {}
@@ -276,16 +279,16 @@ while running:
             # And we register the new control
             randomizeinitsboxibutton.register()
             # Column of Boxis with pictures of a shell enemy
-            shellsc = boxi.cboxi(screen, shells, "image", 40, 40, 1, BLACK, 1, RED,0,0, tabord = 3)
+            shellsc = boxi.cboxi(screen, shells, "image", 40, 40, 0, BLACK, 1, RED,0,0, tabord = 3)
             # Register for redraw events
             shellsc.register()
             # This row of boxis is not registered and will be covered by the timer based screen fill event.  
             # Other controls will be redrawn if they have called their register method.
-            somerboxi = boxi.rboxi(screen, shells, "image", 600, 50, 1, BLACK, 1, RED,0,0, tabord = 4)
+            somerboxi = boxi.rboxi(screen, shells, "image", 600, 50, 0, BLACK, 1, RED,0,0, tabord = 4)
             somerboxi.register()
             # Set up the large text cboxiscroll with its own constructor function
             #renddispstr = boxi.renderlargetext(dispstr, font15, BLUE, screen, 6, 0,0, 400, 600)
-            ltextsc = boxi.ltextcboxiscroll(dispstr, font15, BLUE, screen, 6, 225, 150, 275, 325, 1, WHITE, 2, LIGHTBLUE, 0, 0)
+            ltextsc = boxi.ltextcboxiscroll(dispstr, font20, BLUE, screen, 6, 225, 155, 275, 340, 1, WHITE, 0, LIGHTBLUE, 0, 0, selgrow = 1)
             ltextsc.register()
             # skip setup in future
             issetup = True
