@@ -805,17 +805,34 @@ class Bullet(pygame.sprite.Sprite):
 # Define the cloud object extending pygame.sprite.Sprite
 # Use an image for a better looking sprite
 class Cloud(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super(Cloud, self).__init__()
-        if wave < 3:
-            # During the day, use light clouds
-            self.surf = get_image("cloud.png")
+        if "bling" in kwargs:
+            self.surf = kwargs["bling"]
+            self.surf.set_colorkey(WHITE, RLEACCEL)
+            self.rect = self.surf.get_rect()
+            self.rect.center = kwargs["location"]
+            self.number = True
+            self.duration = 25
+            self.climb = random.randint(-25, -10)
+            self.travel = random.randint(-10, 10)
+            #self.loc = kwargs["location"]
+            # The starting position is player location
+            #self.rect = self.surf.get_rect(center=(self.loc[0],self.loc[1],))
+            #print("made at ")
         else:
-            # At night, use dark clouds
-            self.surf = get_image("cloud2.png")
-        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
-        # The starting position is randomly generated
-        self.rect = self.surf.get_rect(
+            self.number = None
+            if wave < 3:
+                # During the day, use light clouds
+                #self.surf = edict.red16nums[50]
+                self.surf = get_image("cloud.png")
+            else:
+                # At night, use dark clouds
+                self.surf = get_image("cloud2.png")
+            
+            self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+            # The starting position is randomly generated
+            self.rect = self.surf.get_rect(
             center=(
                 random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
                 random.randint(0, SCREEN_HEIGHT_NOBOX - 200),
@@ -825,10 +842,22 @@ class Cloud(pygame.sprite.Sprite):
     # Move the cloud based on a constant speed
     # Remove it when it passes the left edge of the screen
     def update(self):
-        self.rect.move_ip(-6, 0)
-        # if off left edge, kill
-        if self.rect.right < 0:
-            self.kill()   
+        #print(self.number)
+        if hasattr(self, "number"):
+            if self.number == True:
+                #print("moving")
+                up = self.climb
+                self.climb += 2
+                side = self.travel
+                self.rect.move_ip(side, up)
+                self.duration -= 1
+                if self.duration < 1:
+                        self.kill()
+            else:
+                self.rect.move_ip(-6, 0)
+                # if off left edge, kill
+                if self.rect.right < 0:
+                    self.kill()   
 
 # Advanced movement function(s)
 
@@ -1221,6 +1250,10 @@ def randomizebutton():
     # The control generates a three character text string, intended for use with high scores and save games.
     # Mostly I stuck this in because I realized that it was the only piece missing from a slot machine style wheel of pictures
     # display - it is fun and cool looking, which are generally good things in a game UI.
+def newnumber(number1, loc):
+    new_number = Cloud(bling = number1, location = loc)
+    clouds.add(new_number)
+    all_sprites.add(new_number)
 
 # Animation timers
 isanioverflag = True
@@ -1345,7 +1378,7 @@ def healthbar(left, top, health):
 def bosshealthbar(left, top, boss, health, bosshealthblink):
  
     bhealthmax = edict.enemydict[boss.etype]["hp"] / 2 * wave
-    barsizefactor = bhealthmax / 1000
+    barsizefactor = bhealthmax / 10000
     healthbarblink = pygame.Rect(left + 35, top-5, int(100 * barsizefactor) + 10, 40)
     healthbarborder = pygame.Rect(left + 40, top, int(100 * barsizefactor), 30)
     healthbarfilled = pygame.Rect(left + 42, top + 2, int((196) * (health/(bhealthmax)) * barsizefactor), 26)
@@ -2456,6 +2489,7 @@ while running:
                             pulse = pulse + 100
                         elif crash.etype == "e_pu_health116":
                             # Power Up Health
+                            newnumber(edict.blue16nums[50],(player.rect.left, player.rect.top))
                             player.hp = player.hp + 50
                             if player.hp > healthmax // 2:
                                 player.hp = healthmax // 2 
@@ -2465,6 +2499,7 @@ while running:
                             if player.armor > armormax // 2:
                                 player.armor = armormax // 2
                         elif crash.etype == "e_pu_healthmax118":
+                            newnumber(edict.blue16nums[50],(player.rect.left, player.rect.top))
                             # Raise maximum health
                             healthmax = healthmax + 50
                             if healthmax > healthhardmax:
@@ -2581,7 +2616,9 @@ while running:
                             if edict.enemydict[enemy1.etype]["isexploded"] == False:
                                 # is enemy immune?
                                 if edict.enemydict[enemy1.etype]["damenemies"] > 0:
-                                    enemy1.hp = enemy1.hp - 1
+                                    dam = random.randint(5,15)
+                                    enemy1.hp = enemy1.hp - dam
+                                    newnumber(edict.yellow16nums[dam],(thisenemy.rect.left, thisenemy.rect.top))
                                     if enemy1.hp < 1:
                                         if edict.enemydict[enemy1.etype]["isexplodable"]:
                                             enemy1.etype = edict.enemydict[enemy1.etype]["isexplodable"]
@@ -2592,7 +2629,9 @@ while running:
                             if edict.enemydict[enemy2.etype]["isexploded"] == False:                           
                                 # is enemy immune?
                                 if edict.enemydict[enemy2.etype]["damenemies"] > 0:
-                                    enemy2.hp = enemy2.hp - 1
+                                    dam = random.randint(5,15)
+                                    enemy2.hp = enemy2.hp - dam
+                                    newnumber(edict.yellow16nums[dam],(thisenemy.rect.left, thisenemy.rect.top))
                                     if enemy2.hp < 1:
                                         if edict.enemydict[enemy2.etype]["isexplodable"]:
                                             enemy2.etype = edict.enemydict[enemy2.etype]["isexplodable"]
@@ -2609,14 +2648,17 @@ while running:
                     bullethit = pygame.sprite.spritecollideany(thisenemy, bullets)
                     # If bullet hits enemy
                     if bullethit:
+                        #newnumber(edict.red16nums[edam],(thisenemy.rect.left, thisenemy.rect.top))
                         collision_sound.play()
                         if edict.enemydict[thisenemy.etype]["isexploded"] == False and edict.enemydict[thisenemy.etype]["ispowerup"] == False:
-                            edam = 1
+                            edam = random.randint(5,15)
                             if bullethit.btype == 1 and mgtype > 1:
                                 if mgtype == 2:
-                                    edam = 2
+                                    edam = random.randint(15,25)
                                 if mgtype == 3:
-                                    edam == 3
+                                    edam = random.randint(23,38)
+                            
+                            newnumber(edict.red16nums[edam],(thisenemy.rect.left, thisenemy.rect.top))
                             thisenemy.hp -= edam
                             if thisenemy.hp < 1:
                                 if edict.enemydict[thisenemy.etype]["isexplodable"]:
@@ -2625,21 +2667,30 @@ while running:
                                     thisenemy.kill()
                                 score = score + edict.enemydict[thisenemy.etype]["hp"]
                                 wavecounter += 1
+                                
+                                newnumber(edict.green16nums[edict.enemydict[thisenemy.etype]["hp"]],(thisenemy.rect.left, thisenemy.rect.top))
                             if bullethit.btype == 1:
                                 # MG bullets go away on impact
+                                breakage = random.randint(1,10)
                                 if mgtype == 1:
-                                    bullethit.kill()
+                                    if breakage > 1:
+                                        bullethit.kill()
+                                        newnumber(edict.yellow16nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
                                 if mgtype == 2:
                                     # Laser bullets 50% destroyed
-                                    if random.randint(1,10) > 5:
+                                    if breakage > 5:
                                         bullethit.kill()
+                                        newnumber(edict.yellow16nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
                                 if mgtype == 3:
                                     # Plasma bullets 20% destroyed
-                                    if random.randint(1,10) > 8:
+                                    if breakage > 8:
                                         bullethit.kill()
+                                        newnumber(edict.yellow16nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
+                           
                             else:
                                 # Large bullets degraded by impacts
-                                bullethit.boomcounter -= 1                            
+                                bullethit.boomcounter -= 1                                       
+                                newnumber(edict.yellow16nums[1],(thisenemy.rect.left, thisenemy.rect.top))                    
                 # BULLET MOUNTAIN COLLISIONS        
                 for i, thismountain in enumerate(mountains):
                     bullethit = pygame.sprite.spritecollideany(thismountain, bullets)

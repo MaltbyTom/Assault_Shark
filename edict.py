@@ -77,16 +77,25 @@ def addjsons():
                 enemydict.update(addtodict)
                 added += 1
     return added
+numbers = {}
 green8nums = {}
 blue8nums = {}
 red8nums = {}
+red16nums = {}
+green16nums = {}
+blue16nums = {}
+yellow16nums = {}
 
 def gennumbers():
-    x = 0
-    while x < 100:
-        green8nums[x] = font8.render(x, 1, GREEN)
-        blue8nums[x] = font8.render(x, 1, BLUE)
-        red8nums[x] = font8.render(x, 1, RED)
+    x = 1
+    while x < 1000:
+        green8nums[x] = font8.render(str(x), 1, GREEN)
+        blue8nums[x] = font8.render(str(x), 1, BLUE)
+        red8nums[x] = font8.render(str(x), 1, RED)
+        red16nums[x] = font16.render(str(x), 1, RED)
+        green16nums[x] = font16.render(str(x), 1, GREEN)
+        blue16nums[x] = font16.render(str(x), 1, BLUE)
+        yellow16nums[x] = font16.render(str(x), 1, YELLOW)
         x = x + 1
 # This generates a blank monster .json with all available attributes.  No longer used.
 #def gencompleteblank():
@@ -164,7 +173,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -241,7 +250,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -318,7 +327,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -388,7 +397,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_61",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 20,
+        "hp": 200,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 4,
         "ispowerup": False,
@@ -458,7 +467,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_61",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 20,
+        "hp": 200,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 5,
         "ispowerup": False,
@@ -535,7 +544,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -605,7 +614,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_64",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 25,
+        "hp": 250,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 2,
         "ispowerup": False,
@@ -676,7 +685,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_63",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 35,
+        "hp": 350,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 2,
         "ispowerup": False,
@@ -754,7 +763,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_65",
         # Missiles and shells have one hp; blimps and guns have more, bosses have many
-        "hp": 1000,
+        "hp": 10000,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -829,7 +838,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -904,7 +913,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -979,7 +988,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1054,7 +1063,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1129,7 +1138,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1199,7 +1208,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1278,7 +1287,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": False,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 300,
+        "hp": 3000,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1355,7 +1364,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1423,7 +1432,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1491,7 +1500,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1559,7 +1568,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1627,7 +1636,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1695,7 +1704,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1763,7 +1772,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1838,7 +1847,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1913,7 +1922,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1988,7 +1997,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2063,7 +2072,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2138,7 +2147,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2213,7 +2222,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2288,7 +2297,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2363,7 +2372,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2438,7 +2447,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2513,7 +2522,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2588,7 +2597,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,

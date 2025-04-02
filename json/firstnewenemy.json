@@ -49,7 +49,7 @@
         "comment_": " If isexplodable, eplodes before dying into etype isexplodable",
         "isexplodable": "e_exp_62",
         "comment_": " Missiles and shells have one hp; blimps and guns have more",
-        "hp": 1,
+        "hp": 10,
         "comment_": " Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher",
         "fired": 0,
         "ispowerup": 0,
