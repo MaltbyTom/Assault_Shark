@@ -1,0 +1,23 @@
+{
+    "savepointUBW": {
+        "wave": 6,
+        "score": 74952,
+        "ammo": [
+            1981,
+            2125,
+            1971,
+            2323
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 23,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 100,
+        "armormax": 200,
+        "initials": "UBW"
+    }
+}

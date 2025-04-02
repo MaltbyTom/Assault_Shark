@@ -19,6 +19,11 @@ YELLOW = pygame.Color("yellow")
 LIGHTBLUE = pygame.Color("lightblue1")
 DKGRAY = pygame.Color("dimgray")
 DKGREEN = pygame.Color("darkgreen")
+PINK = pygame.Color("hotpink")
+MAROON = pygame.Color("maroon1")
+LAWNGREEN = pygame.Color("lawngreen")
+ORANGE = pygame.Color("darkorange")
+PURPLE = pygame.Color("darkorchid1")
 
 # Define constants for the screen width and height
 root = tkinter.Tk()
@@ -81,21 +86,56 @@ numbers = {}
 green8nums = {}
 blue8nums = {}
 red8nums = {}
+yellow8nums = {}
+pink8nums = {}
+maroon8nums = {}
+orange8nums = {}
+purple8nums = {}
 red16nums = {}
 green16nums = {}
 blue16nums = {}
 yellow16nums = {}
+pink16nums = {}
+maroon16nums = {}
+yellow16nums = {}
+pink16nums = {}
+maroon16nums = {}
+orange16nums = {}
+purple16nums = {}
+
+m2 = font20.render("Multi Shot 2", 1, ORANGE)
+m3 = font20.render("Multi Shot 3", 1, ORANGE)
+m5 = font30.render("Multi Shot 5", 1, ORANGE)
+m7 = font50.render("Multi Shot 7", 1, ORANGE)
+a2 = font30.render("Laser Ammo", 1, PURPLE)
+a3 = font50.render("Plasma Ammo", 1, PURPLE)
+b = font20.render("Bounce Shot", 1, MAROON)
+b2 = font30.render("Bounce Shot 2", 1, MAROON)
+b3 = font50.render("Bounce Shot 3", 1, MAROON)
+bio = font12.render("Bio Blaster", 1, PINK)
+shock = font12.render("Shock Shield", 1, PINK)
+flamer = font12.render("Flamer", 1, PINK)
+pulsar = font12.render("Pulsar", 1, PINK)
+xl = font12.render("Extra Life", 1, BLUE)
 
 def gennumbers():
     x = 1
-    while x < 1000:
-        green8nums[x] = font8.render(str(x), 1, GREEN)
-        blue8nums[x] = font8.render(str(x), 1, BLUE)
-        red8nums[x] = font8.render(str(x), 1, RED)
-        red16nums[x] = font16.render(str(x), 1, RED)
-        green16nums[x] = font16.render(str(x), 1, GREEN)
-        blue16nums[x] = font16.render(str(x), 1, BLUE)
-        yellow16nums[x] = font16.render(str(x), 1, YELLOW)
+    while x < 100000:
+        if x < 150:        
+            blue8nums[x] = font8.render(str(x), 1, BLUE)
+            red8nums[x] = font8.render(str(x), 1, RED)
+            yellow8nums[x] = font8.render(str(x), 1, YELLOW)        
+            pink8nums[x] = font8.render(str(x), 1, PINK)
+            maroon8nums[x] = font8.render(str(x), 1, MAROON)
+            red16nums[x] = font16.render(str(x), 1, RED)
+            yellow16nums[x] = font16.render(str(x), 1, YELLOW) 
+            green16nums[x] = font16.render(str(x), 1, LAWNGREEN)
+            blue16nums[x] = font16.render(str(x), 1, BLUE)       
+            pink16nums[x] = font16.render(str(x), 1, PINK)
+            maroon16nums[x] = font16.render(str(x), 1, MAROON)
+            purple16nums[x] = font16.render(str(x), 1, PURPLE)
+            orange16nums[x]  = font16.render(str(x), 1, ORANGE)
+        green8nums[x] = font8.render(str(x), 1, LAWNGREEN)
         x = x + 1
 # This generates a blank monster .json with all available attributes.  No longer used.
 #def gencompleteblank():

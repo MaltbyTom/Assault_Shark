@@ -51,7 +51,7 @@ import boxi # Box making module
 # Import mouse
 import pygame.mouse
 #from pygame._sdl2.video import Window
-
+import json
 #window = None
 
 
@@ -1074,9 +1074,9 @@ edict.gennumbers()
 
 def texts(lives, score):
     # gives lives, score, waves, high score
-    scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,0))
+    scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: " + str(highscore) + " " + hsinitials, 1, (0,0,0))
     screen.blit(scoretext, (52, SCREEN_HEIGHT - 27))
-    scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,255))
+    scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: " + str(highscore) + " " + hsinitials, 1, (0,0,255))
     screen.blit(scoretext, (50, SCREEN_HEIGHT - 25))
     initstext = font30.render("Pilot: " + initials, 1, BLACK)
     screen.blit(initstext, (32, SCREEN_HEIGHT - 87))
@@ -1096,10 +1096,10 @@ def texts3(highscore):
     ptxtoffset = playagametextblack.width / 2
     screen.blit(playagametextblack, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 360))
     screen.blit(playagametextred, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 362))
-    playagametext = font60.render("High Score: "+str(highscore), 1, (0,0,0))
+    playagametext = font60.render("High Score: " + hsinitials + " " + str(highscore), 1, (0,0,0))
     ptxtoffset = playagametext.width / 2
     screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 200))
-    playagametext = font60.render("High Score: "+str(highscore), 1, (255,0,0))
+    playagametext = font60.render("High Score: " + hsinitials + " " + str(highscore), 1, (255,0,0))
     screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 202))
     # Control list
     ptxtoffset = pausetext1.width / 2
@@ -1378,7 +1378,7 @@ def healthbar(left, top, health):
 def bosshealthbar(left, top, boss, health, bosshealthblink):
  
     bhealthmax = edict.enemydict[boss.etype]["hp"] / 2 * wave
-    barsizefactor = bhealthmax / 10000
+    barsizefactor = bhealthmax / 5000
     healthbarblink = pygame.Rect(left + 35, top-5, int(100 * barsizefactor) + 10, 40)
     healthbarborder = pygame.Rect(left + 40, top, int(100 * barsizefactor), 30)
     healthbarfilled = pygame.Rect(left + 42, top + 2, int((196) * (health/(bhealthmax)) * barsizefactor), 26)
@@ -1707,21 +1707,21 @@ inportal = False
 didicleanup = True
 settingsscreen = False
 settingssetup = False
+hsinitials = "AAA"
 # This call creates a .json file with all fields in the dictionary
 # fullrec = edict.gencompleteblank()
 
 # check for saved highscore
-hsfilename = "highscore.txt"
+hsfilename = "highscore.json"
 if os.path.isfile(hsfilename) and os.access(hsfilename, os.R_OK):
-    with open(hsfilename, "r") as file:
-        hsstr =  file.read()
-        if hsstr:
-            hs = (int(hsstr))
-        else:
-            hs = 0
-        # If larger than 0, update
-        if hs > highscore:
-            highscore = hs
+    with open('highscore.json', 'r') as f:
+        hs = json.load(f)
+else:
+        hs = {"score": 0, "inits": "AAA"}
+# If larger than 0, update
+if hs["score"] > highscore:            
+            highscore = hs["score"]
+            hsinitials = hs["inits"]
 
 didishowloadscreen = False
 loadselection = False
@@ -2273,7 +2273,7 @@ while running:
                         bossmode = True
                         bosses += 1
                         bhealthmax = edict.enemydict[e.etype]["hp"] / 4 * wave
-                        barsizefactor = bhealthmax / 1000
+                        barsizefactor = bhealthmax / 5000
                         barwide = 200 * barsizefactor + 10
                         bosshealthbar((SCREEN_WIDTH / 2 - (barwide // 2)), (bosses * 50), e ,e.hp, bosshealthblink)
                         bosshealthblink = bosshealthblink + 1
@@ -2435,14 +2435,17 @@ while running:
                             if player.armor > 0:
                                 # Damage armor first
                                 player.armor = player.armor - damage
+                                newnumber(edict.yellow16nums[damage],(player.rect.left, player.rect.top))
                                 # If armor exhausted
                                 if player.armor < 0:
                                     # Remove remainder from health
                                     player.hp = + player.hp + player.armor
+                                    newnumber(edict.red16nums[abs(player.armor)],(player.rect.left, player.rect.top))
                                     # Set armor to empty
                                     player.armor = 0
                             else:
                                 player.hp = player.hp - damage
+                            newnumber(edict.red16nums[damage],(player.rect.left, player.rect.top))
                             if player.hp < 1:
                                 # Decrement lives
                                 plives = plives - 1
@@ -2473,75 +2476,116 @@ while running:
                                 ingame = False
                         
                         elif crash.etype == "e_pu_life111":
+                            newnumber(edict.maroon16nums[1],(player.rect.left, player.rect.top))
+                            newnumber(edict.xl,(player.rect.left, player.rect.top))
                             # Extra Life
                             plives = plives + 1
                         elif crash.etype == "e_pu_flamer112":
+                            newnumber(edict.maroon16nums[100],(player.rect.left, player.rect.top))
+                            newnumber(edict.flamer,(player.rect.left, player.rect.top))
                             # Power Up Flamer
                             flamer = flamer + 100
                         elif crash.etype == "e_pu_shock113":
+                            newnumber(edict.maroon16nums[100],(player.rect.left, player.rect.top))
+                            newnumber(edict.shock,(player.rect.left, player.rect.top))
                             # Power Up Shock
                             shock = shock + 100
                         elif crash.etype == "e_pu_bio114":
+                            newnumber(edict.maroon16nums[100],(player.rect.left, player.rect.top))
+                            newnumber(edict.bio,(player.rect.left, player.rect.top))
                             # Power Up Bio
                             bio = bio + 100
                         elif crash.etype == "e_pu_pulsar115":
                             # Power Up Pulsar
+                            newnumber(edict.maroon16nums[100],(player.rect.left, player.rect.top))
+                            newnumber(edict.pulsar,(player.rect.left, player.rect.top))
                             pulse = pulse + 100
                         elif crash.etype == "e_pu_health116":
                             # Power Up Health
-                            newnumber(edict.blue16nums[50],(player.rect.left, player.rect.top))
                             player.hp = player.hp + 50
+                            hpgain = 50
                             if player.hp > healthmax // 2:
+                                hpgain = 50 - (player.hp - healthmax // 2)
                                 player.hp = healthmax // 2 
+                            if hpgain > 0:
+                                newnumber(edict.purple16nums[hpgain],(player.rect.left, player.rect.top))
                         elif crash.etype == "e_pu_armor117":
                             # Power Up Armor
                             player.armor = player.armor + 25
+                            again = 25
                             if player.armor > armormax // 2:
+                                again = 25 - (player.armor - armormax // 2)
                                 player.armor = armormax // 2
+                            if again > 0: 
+                                newnumber(edict.blue16nums[again], (player.rect.left, player.rect.top))
                         elif crash.etype == "e_pu_healthmax118":
-                            newnumber(edict.blue16nums[50],(player.rect.left, player.rect.top))
                             # Raise maximum health
+                            hpmaxgain = 50
                             healthmax = healthmax + 50
                             if healthmax > healthhardmax:
+                                hpmaxgain = 50 - (healthmax - healthhardmax)
                                 healthmax = healthhardmax
+                            if hpmaxgain > 0:
+                                newnumber(edict.orange16nums[hpmaxgain],(player.rect.left, player.rect.top))
                             # Power Up Health
                             player.hp = player.hp + 50
+                            hpgain = 50
                             if player.hp > healthmax // 2:
-                                player.hp = healthmax // 2  
+                                hpgain = 50 - (player.hp - healthmax // 2)
+                                player.hp = healthmax // 2 
+                            if hpgain > 0:
+                                newnumber(edict.purple16nums[hpgain],(player.rect.left, player.rect.top))  
                         elif crash.etype == "e_pu_armormax119":
-                            # Raise maximum armor
+                            # Raise maximum armor                          
                             armormax = armormax + 25
+                            amgain = 25
                             if armormax > armorhardmax:
+                                amgain = 25 - (armormax - armorhardmax)
                                 armormax = armorhardmax
                             # Power Up Armor
                             player.armor = player.armor + 25
+                            again = 25
                             if player.armor > armormax // 2:
+                                again = 25 - (player.armor - armormax // 2)
                                 player.armor = armormax // 2
+                            if again > 0: 
+                                newnumber(edict.blue16nums[again], (player.rect.left, player.rect.top))
+                            if amgain > 0:
+                                newnumber(edict.orange16nums[amgain], (player.rect.left, player.rect.top)) 
                         elif crash.etype == "e_pu_mgmulti2":
+                            newnumber(edict.m2, (player.rect.left, player.rect.top))
                             # MG upgrade multifire 2
                             mgmult = 2
                         elif crash.etype == "e_pu_mgmulti3":
+                            newnumber(edict.m3, (player.rect.left, player.rect.top))
                             # MG upgrade multifire 3
                             mgmult = 3
                         elif crash.etype == "e_pu_mgmulti5":
+                            newnumber(edict.m5, (player.rect.left, player.rect.top))
                             # MG upgrade multifire 5
                             mgmult = 5
                         elif crash.etype == "e_pu_mgmulti7":
+                            newnumber(edict.m7, (player.rect.left, player.rect.top))
                             # MG upgrade multifire 7
                             mgmult = 7
                         elif crash.etype == "e_pu_mgammo_laser2":
+                            newnumber(edict.a2, (player.rect.left, player.rect.top))
                             # MG upgrade laser ammo
                             mgtype = 2
                         elif crash.etype == "e_pu_mgammo_plasma3":
+                            newnumber(edict.a3, (player.rect.left, player.rect.top))
                             # MG upgrade plasma ammo
                             mgtype = 3
                         elif crash.etype == "e_pu_mgb1":
+                            newnumber(edict.b, (player.rect.left, player.rect.top))
                             # MG upgrade bounce ammo
                             mgbounce = 1
                         elif crash.etype == "e_pu_mgb2":
+                            newnumber(edict.b2, (player.rect.left, player.rect.top))
                             # MG upgrade 2 bounce ammo
                             mgbounce = 2
                         elif crash.etype == "e_pu_mgb3":
+                            newnumber(edict.b3, (player.rect.left, player.rect.top))
                             # MG upgrade 3 bounce ammo
                             mgbounce = 3                            
                         
@@ -2618,7 +2662,7 @@ while running:
                                 if edict.enemydict[enemy1.etype]["damenemies"] > 0:
                                     dam = random.randint(5,15)
                                     enemy1.hp = enemy1.hp - dam
-                                    newnumber(edict.yellow16nums[dam],(thisenemy.rect.left, thisenemy.rect.top))
+                                    newnumber(edict.yellow8nums[dam],(thisenemy.rect.left, thisenemy.rect.top))
                                     if enemy1.hp < 1:
                                         if edict.enemydict[enemy1.etype]["isexplodable"]:
                                             enemy1.etype = edict.enemydict[enemy1.etype]["isexplodable"]
@@ -2631,7 +2675,7 @@ while running:
                                 if edict.enemydict[enemy2.etype]["damenemies"] > 0:
                                     dam = random.randint(5,15)
                                     enemy2.hp = enemy2.hp - dam
-                                    newnumber(edict.yellow16nums[dam],(thisenemy.rect.left, thisenemy.rect.top))
+                                    newnumber(edict.yellow8nums[dam],(thisenemy.rect.left, thisenemy.rect.top))
                                     if enemy2.hp < 1:
                                         if edict.enemydict[enemy2.etype]["isexplodable"]:
                                             enemy2.etype = edict.enemydict[enemy2.etype]["isexplodable"]
@@ -2658,39 +2702,40 @@ while running:
                                 if mgtype == 3:
                                     edam = random.randint(23,38)
                             
-                            newnumber(edict.red16nums[edam],(thisenemy.rect.left, thisenemy.rect.top))
+                            newnumber(edict.red8nums[edam],(thisenemy.rect.left, thisenemy.rect.top))
                             thisenemy.hp -= edam
                             if thisenemy.hp < 1:
                                 if edict.enemydict[thisenemy.etype]["isexplodable"]:
                                     thisenemy.etype = edict.enemydict[thisenemy.etype]["isexplodable"]
                                 else:
                                     thisenemy.kill()
-                                score = score + edict.enemydict[thisenemy.etype]["hp"]
+                                scoreadd = edict.enemydict[thisenemy.etype]["hp"] + int(random.randint(-5, 5) * edict.enemydict[thisenemy.etype]["hp"] / 10)
+                                score += scoreadd
                                 wavecounter += 1
-                                
-                                newnumber(edict.green16nums[edict.enemydict[thisenemy.etype]["hp"]],(thisenemy.rect.left, thisenemy.rect.top))
+                                newnumber(edict.pink8nums[1],(player.rect.left, player.rect.top))
+                                newnumber(edict.green8nums[scoreadd],(player.rect.left, player.rect.top))
                             if bullethit.btype == 1:
                                 # MG bullets go away on impact
                                 breakage = random.randint(1,10)
                                 if mgtype == 1:
                                     if breakage > 1:
                                         bullethit.kill()
-                                        newnumber(edict.yellow16nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
+                                        newnumber(edict.yellow8nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
                                 if mgtype == 2:
                                     # Laser bullets 50% destroyed
                                     if breakage > 5:
                                         bullethit.kill()
-                                        newnumber(edict.yellow16nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
+                                        newnumber(edict.yellow8nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
                                 if mgtype == 3:
                                     # Plasma bullets 20% destroyed
                                     if breakage > 8:
                                         bullethit.kill()
-                                        newnumber(edict.yellow16nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
+                                        newnumber(edict.yellow8nums[breakage],(thisenemy.rect.left, thisenemy.rect.top))
                            
                             else:
                                 # Large bullets degraded by impacts
                                 bullethit.boomcounter -= 1                                       
-                                newnumber(edict.yellow16nums[1],(thisenemy.rect.left, thisenemy.rect.top))                    
+                                newnumber(edict.yellow8nums[1],(thisenemy.rect.left, thisenemy.rect.top))                    
                 # BULLET MOUNTAIN COLLISIONS        
                 for i, thismountain in enumerate(mountains):
                     bullethit = pygame.sprite.spritecollideany(thismountain, bullets)
@@ -2767,6 +2812,7 @@ while running:
                         wavesunmoon.update(wave)
                 if score > highscore:
                     highscore = score
+                    hsinitials = initials
                 # Flip everything to the display
                 pygame.display.flip()
                 
@@ -3041,7 +3087,8 @@ while running:
                             mountain1.kill()
                         # Update highscore
                         if score > highscore:
-                            highscore = score                      
+                            highscore = score  
+                            hsinitials = initials                    
                         loaddataexists = edict.loadgame()
                         # returns number of saved games
                         listsize = edict.loadgame()
@@ -3120,8 +3167,10 @@ while running:
         print(entity.name)
         quit
 #Save highscore
+hsdump = {"score": highscore, "inits": hsinitials}
 with open(hsfilename, "w") as file:
-    file.write(str(highscore))
+        json.dump(hsdump, file, indent=4)
+
   
 # At this point, we're done, so we can stop and quit the mixer
 pygame.mixer.music.stop()
