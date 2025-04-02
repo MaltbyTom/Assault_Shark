@@ -48,6 +48,8 @@ from screeninfo import get_monitors
 import xbox360_controller
 import edict # Enemy dictionary module
 import boxi # Box making module
+# Import mouse
+import pygame.mouse
 #from pygame._sdl2.video import Window
 
 #window = None
@@ -94,6 +96,11 @@ from pygame.locals import (
     K_m,
     K_LCTRL,
     K_l,
+    K_s,
+    MOUSEBUTTONDOWN,
+    MOUSEWHEEL,
+    MOUSEBUTTONUP,
+    MOUSEMOTION,
 )
 
 
@@ -106,6 +113,9 @@ GRAY = pygame.Color("gray")
 BLACK = pygame.Color("black")
 WHITE = pygame.Color("white")
 YELLOW = pygame.Color("yellow")
+LIGHTBLUE = pygame.Color("lightblue1")
+DKGRAY = pygame.Color("dimgray")
+DKGREEN = pygame.Color("darkgreen")
 
 
 screen_nums = []
@@ -295,7 +305,7 @@ class Player(pygame.sprite.Sprite):
                 self.rect.bottom = SCREEN_HEIGHT_NOBOX
             
         return(self)                
-
+rbuttimer = 0
 portalaniticks = 0
 portalctr = 0
 gatehouse = False
@@ -383,7 +393,8 @@ class Enemy(pygame.sprite.Sprite):
         self.name = "enemy" + edict.enemydict[etype]["imgname"]
         self.surf = get_image(edict.enemydict[etype]["imgname"])
         self.surf.set_colorkey(edict.enemydict[etype]["mask"], RLEACCEL) 
-        # Random speed, climb/dive               
+        # Random speed, climb/dive   
+                    
         if edict.enemydict[etype]["randspeed"]:
             self.speed = random.randint(*edict.enemydict[etype]["speed"])
         else:
@@ -409,7 +420,6 @@ class Enemy(pygame.sprite.Sprite):
                 if hasattr(launcher, "etype"):
                     if edict.enemydict[launcher.etype]["boss"] == 1:
                         if etype == "e_tent_tentacle91":
-                            #print("tentaclespawn")
                             self.rect = self.surf.get_rect(center=(launcher.rect.left + edict.enemydict[etype]["centerwidth"], launcher.rect.top + edict.enemydict[etype]["centerheight"]))
                         else:
                             randadd = random.randint(-100,100)
@@ -436,18 +446,19 @@ class Enemy(pygame.sprite.Sprite):
         self.fired = edict.enemydict[etype]["fired"]
         self.hp = edict.enemydict[etype]["hp"]
 
+        if edict.enemydict[etype]["boss"]:
+            self.basex = SCREEN_WIDTH - 250 + random.randint(-200, 200)
+            self.basey = SCREEN_HEIGHT_NOBOX / 2 - self.rect.height / 2 + random.randint(-300, 100)
         
         self.etype = etype
         # set blowup time to enemy as passed
         self.boomcounter = boomcounter
         #if etype == 91:
-        #    print("has self.hp")
 
     # Move the enemy based on speed
     # Remove it when it passes the left edge of the screen
     def update(self):
         #if self.etype == 91:
-        #    print("tentacle update")
         if random.randint(1,10)>5:
             # 50% modify climb if applicable
             if edict.enemydict[self.etype]["randclimb"]:
@@ -467,7 +478,6 @@ class Enemy(pygame.sprite.Sprite):
         if edict.enemydict[self.etype]["isanimated"]:
             # animate through dictionary checks
             #if self.etype == 91:
-            #    print("animated")
             framecheck = 0
             gotframe = False
             self.ticks = self.ticks -1
@@ -509,11 +519,9 @@ class Enemy(pygame.sprite.Sprite):
         # Move the enemy
         if edict.enemydict[self.etype]["advancedmovement"] == True:
             #if self.etype == 91:
-            #    print("call amove")
             isdone = amove(self) 
         #for e in enemies:
             #if e.etype == 91:
-            #    print("back from amove")
         if hasattr(self, "rect"):
             if hasattr(self.rect, "move_ip"):
                 self.rect.move_ip(-self.speed, self.climb)
@@ -616,7 +624,6 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT_NOBOX
         #for e in enemies:
         #    if e.etype == 91:
-        #        print ("still exists at exit")
 
 # Define the bullet object extending pygame.sprite.Sprite
 # Instead of a surface, we use an image for a better looking sprite
@@ -828,13 +835,11 @@ class Cloud(pygame.sprite.Sprite):
 def amove(thise):
     if thise.etype == "e_tent_tentacle91":
         # Tentacle
-        #print("amove")
         #daboss = False
         for e in enemies:
             if edict.enemydict[e.etype]["boss"] == True:
                 daboss = e
         #if daboss:
-            #print(daboss.etype)
             
             #if edict.enemydict[daboss]["isexploded"]:
             #    thise.kill()
@@ -857,8 +862,8 @@ def amove(thise):
             movex = 0
             movey = 0
             # Set base coordinates
-            basey = SCREEN_HEIGHT_NOBOX / 2 - thise.rect.height / 2
-            basex = SCREEN_WIDTH - 250
+            basey = thise.basey
+            basex = thise.basex
             # establish proposed move
         
             if player.rect.right + 500 > thise.rect.left:
@@ -883,7 +888,6 @@ def amove(thise):
                                 new_enemy = Enemy("e_tent_tentacle91",14,300,thise)
                                 enemies.add(new_enemy)
                                 all_sprites.add(new_enemy)
-                                #print("Back from enemy init")
                 else:
                     thise.speed = 8
                     # Charge 
@@ -918,14 +922,40 @@ def amove(thise):
                         thise.speed = thise.speed + 3
                 # Update proposed y position
                 movey = thise.climb + thise.rect.bottom
-                # Now check that we aren't running into a mountain or the ground
+                # Now check that we aren't running into another boss, a mountain or the ground
                 if movey > SCREEN_HEIGHT_NOBOX:
                     movey = SCREEN_HEIGHT_NOBOX - 50
-                if len(mountains) > 0:
-                    for m in mountains:
-                        if m.rect.collidepoint(movey,movex):
-                            thise.climb = -5
-                            thise.speed = 5
+            
+            movey = thise.climb + thise.rect.bottom
+            if thise.speed > 5:
+                movex = thise.speed + thise.rect.left
+            else:
+                movex = thise.speed + thise.rect.right
+            for e in enemies:
+                if e.rect.collidepoint(movex, movey):
+                    if e is not thise:
+                        if edict.enemydict[e.etype]["boss"]:
+                            if e.rect.left > thise.rect.left:
+                                e.rect.left += 10
+                                thise.speed = -5
+                                e.speed = 5
+                            else:
+                                thise.speed = 5
+                                e.speed = -5
+                                e.rect.left -= 10
+                            if e.rect.top > thise.rect.top:
+                                thise.climb = -5
+                                e.climb = 5
+                                e.rect.top += 10
+                            else:
+                                thise.climb = 5
+                                e.climb = -5
+                                e.rect.top -= 10
+            if len(mountains) > 0:
+                for m in mountains:
+                    if m.rect.collidepoint(movex, movey):
+                        thise.climb = -5
+                        thise.speed = 5
 
             # Don't chase past half screen
             if thise.rect.left < SCREEN_WIDTH / 2:
@@ -955,7 +985,6 @@ def amove(thise):
                 thise.climb = -8
         #for e in enemies:
             #if e.etype == 91: 
-                #print("end of amove")
         return(thise)
     
 
@@ -963,6 +992,9 @@ def amove(thise):
 # Define and cache fonts
 
 pygame.font.init()
+font8 = pygame.font.Font("fonts/arcade_r.ttf", 8)
+font10 = pygame.font.Font("fonts/arcade_r.ttf", 10)
+font12 = pygame.font.Font("fonts/arcade_r.ttf", 12)
 font15 = pygame.font.Font("fonts/arcade_r.ttf", 15)
 font16 = pygame.font.Font("fonts/arcade_r.ttf", 16)
 font20 = pygame.font.Font("fonts/arcade_r.ttf", 20)
@@ -972,38 +1004,44 @@ font60 = pygame.font.Font("fonts/arcade_r.ttf", 60)
 font75 = pygame.font.Font("fonts/arcade_r.ttf", 75)
 
 # Cache repeated text renders
-playagametextblack = font20.render("Press Enter/[Start] To Play - Press Esc/[Back] to Quit", 1, BLACK)
-playagametextred = font20.render("Press Enter/[Start] To Play - Press Esc/[Back] to Quit", 1, RED)
-pausetext1 = font20.render(" Keyboard Controls:", 1, BLACK)
-pausetext2 = font16.render("Flying: Arrow keys - Up, Down, Left, Right -- Tilt: R Ctrl", 1, BLACK)
-pausetext3 = font16.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, BLACK)
-pausetext4 = font16.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, BLACK)
-pausetext5 = font20.render("Press Enter To UnPause - Press Esc to Quit", 1, BLACK)
-pausetext1red = font20.render(" Keyboard Controls:", 1, RED)
-pausetext2red = font16.render("Flying: Arrow keys - Up, Down, Left, Right -- Tilt: R Ctrl", 1, RED)
-pausetext3red = font16.render("Weapons: Space - Machine Gun, X - Flamer, C - Shock Shield, V - Pulsar, B - Bio Blast", 1, RED)
-pausetext4red = font16.render("Enter - Play / Pause / Unpause, Escape - Quit ", 1, RED)
-pausetext5red = font20.render("Press Enter To UnPause - Press Esc to Quit", 1, RED)
-pausetext6 = font20.render(" Joystick Controls:", 1, BLACK)
-pausetext7 = font16.render("Flying: Left Stick - Up, Down, Left, Right -- Tilt: Left Bump Trigger", 1, BLACK)
-pausetext8 = font16.render("Weapons: Right Trigger - Machine Gun, A - Flamer, X - Shock Shield, B - Pulsar, Y - Bio Blast", 1, BLACK)
-pausetext9 = font16.render("Start - Play / Pause / Unpause, Back - Quit ", 1, BLACK)
-pausetext10 = font20.render("Press Start To UnPause - Press Bacl to Quit", 1, BLACK)
-pausetext6red = font20.render(" Joystick Controls:", 1, RED)
-pausetext7red = font16.render("Flying: Left Stick - Up, Down, Left, Right -- Tilt: Left Bump Trigger", 1, RED)
-pausetext8red = font16.render("Weapons: Right Trigger - Machine Gun, A - Flamer, X - Shock Shield, B - Pulsar, Y - Bio Blast", 1, RED)
-pausetext9red = font16.render("Start - Play / Pause / Unpause, Back - Quit ", 1, RED)
-pausetext10red = font20.render("Press Start To UnPause - Press Bacl to Quit", 1, RED)
+playagametextblack = font20.render("Press [Enter]/(Start) To Play - Press [Esc]/(Back) to Quit", 1, BLACK)
+playagametextred = font20.render("Press [Enter]/(Start) To Play - Press [Esc]/(Back) to Quit", 1, RED)
+pausetext1 = font20.render(" [Keyboard Controls]:", 1, BLACK)
+pausetext2 = font16.render("Flying: Arrow keys - [Up], [Down], [Left], [Right] -- Tilt: [R Ctrl]", 1, BLACK)
+pausetext3 = font16.render("Weapons: [Space] - Machine Gun, [X] - Flamer, [C] - Shock Shield, [V] - Pulsar, [B] - Bio Blast", 1, BLACK)
+pausetext4 = font16.render("[Enter] - Play / Pause / Unpause, [Escape] - Quit ", 1, BLACK)
+pausetext5 = font20.render("Press [Enter] To UnPause - Press [Esc] to Quit", 1, BLACK)
+pausetext1red = font20.render(" [Keyboard Controls]:", 1, RED)
+pausetext2red = font16.render("Flying: Arrow keys - [Up], [Down], [Left], [Right] -- Tilt: [R Ctrl]", 1, RED)
+pausetext3red = font16.render("Weapons: [Space] - Machine Gun, [X] - Flamer, [C] - Shock Shield, [V] - Pulsar, [B] - Bio Blast", 1, RED)
+pausetext4red = font16.render("[Enter] - Play / Pause / Unpause, [Escape] - Quit ", 1, RED)
+pausetext5red = font20.render("Press [Enter] To UnPause - Press [Esc] to Quit", 1, RED)
+pausetext6 = font20.render(" (Joystick Controls):", 1, BLACK)
+pausetext7 = font16.render("Flying: Left Stick - (Up), (Down), (Left), (Right) -- Tilt: (Left Bump Trigger)", 1, BLACK)
+pausetext8 = font16.render("Weapons: (Right Trigger) - Machine Gun, (A) - Flamer, (X) - Shock Shield, (B) - Pulsar, (Y) - Bio Blast", 1, BLACK)
+pausetext9 = font16.render("(Start) - Play / Pause / Unpause, (Back) - Quit ", 1, BLACK)
+pausetext10 = font20.render("Press (Start) To UnPause - Press (Back) to Quit", 1, BLACK)
+pausetext6red = font20.render(" (Joystick Controls):", 1, RED)
+pausetext7red = font16.render("Flying: Left Stick - (Up), (Down), (Left), (Right) -- Tilt: (Left Bump Trigger)", 1, RED)
+pausetext8red = font16.render("Weapons: (Right Trigger) - Machine Gun, (A) - Flamer, (X) - Shock Shield, (B) - Pulsar, (Y) - Bio Blast", 1, RED)
+pausetext9red = font16.render("(Start) - Play / Pause / Unpause, (Back) - Quit ", 1, RED)
+pausetext10red = font20.render("Press (Start) To UnPause - Press (Back) to Quit", 1, RED)
 vaulttext1red = font16.render("This vault is long abandoned.  It's doors are blocked by fallen rock.", 1 , RED)
 vaulttext2red = font16.render("If only you had tools to move the debris and a repair kit to fix the hyperlink!", 1, RED)
-vaulttext3red = font20.render("Press Enter/Start to leave the vault!", 1, RED)
-vaulttext4red = font16.render("Press [S] on keyboard or (A) on controller to set/update savepoint.", 1, RED)
-vaulttext5red = font20.render("Save point set!", 1, RED)
-loadasktextred = font16.render("A cloned assaultshark is available in the cryo-labs!  Press (A) on joystick or [L] on keyboard to restore", 1, RED)
+vaulttext3red = font20.render("Press [Enter]/(Start) to leave the vault!", 1, RED)
+vaulttext4red = font16.render("Working with the biokit on your assault shark, you manage to restore some of the cryogenic cloning hangars.", 1, RED)
+vaulttext5red = font20.render("Press [SPACE] on keyboard or (A) on controller to set/update savepoint.", 1, RED)
+vaulttext6red = font20.render("Save point set!", 1, RED)
+loadasktextred = font16.render("A cloned assaultshark is available in the cryo-labs!  Press (B) on joystick or [L] on keyboard to restore", 1, RED)
 loadedtextred = font16.render("Your cloned ship has been fetched from the cryolabs, restored, and made ready", 1, RED)
+setuptextred = font16.render("Press (X) on joystick or [S] on keyboard to set your shark pilot's initials and game settings", 1, RED)
+loadtextred = font16.render("Arrow keys or left stick select.  Press (A) on joystick or [ENTER] on keyboard to load selected game.", 1, RED)
+settextred = font16.render("Arrow keys or left stick select.  Press (A) on joystick or [ENTER] on keyboard to accept settings.", 1, RED)
+settextred2 = font16.render("(Y) or [SPACE] randomizes initials.", 1, RED)
 loaded = 0
 
-
+# This generates dictionaries of flyaway numbers in different colors
+edict.gennumbers()
 
 def texts(lives, score):
     # gives lives, score, waves, high score
@@ -1011,6 +1049,10 @@ def texts(lives, score):
     screen.blit(scoretext, (52, SCREEN_HEIGHT - 27))
     scoretext=font20.render("Lives:" + str(lives) + "  Score:" + str(score) +"  Wave: " + str(wave)+ ":" + "  (" + str(wavecounter) + "/" + str(wavegoal) + ")" +"   High Score: "+str(highscore), 1, (0,0,255))
     screen.blit(scoretext, (50, SCREEN_HEIGHT - 25))
+    initstext = font30.render("Pilot: " + initials, 1, BLACK)
+    screen.blit(initstext, (32, SCREEN_HEIGHT - 87))
+    initstext = font30.render("Pilot: " + initials, 1, BLUE)
+    screen.blit(initstext, (30, SCREEN_HEIGHT - 85))
 
 def texts2(flamer, shock, bio, pulse):
     # gives ammo - machinegun has infinite ammo
@@ -1021,61 +1063,61 @@ def texts2(flamer, shock, bio, pulse):
 
 def texts3(highscore):
     # on enter to play screen, gives high score
-    #print ("Start screen update happened!")
     global playscreenupdated
     ptxtoffset = playagametextblack.width / 2
-    screen.blit(playagametextblack, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 60))
-    screen.blit(playagametextred, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 58))
+    screen.blit(playagametextblack, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 360))
+    screen.blit(playagametextred, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 362))
     playagametext = font60.render("High Score: "+str(highscore), 1, (0,0,0))
     ptxtoffset = playagametext.width / 2
-    screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 100))
+    screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 200))
     playagametext = font60.render("High Score: "+str(highscore), 1, (255,0,0))
-    screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 102))
+    screen.blit(playagametext, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 202))
     # Control list
     ptxtoffset = pausetext1.width / 2
-    screen.blit(pausetext1, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -5))
-    screen.blit(pausetext1red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + -3))
+    screen.blit(pausetext1, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -355))
+    screen.blit(pausetext1red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + -353))
     ptxtoffset = pausetext2.width / 2
-    screen.blit(pausetext2, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 20))
-    screen.blit(pausetext2red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 22))
+    screen.blit(pausetext2, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 330))
+    screen.blit(pausetext2red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 328))
     ptxtoffset = pausetext3.width / 2
-    screen.blit(pausetext3, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 40))
-    screen.blit(pausetext3red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 42))
+    screen.blit(pausetext3, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -310))
+    screen.blit(pausetext3red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 -308))
     ptxtoffset = pausetext4.width / 2
-    screen.blit(pausetext4, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 60))
-    screen.blit(pausetext4red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 62))
+    screen.blit(pausetext4, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 290))
+    screen.blit(pausetext4red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 -288))
     # Joystick controls
     ptxtoffset = pausetext6.width / 2
-    screen.blit(pausetext6, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 190))
-    screen.blit(pausetext6red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 188))
+    screen.blit(pausetext6, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 240))
+    screen.blit(pausetext6red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 238))
     ptxtoffset = pausetext7.width / 2
-    screen.blit(pausetext7, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 165))
-    screen.blit(pausetext7red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 163))
+    screen.blit(pausetext7, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 215))
+    screen.blit(pausetext7red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 213))
     ptxtoffset = pausetext8.width / 2
-    screen.blit(pausetext8, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -145))
-    screen.blit(pausetext8red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 143))
+    screen.blit(pausetext8, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 -195))
+    screen.blit(pausetext8red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 193))
     ptxtoffset = pausetext9.width / 2
-    screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
-    screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
+    screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 175))
+    screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 173))
     loaddataexists = edict.loadgame()
-    #print(loaddataexists)
-    #print("From loadgame:")
-    #print(edict.savedict)
+    # returns number of saved games
+    listsize = edict.loadgame()
+    # Add rendered versions of savenames to dictionary
+    # Add a dictionary key "render" containing renders of the text keys
+    renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
     if loaddataexists > 0:
         if loaded == 0:
             ptxtoffset = loadasktextred.width / 2
             ptxtlft = SCREEN_WIDTH / 2 - ptxtoffset
-            boxi.boxi(screen,loadasktextred,SCREEN_HEIGHT / 2 - 220, ptxtlft, 3, BLACK, 2, RED, 0, 0)
+            boxi.boxi(screen,loadasktextred,SCREEN_HEIGHT / 2 + 320, ptxtlft, 2, BLACK, 3, RED, 0, 0)
         else:
             ptxtoffset = loadedtextred.width / 2
             ptxtlft = SCREEN_WIDTH / 2 - ptxtoffset
-            boxi.boxi(screen,loadedtextred,SCREEN_HEIGHT / 2 - 220, ptxtlft, 3, BLACK, 2, RED, 0, 0) 
-
+            boxi.boxi(screen,loadedtextred,SCREEN_HEIGHT / 2 + 320, ptxtlft, 2, BLACK, 3, RED, 0, 0) 
+    boxi.boxi(screen, setuptextred, SCREEN_HEIGHT / 2 + 275, SCREEN_WIDTH / 2 - setuptextred.width/2, 2, BLACK, 3, RED, 0, 0)
     playscreenupdated = True
     
 
 def texts4():
-    #print("Pause screen update happened!")
     global pausescreenupdated
     #Pause screen    
     ptxtoffset = pausetext5.width / 2
@@ -1108,37 +1150,81 @@ def texts4():
     screen.blit(pausetext9, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 - 125))
     screen.blit(pausetext9red, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 - 123))
     pausescreenupdated = True
- 
-def readgamedict():
+
+loadgame = ""
+def readgamedict(*args, **kwargs):
     global loaded, loaddataexists
     global plives, score, flamer, shock, bio, pulse, redflash, greenflash, mgmult, mgtype, mgbounce, bounceinheritc, bounceinherits
-    global healthmax, armormax, wavecounter, wavegoal, waveboss, waveendticks, jetupdown, tilt, wave
-    #self.name = "enemy" + edict.enemydict[etype]["imgname"]
-    #print("From readgamedict:")
-    #print(edict.savedict)
-    wave = edict.savedict["savepoint"]["wave"]
-    score = edict.savedict["savepoint"]["score"]
-    ammo = edict.savedict["savepoint"]["ammo"]
+    global healthmax, armormax, wavecounter, wavegoal, waveboss, waveendticks, jetupdown, tilt, wave, initials
+
+    initsuff = "savepoint"
+    if "initsuff" in kwargs:
+        initsuff = kwargs["initsuff"]
+    wave = edict.savedict[initsuff]["wave"]
+    score = edict.savedict[initsuff]["score"]
+    ammo = edict.savedict[initsuff]["ammo"]
     flamer = ammo[0]
     shock = ammo[1]
     bio = ammo[2]
     pulse = ammo[3]
-    mg  = edict.savedict["savepoint"]["mg"]
+    mg  = edict.savedict[initsuff]["mg"]
     mgmult = mg[0]
     mgtype = mg[1]
     mgbounce = mg[2]
-    plives = edict.savedict["savepoint"]["lives"]
-    player.hp = edict.savedict["savepoint"]["health"]
-    healthmax = edict.savedict["savepoint"]["healthmax"]
-    player.armor = edict.savedict["savepoint"]["armor"]
-    armormax = edict.savedict["savepoint"]["armormax"]    
+    plives = edict.savedict[initsuff]["lives"]
+    player.hp = edict.savedict[initsuff]["health"]
+    healthmax = edict.savedict[initsuff]["healthmax"]
+    player.armor = edict.savedict[initsuff]["armor"]
+    armormax = edict.savedict[initsuff]["armormax"] 
+    if "initials" in edict.savedict[initsuff]:
+        initials = edict.savedict[initsuff]["initials"]
+
     if wave > 1:
         wavct = 1
         while wavct < wave:
             wavegoal = wavegoal + ((wavct + 1) * (wavct + 1) * 10) + 100
             wavct = wavct + 1
 
-    
+def savegame():
+    initsuff = "savepoint" + initials
+    asavedict = {}
+    ammo = {}
+    mg = {}
+    asavedict = {initsuff: {"wave": wave}}
+    #asavedict[initsuff]["wave"] = wave
+    asavedict[initsuff]["score"] = score
+    ammo = [flamer, shock, bio, pulse]
+    asavedict[initsuff]["ammo"] = ammo
+    mg = [mgmult, mgtype, mgbounce]
+    asavedict[initsuff]["mg"] = mg
+    asavedict[initsuff]["lives"] = plives
+    asavedict[initsuff]["health"] = player.hp
+    asavedict[initsuff]["healthmax"] = healthmax
+    asavedict[initsuff]["armor"] = player.armor
+    asavedict[initsuff]["armormax"] = armormax
+    asavedict[initsuff]["initials"] = initials
+    edict.savegame(asavedict, initsuff)
+    return asavedict
+
+# Functions for Boxibuttons:
+a1 = 0
+a2 = 0
+a3 = 0
+def randomizebutton():
+    global a1
+    global a2
+    global a3
+    a1 = 72 + random.randint(1, 72)
+    a2 = 72 + random.randint(1, 72)
+    a3 = 72 + random.randint(1, 72)
+    # This sets up an animation event for the randomization of the 'AAA' initials style control in the while running loop.
+    # The control generates a three character text string, intended for use with high scores and save games.
+    # Mostly I stuck this in because I realized that it was the only piece missing from a slot machine style wheel of pictures
+    # display - it is fun and cool looking, which are generally good things in a game UI.
+
+# Animation timers
+isanioverflag = True
+isaniover = 0
 
 healthhardmax = 400
 armorhardmax = 200
@@ -1237,13 +1323,11 @@ def mgbar(left, top):
 
 def healthbar(left, top, health):
     #if health > healthmax:
-    healthbarborder = pygame.Rect(left + 40, top, healthmax, 30)
-    healthbarfilled = pygame.Rect(left + 42, top + 2, int((healthmax - 4) * (health/(healthmax/2))), 26)
+    healthbarborder = pygame.Rect(left + 240, top, healthmax, 30)
+    healthbarfilled = pygame.Rect(left + 242, top + 2, int((healthmax - 4) * (health/(healthmax/2))), 26)
     heartimg = get_image("heart.png")
     heartimg.set_colorkey(WHITE, RLEACCEL)
-    screen.blit(heartimg, (left,top))
-    healthbarmark = pygame.Rect(left + 237, top-3, 1, 33)
-    #print(healthmax)
+    healthbarmark = pygame.Rect(left + 437, top-3, 1, 33)
     if health > 70:
         healthbarcolor = GREEN
     elif health > 30:
@@ -1254,19 +1338,21 @@ def healthbar(left, top, health):
     pygame.draw.rect(screen, healthbarcolor, healthbarfilled, 0, 2)
     if healthmax > 200:
         pygame.draw.rect(screen, BLACK, healthbarmark, 0, 0)
+    
+    screen.blit(heartimg, (left + 210,top))
     #return health
 
 def bosshealthbar(left, top, boss, health, bosshealthblink):
  
     bhealthmax = edict.enemydict[boss.etype]["hp"] / 2 * wave
     barsizefactor = bhealthmax / 1000
-    healthbarblink = pygame.Rect(left + 35, top-5, int(200 * barsizefactor) + 10, 40)
-    healthbarborder = pygame.Rect(left + 40, top, int(200 * barsizefactor), 30)
+    healthbarblink = pygame.Rect(left + 35, top-5, int(100 * barsizefactor) + 10, 40)
+    healthbarborder = pygame.Rect(left + 40, top, int(100 * barsizefactor), 30)
     healthbarfilled = pygame.Rect(left + 42, top + 2, int((196) * (health/(bhealthmax)) * barsizefactor), 26)
 
-    if int((196) * (health/(bhealthmax))) > 70 * wave / 2:
+    if int((196) * (health/(bhealthmax))) > 70 * wave / 8:
         healthbarcolor = GREEN
-    elif int((196) * (health/(bhealthmax))) > 30 * wave / 2:
+    elif int((196) * (health/(bhealthmax))) > 30 * wave / 8:
         healthbarcolor = YELLOW
     else:
         healthbarcolor = RED
@@ -1283,17 +1369,17 @@ def bosshealthbar(left, top, boss, health, bosshealthblink):
     
 
 def armorbar(left, top, armor):
-    armorbarborder = pygame.Rect(left + 40, top, armormax, 30)
-    armorbarfilled = pygame.Rect(left + 42, top +2, int((armormax - 4) * (armor/(armormax/2))), 26)
+    armorbarborder = pygame.Rect(left + 240, top, armormax, 30)
+    armorbarfilled = pygame.Rect(left + 242, top +2, int((armormax - 4) * (armor/(armormax/2))), 26)
     shieldimg = get_image("shield.png")
     shieldimg.set_colorkey(WHITE, RLEACCEL)
-    screen.blit(shieldimg, (left, top))
-    armorbarmark = pygame.Rect(left + 137, top-3, 1, 33)
+    armorbarmark = pygame.Rect(left + 337, top-3, 1, 33)
     pygame.draw.rect(screen, BLACK, armorbarborder, 0, 2)
     pygame.draw.rect(screen, BLUE, armorbarfilled, 0, 2)
     if armormax > 100:
         pygame.draw.rect(screen, BLACK, armorbarmark, 0, 0)
     #return healthmax
+    screen.blit(shieldimg, (left + 212, top))
     return armor
 
 def fpscounter():    
@@ -1322,8 +1408,8 @@ def statusdisplay():
     # Draw our game text
     texts(plives, score)
     texts2(flamer,shock,bio,pulse)   
-    healthbar(20, SCREEN_HEIGHT - 85, player.hp)
-    armorbar((healthmax + 70), SCREEN_HEIGHT - 85, player.armor)
+    healthbar(120, SCREEN_HEIGHT - 85, player.hp)
+    armorbar((healthmax + 170), SCREEN_HEIGHT - 85, player.armor)
     mgbar(SCREEN_WIDTH - 300, SCREEN_HEIGHT - 85)
 # Setup for sounds, defaults are good
 pygame.mixer.init()
@@ -1340,6 +1426,7 @@ try:
     controller = xbox360_controller.Controller()
 except pygame.error:
     nojoy = True
+
 # Create the screen object
 # First set the icon
 icon = pygame.image.load("graphics/icon.png")
@@ -1373,7 +1460,6 @@ print(str(jsons) + " JSON file(s) added")
 # Sound source: http://ccmixter.org/files/Apoxode/59262
 # License: https://creativecommons.org/licenses/by/3.0/
 pygame.mixer.music.load("sounds/apoxode_-_electric_1.mp3")
-pygame.mixer.music.play(loops=-1)
 
 # Load all our sound files
 # Sound sources: Jon Fincher
@@ -1497,10 +1583,50 @@ all_sprites.add(wavesunmoon)
 all_sprites.add(player)
 
 
+# Now parameter lists for *params...
 
+# parameters for the rboxipicwheels row for entering three initials video game style
+# initialspos{} is the dictionary of options per wheel, with the ascii character literal and its rendering for
+# all allowable ascii characters.  initialsdef{} is the default values of A, A, A.
+# Initials defaults
+initialfont = font50
+initialfcolor = BLACK
+# Dictionary for initial wheel positions
+rendera = boxi.renderinits("A",initialfont, initialfcolor)
+#rendera = rendera.subsurface(0,0,rendera.width - rendera.width//8, rendera.height)
+#rendera = initialfont.render("A", 1, initialfcolor)
+initialsdef = {1: {"lit": "A", "ren": rendera, "val": 65}, 2: {"lit": "A", "ren": rendera, "val": 65}, 3:{"lit": "A", "ren": rendera, "val": 65}}
+# Programatically make an allowable ascii dictionary
+initialspos = {}
+ctr = 65 # Ascii value of "A" - capitals are 65 to 90, numbers are 48 to 57, but we want the numbers to appear after the letters
+while ctr < 91:
+    initialspos [ctr] = {"lit": chr(ctr), "ren": boxi.renderinits(chr(ctr), initialfont, initialfcolor)}
+    ctr += 1
+ctr = 48
+while ctr < 58:
+    initialspos [ctr] = {"lit": chr(ctr), "ren": boxi.renderinits(chr(ctr), initialfont, initialfcolor)}
+    ctr += 1
+# And the call defaults
+initrboxidef = (screen, initialsdef, "ren", 830, 555, 2, YELLOW, 1, BLACK, initialspos, 0, 0)
+# parameters for default boxi call with rendered text object - these will be extra field displays for the savegame Cboxiscroll
+# A default rendered text item to display in a Boxi
+textitem = font20.render("A text object", 1, BLACK)
+# display boxes for loadgames
+baseloc = (400, 1200)
+boxidef1 = (screen, textitem, baseloc[0] + 30, baseloc[1], 0, LIGHTBLUE, 2, BLACK, 0, 0)
+boxidef2 = (screen, textitem, baseloc[0] + 60, baseloc[1], 0, LIGHTBLUE, 2, BLACK, 0, 0)
+boxidef3 = (screen, textitem, baseloc[0] + 90, baseloc[1], 0, LIGHTBLUE, 2, BLACK, 0, 0)
+# parameters for a scrolling column of boxes, dictionary driven, with linked fields by key displayed
+# Add a dictionary key "render" containing renders of the text keys
+renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
+cboxiscdef1 = (screen, renderedtext, "render", baseloc[0] + 160, baseloc[1] + 10, 1, WHITE, 1, BLUE, 0, 0, 7)
+
+portalsetup = False
+saved = False
 
 # Set player lives, score, special weapons, redflash, greenflash, gamerunning variables
 
+initials = "AAA"
 # MG POWERUPS
 # 1, 2, 3, 5, 7
 mgmult = 1
@@ -1546,6 +1672,8 @@ tilt = 1
 lastwaveboss = 0
 inportal = False
 didicleanup = True
+settingsscreen = False
+settingssetup = False
 # This call creates a .json file with all fields in the dictionary
 # fullrec = edict.gencompleteblank()
 
@@ -1562,17 +1690,25 @@ if os.path.isfile(hsfilename) and os.access(hsfilename, os.R_OK):
         if hs > highscore:
             highscore = hs
 
+didishowloadscreen = False
+loadselection = False
 loaddataexists = False
 loaddataexists = edict.loadgame()
+# returns number of saved games
+listsize = edict.loadgame()
+# Add rendered versions of savenames to dictionary
+# Add a dictionary key "render" containing renders of the text keys
+renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
 
 playscreenupdated = False
 pausescreenupdated = False
+bosscheck = 0
+addfactor = 0
 
 def initnewgame():
     global loaded, loaddataexists
     global plives, score, flamer, shock, bio, pulse, redflash, greenflash, mgmult, mgtype, mgbounce, bounceinheritc, bounceinherits
-    global healthmax, armormax,wave, wavecounter, wavegoal, waveboss, waveendticks, jetupdown, tilt
-    #print("initnewgame called")
+    global healthmax, armormax,wave, wavecounter, wavegoal, waveboss, waveendticks, jetupdown, tilt, addfactor, bosscheck
     loaddataexists = False
     redflash = False
     greenflash = False
@@ -1591,7 +1727,10 @@ def initnewgame():
     player.rect.top = SCREEN_HEIGHT_NOBOX / 5
     if loaded:
         # Use loaded dictionary
-        readgamedict()
+        if loadgame != "":
+            readgamedict(initsuff = loadgame)
+        else:
+            readgamedict()
     else:
         #Normal game start
         # MG POWERUPS
@@ -1612,10 +1751,16 @@ def initnewgame():
         wavegoal = 150
         player.hp = 100
         player.armor = 50  
-        #print("reset")
         healthmax = 200
         armormax = 100
-
+        bosscheck = wave
+        if (wave - 1) > 3: 
+            addfactor += (wave - 1) // 3
+            if addfactor > 3:
+                addfactor = 3
+        bosscheck += addfactor
+        waveboss = bosscheck
+    pygame.mixer.music.play(loops=-1)
     # New game has started, game loaded flag reset
     loaded = 0
 
@@ -1627,7 +1772,6 @@ while running:
     try:
         #pressed_keys = pygame.key.get_pressed()
         #if pressed_keys[K_m] and pressed_keys[K_LCTRL]:
-            #print("ctr m pressed")
             #move(Window)
             #pygame.display.set_mode(size=(SCREEN_WIDTH, SCREEN_HEIGHT),display=0)
         if pause == True and ingame == True:
@@ -1635,43 +1779,95 @@ while running:
             if inportal == True:
                 # This is the 'in the vault' stub
                 # 'In the vault' is a substate of paused
-                screen.fill(BLACK)
-                
-                screen.blit(vaulttext1red, (SCREEN_WIDTH / 2 - vaulttext1red.width, 140))
-                screen.blit(vaulttext2red, (SCREEN_WIDTH / 2 - vaulttext2red.width, 180))
-                screen.blit(vaulttext3red, (SCREEN_WIDTH / 2 - vaulttext3red.width, SCREEN_HEIGHT/2))
-                player.rect.bottom = 200
-                player.rect.left = 10
+                if portalsetup == False:
+                    screen.fill(BLACK)
+                    mscreen = boxi.boxi(screen, get_image("sharktank3.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)
+                    
+                    instboxi = boxi.boxi(screen, vaulttext3red, SCREEN_HEIGHT - 30, SCREEN_WIDTH / 2 - vaulttext3red.width / 2, 2, BLACK, 3, RED, 0, 0)
+                    if saved == False:
+                        instboxi2 = boxi.boxi(screen, vaulttext5red, SCREEN_HEIGHT - 70, SCREEN_WIDTH / 2 - vaulttext5red.width / 2, 2, BLACK, 3, RED, 0, 0)
+                    else:
+                        instboxi2 = boxi.boxi(screen, vaulttext6red, SCREEN_HEIGHT - 70, SCREEN_WIDTH / 2 - vaulttext6red.width / 2, 2, BLACK, 3, RED, 0, 0)
+                    screen.blit(vaulttext1red, (SCREEN_WIDTH / 2 - vaulttext1red.width/2, 810))
+                    screen.blit(vaulttext2red, (SCREEN_WIDTH / 2 - vaulttext2red.width/2, 850))
+                    screen.blit(vaulttext4red, (SCREEN_WIDTH / 2 - vaulttext4red.width/2, 890))
+                    player.rect.bottom = 200
+                    player.rect.left = 10
+                    portalsetup = True
+                    # Look at every event in the queue
+                for event in pygame.event.get():
+                    # Did the user hit a key?
+                    if event.type == pygame.JOYBUTTONDOWN:
+                        if event.button == xbox360_controller.START:
+                            inportal = False
+                            pause = False
+                            pygame.mixer.music.play(loops=-1)
+                        if event.button == xbox360_controller.BACK:
+                            ingame = False                        
+                        buttons = controller.get_buttons()
+                        if buttons[0] == 1:
+                            savegame()
+                            saved = True 
+                            portalsetup = False
+                            stuff = False
+                            # Save game
+                            # Replace vaulttext5 with vaulttext6
+                    if event.type == KEYDOWN:
+                        if event.key == K_RETURN:
+                            # Press Enter to Play
+                            # unpause
+                            inportal = False
+                            pause = False
+                            pygame.mixer.music.play(loops=-1)
+                        elif event.key == K_ESCAPE:
+                            # Prepare for exit
+                            ingame = False                                     
+                        elif event.key == K_SPACE: 
+                            savegame()
+                            del instboxi2
+                            saved = True
+                            portalsetup = False
+                            stuff = False     
+                            # Save game
+                            # Replace vaulttext5 with vaulttext6
+                        #pressed_keysq = pygame.key.get_pressed()
+                        #if pressed_keysq == K_p:
+                        #    pause = False
+                    # Did the user click the window close button? If so, stop the loop
+                    elif event.type == QUIT:
+                        running = False
+                # Set Background for start screen     
+                #screen.fill((135, 206, 250))
             else:
                 if pausescreenupdated == False:
                     texts4()
-            # Look at every event in the queue
-            for event in pygame.event.get():
-                # Did the user hit a key?
-                if event.type == pygame.JOYBUTTONDOWN:
-                    if event.button == xbox360_controller.START:
-                        pause = False
-                        pygame.mixer.music.play(loops=-1)
-                    if event.button == xbox360_controller.BACK:
-                        ingame = False
-                if event.type == KEYDOWN:
-                    if event.key == K_RETURN:
-                        # Press Enter to Play
-                        # unpause
-                        inportal = False
-                        pause = False
-                        pygame.mixer.music.play(loops=-1)
-                    elif event.key == K_ESCAPE:
-                        # Prepare for exit
-                        ingame = False              
-                    #pressed_keysq = pygame.key.get_pressed()
-                    #if pressed_keysq == K_p:
-                    #    pause = False
-                # Did the user click the window close button? If so, stop the loop
-                elif event.type == QUIT:
-                    running = False
-            # Set Background for start screen     
-            #screen.fill((135, 206, 250))
+                # Look at every event in the queue
+                for event in pygame.event.get():
+                    # Did the user hit a key?
+                    if event.type == pygame.JOYBUTTONDOWN:
+                        if event.button == xbox360_controller.START:
+                            pause = False
+                            pygame.mixer.music.play(loops=-1)
+                        if event.button == xbox360_controller.BACK:
+                            ingame = False
+                    if event.type == KEYDOWN:
+                        if event.key == K_RETURN:
+                            # Press Enter to Play
+                            # unpause
+                            inportal = False
+                            pause = False
+                            pygame.mixer.music.play(loops=-1)
+                        elif event.key == K_ESCAPE:
+                            # Prepare for exit
+                            ingame = False              
+                        #pressed_keysq = pygame.key.get_pressed()
+                        #if pressed_keysq == K_p:
+                        #    pause = False
+                    # Did the user click the window close button? If so, stop the loop
+                    elif event.type == QUIT:
+                        running = False
+                # Set Background for start screen     
+                #screen.fill((135, 206, 250))
             
             pygame.display.flip()
         else:
@@ -1719,23 +1915,26 @@ while running:
                             # Percentage of wave complete for factoring rate of enemy spawning
                             wavcompleteperc = int(((wavecounter + wave)/wavegoal) * 100)
                             # Possible to spawn boss at 50%
-                            if wavcompleteperc > 50 and waveboss < wave and random.randint(1,100) > 95:
+                            bosscheck = wave
+                            if wave > 3: 
+                                addfactor += (wave - 3) * 2
+                            bosscheck += addfactor
+                            
+                            if wavcompleteperc > 50 and waveboss < bosscheck and bosses < 4 and random.randint(1,100) > 95:
                                 new_enemy = Enemy("e_boss_cutboss41",35,edict.enemydict["e_boss_cutboss41"]["hp"],0)
                                 enemies.add(new_enemy)
                                 all_sprites.add(new_enemy)
-                                new_enemy.hp = (new_enemy.hp / 2) * wave
+                                new_enemy.hp = (new_enemy.hp / 2) * (wave / 2)
                                 waveboss = waveboss + 1
                                 lastwaveboss = wave
-                                #print("Boss spawned!  Wave"+ str(wave))
                             # if Boss hasn't spawned by 90%, spawn boss
                             if wavcompleteperc > 90 and lastwaveboss < wave:
                                 new_enemy = Enemy("e_boss_cutboss41",35,edict.enemydict["e_boss_cutboss41"]["hp"],0)
                                 enemies.add(new_enemy)
                                 all_sprites.add(new_enemy)
-                                new_enemy.hp = (new_enemy.hp / 2) * wave
+                                new_enemy.hp = (new_enemy.hp / 2) * (wave / 2)
                                 waveboss = waveboss + 1
                                 lastwaveboss = wave
-                                #print("Boss spawned!  Wave"+ str(wave))
 
                             if random.randint(1,150) < wavcompleteperc + 25 + wave * wave:
                                 enemiestocreate = random.randint(1,int(math.sqrt(wave)))
@@ -1745,33 +1944,23 @@ while running:
                                             spawnlist = []
                                             spawnlist.clear()
                                             for pu in edict.enemydict: # See if enemy is allowable
-                                                #print(1)
-                                                    #print(2)
                                                 if edict.enemydict[pu]["firstspawn"] <= wave: # Wave allowed
-                                                    #print(3)
                                                     # Don't release weapon upgrades player already has
                                                     dontadd = False
                                                     
                                                     if pu.startswith("e_pu_mgmult"): # Starts with powerup
-                                                        #print("mgmult >= int(pu[-1])", mgmult >= int(pu[-1]))
-                                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
                                                         if mgmult >= int(pu[-1]):
                                                             dontadd = True
                                                     if pu.startswith("e_pu_mgb"): # Starts with powerup
-                                                        #print("mgbounce >= int(pu[-1])", mgbounce >= int(pu[-1]))
-                                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
                                                         if mgbounce >= int(pu[-1]):
                                                             dontadd = True
                                                     if pu.startswith("e_pu_mgammo"): # Starts with powerup
-                                                        #print("mgtype >= int(pu[-1])", mgbounce >= int(pu[-1]))
-                                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
                                                         if mgtype >= int(pu[-1]):
                                                             dontadd = True
                                                     if dontadd == False:
                                                         i = 1
                                                         while i <= edict.enemydict[pu]["spawnweight"]: # Likelyhood repeats of entries in list
                                                             spawnlist.append(pu)
-                                                            #print(4)
                                                             i += 1
                                             choices = len(spawnlist)
                                             
@@ -2050,7 +2239,7 @@ while running:
                     if edict.enemydict[e.etype]["boss"] == 1:
                         bossmode = True
                         bosses += 1
-                        bhealthmax = edict.enemydict[e.etype]["hp"] / 2 * wave
+                        bhealthmax = edict.enemydict[e.etype]["hp"] / 4 * wave
                         barsizefactor = bhealthmax / 1000
                         barwide = 200 * barsizefactor + 10
                         bosshealthbar((SCREEN_WIDTH / 2 - (barwide // 2)), (bosses * 50), e ,e.hp, bosshealthblink)
@@ -2064,33 +2253,23 @@ while running:
                     newe = 0 # E being spawned
                     spawnlist = []
                     for pu in edict.enemydict: # See if enemy is allowable
-                        #print(1)
                         if pu.startswith("e_pu"): # Starts with powerup
-                            #print(2)
                             if edict.enemydict[pu]["firstspawn"] <= wave: # Wave allowed
-                                #print(3)
                                 i = 1
                                 while i <= edict.enemydict[pu]["spawnweight"]: # Likelyhood repeats of entries in list
                                     dontadd = False
                                                     
                                     if pu.startswith("e_pu_mgmult"): # Starts with powerup
-                                        #print("mgmult >= int(pu[-1])", mgmult >= int(pu[-1]))
-                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
                                         if mgmult >= int(pu[-1]):
                                             dontadd = True
                                     if pu.startswith("e_pu_mgb"): # Starts with powerup
-                                        #print("mgbounce >= int(pu[-1])", mgbounce >= int(pu[-1]))
-                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
                                         if mgbounce >= int(pu[-1]):
                                             dontadd = True
                                     if pu.startswith("e_pu_mgammo"): # Starts with powerup
-                                        #print("mgtype >= int(pu[-1])", mgbounce >= int(pu[-1]))
-                                        #print ("mult", mgmult, "bounce", mgbounce, "type", mgtype,int(pu[-1]),pu)
                                         if mgtype >= int(pu[-1]):
                                             dontadd = True
                                     if dontadd == False:
                                         spawnlist.append(pu)
-                                    #print(4)
                                     i += 1
                     choices = len(spawnlist)
                     while newe < pups:
@@ -2168,7 +2347,9 @@ while running:
                             #player has gone through portal
                             portalmountain = crash
                             inportal = True
+                            portalsetup = False
                             pause = True
+                            saved = False
                         else:
                             # Decrement lives
                             plives = plives - 1
@@ -2205,7 +2386,6 @@ while running:
                 # Make sure all enemies have rectangles
                 #for e in enemies:
                     #if e.etype == 91:
-                    #    print("check for crash")
                     #if hasattr(e, "rect") == False:
                     #    e.kill()
                 crash = pygame.sprite.spritecollideany(player, enemies)
@@ -2213,7 +2393,6 @@ while running:
                     crash.mask = pygame.mask.from_surface(crash.surf)
                     if pygame.sprite.collide_mask(player, crash):
                         #if crash.etype == 91:
-                            #print("crash")
                         if edict.enemydict[crash.etype]["ispowerup"] == False:
                             # Missile or blimp, possibly exploding
                             collision_sound.play()
@@ -2336,7 +2515,6 @@ while running:
                         # Remove the Enemy if not boss or tentacle
                         if edict.enemydict[crash.etype]["boss"] == 0 and crash.etype != 91:
                             #if crash.etype == 91:
-                            #    print("killed in crash")
                             crash.kill()
                         else:
                             # Player bounces off boss
@@ -2381,9 +2559,7 @@ while running:
                     # If enemies collide
                     if enemy2 != enemy1: 
                         #if enemy2.etype == 91:
-                            #print("enemy2")
                         #if enemy1.etype == 91:
-                            #print("enemy1")
                         # Not with themselves
                         # De-collide, move smaller
                         #enemy2.rect = enemy2.surf.get_rect()
@@ -2546,68 +2722,345 @@ while running:
                 # Ensure we maintain a 30 frames per second rate
                 clock.tick(30)
             else:
-                # This is the Startup and Between Games part of the clock loop.
-                # Get rid of any remaining sprites except sunmoon and player
-                # Park on start screen
+                if settingsscreen == True:
+                    # This is the settings / initials screen showing part of the clock loop
+                    if settingssetup == False:
+                        screen.fill(BLACK)
+                        sscreen = boxi.boxi(screen, get_image("settingsscreen.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)                  
+                        # rboxi for initials
+                        initialsrboxi = boxi.rboxipicwheels(*initrboxidef, tabord = 2)
+                        # And we register the new control
+                        #initialsrboxi.register()
+                        # Boxibutton for randomizing initials - this passes a function hook for the button pressed event
+                        randomizeinitsboxibutton = boxi.boxibutton(480, 900, 100, 30, 3, YELLOW, 1, BLACK, randomizebutton, 5, "Randomize Initials", screen)
+                        # And we register the new control
+                        #randomizeinitsboxibutton.register()
+                        randomizeinitsboxibutton.frame.bordercolor = boxi.gotfocuscolor
+                        instboxi = boxi.boxi(screen, settextred, SCREEN_HEIGHT - 30, SCREEN_WIDTH / 2 - settextred.width / 2, 2, BLACK, 3, RED, 0, 0)
+                        instboxi2 = boxi.boxi(screen, settextred2, SCREEN_HEIGHT - 65, SCREEN_WIDTH / 2 - settextred2.width / 2, 2, BLACK, 3, RED, 0, 0)                               
+                        jtimeout = 0
+                        settingssetup = True
+                    # Look at every event in the queue
+                    if randomizeinitsboxibutton != None and initialsrboxi != None:
+                        for event in pygame.event.get():
+                            # Did the user hit a key or joystick button?
+                            if nojoy != True:
+                                if event.type == pygame.JOYBUTTONDOWN:
+                                    if event.button == xbox360_controller.START:
+                                        stuff = False                         
+                                    if event.button == xbox360_controller.BACK:
+                                        # Return to main screen
+                                        didicleanup = False
+                                        settingsscreen = False
+                                        #running = False   
+                                left_x, left_y = controller.get_left_stick()
+                                if left_y > .2:
+                                    if jtimeout < 1:
+                                        initialsrboxi.updatebuttons(K_DOWN)
+                                        jtimeout = 7
+                                    if jtimeout > 0:
+                                        jtimeout -=1        
+                                elif left_y < -.2:
+                                    if jtimeout < 1:
+                                        initialsrboxi.updatebuttons(K_UP)
+                                        jtimeout = 7
+                                    if jtimeout > 0:
+                                        jtimeout -=1  
+                                elif left_x > .2:
+                                    if jtimeout < 1:
+                                        initialsrboxi.updatebuttons(K_RIGHT)
+                                        jtimeout = 7
+                                    if jtimeout > 0:
+                                        jtimeout -=1    
+                                elif left_x < -.2:
+                                    if jtimeout < 1:
+                                        initialsrboxi.updatebuttons(K_LEFT)
+                                        jtimeout = 7
+                                    if jtimeout > 0:
+                                        jtimeout -=1                               
+                                triggers = controller.get_triggers()
+                                buttons = controller.get_buttons()
+                                if triggers > 0.3:
+                                    stuff = False
+                                if buttons[0] == 1:
+                                    #if jtimeout < 1:
+                                    initials = initialsrboxi.textstr
+                                    didicleanup = False
+                                    settingsscreen = False 
+                                    #jtimeout = 10
+                                if buttons[2] == 1:
+                                    stuff = False
+                                if buttons[1] == 1:
+                                    stuff = False
+                                if buttons[3] == 1:
+                                    randomizeinitsboxibutton.buttonpressed(randomizeinitsboxibutton.getbuttonpressed)
+                                    randomizeinitsboxibutton.rectborder.top = randomizeinitsboxibutton.rectbox.top - randomizeinitsboxibutton.border2
+                                    randomizeinitsboxibutton.rectborder.left = randomizeinitsboxibutton.rectbox.left - randomizeinitsboxibutton.border2
+                                    randomizeinitsboxibutton.pressedshadow = True
+                                    rbuttimer = 5
+                                if buttons[4] == 1:        
+                                    stuff = False    
+                            if event.type == KEYDOWN:
+                                if event.key == K_RETURN:
+                                    initials = initialsrboxi.textstr
+                                    didicleanup = False
+                                    settingsscreen = False
+                                elif event.key == K_ESCAPE:
+                                    # Return to main screen
+                                    didicleanup = False
+                                    settingsscreen = False
+                                elif event.key == K_DOWN or event.key == K_UP or event.key == K_LEFT or event.key == K_RIGHT:
+                                    initialsrboxi.updatebuttons(event.key)  
+                                elif event.key == K_SPACE:
+                                    randomizeinitsboxibutton.buttonpressed(randomizeinitsboxibutton.getbuttonpressed)
+                                    randomizeinitsboxibutton.rectborder.top = randomizeinitsboxibutton.rectbox.top - randomizeinitsboxibutton.border2
+                                    randomizeinitsboxibutton.rectborder.left = randomizeinitsboxibutton.rectbox.left - randomizeinitsboxibutton.border2
+                                    randomizeinitsboxibutton.pressedshadow = True
+                                    rbuttimer = 5
+                            if event.type == MOUSEBUTTONDOWN:
+                                mousepos = pygame.mouse.get_pos()
+                                boxi.mousehandler(event, event.button, mousepos)
+                            if event.type == MOUSEWHEEL:
+                                boxi.mousehandler(event, 0, (0, event.y)) 
+                            if event.type == MOUSEBUTTONUP:
+                                randomizeinitsboxibutton.rectborder.top = randomizeinitsboxibutton.rectbox.top 
+                                randomizeinitsboxibutton.rectborder.left = randomizeinitsboxibutton.rectbox.left 
+                    
+                        if jtimeout > 0:
+                            jtimeout -=1    
+                    if settingsscreen == True:
+                        if rbuttimer > 0:
+                            rbuttimer -= 1
+                            if rbuttimer == 0:
+                                if randomizeinitsboxibutton:
+                                    randomizeinitsboxibutton.rectborder.top = randomizeinitsboxibutton.rectbox.top 
+                                    randomizeinitsboxibutton.rectborder.left = randomizeinitsboxibutton.rectbox.left
 
-                # If cleanup hasn't happened, clean up
-                if didicleanup == False:
-                    pygame.mixer.music.stop()
-                    for i, enemy1 in enumerate(enemies):
-                        enemy1.kill()
-                    for i, bullet1 in enumerate(bullets):
-                        bullet1.kill()
-                    for i, cloud1 in enumerate(clouds):
-                        cloud1.kill()       
-                    for i, mountain1 in enumerate(mountains):
-                        mountain1.kill()
-                    # Update highscore
-                    if score > highscore:
-                        highscore = score
-                        didicleanup = True                       
-                    loaddataexists = edict.loadgame()
-                # Look at every event in the queue
-                for event in pygame.event.get():
-                    # Did the user hit a key or joystick button?
-                    if nojoy != False:
-                        #buttons = controller.get_buttons()
-                        pressed_keys = pygame.key.get_pressed()
-                        if pressed_keys[K_l] == True:
-                            #print("load click")
-                            if loaddataexists > 0:
-                                loaded = True                                        
-                                screen.fill((135, 206, 250))
-                                texts3(highscore)
-                        #if event.type == pygame.JOYBUTTONDOWN:
-                            #if event.button == xbox360_controller.START:
+                        # This is an animation handler for the initials rboxi's randomize initials function, called by the rboxi button above.
+                        # It serves no vital purpose, but displays the scrolling of the initials as if it were a slot machine, which is fun.    
+                        if a1 > 0 or a2 > 0 or a3 > 0:
+                            isanioverflag = False
+                            isaniover = 3
+                            if a1 > 0:
+                                a1 -= 1
+                                if initialsrboxi:
+                                    initialsrboxi.selectedcol = 0
+                                    initialsrboxi.turnwheeldown()
+                                    initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
+                            if a2 > 0:
+                                a2 -= 1
+                                if initialsrboxi:
+                                    initialsrboxi.selectedcol = 1
+                                    initialsrboxi.turnwheeldown()
+                                    initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
+                            if a3 > 0:
+                                a3 -= 1
+                                if initialsrboxi:   
+                                    initialsrboxi.selectedcol = 2
+                                    initialsrboxi.turnwheeldown()
+                                    initialsrboxi.rdict[initialsrboxi.selectedcol]["boxi"].draw()
+                        else:
+                            isaniover -=1
+                            if isaniover < 1:
+                                isanioverflag = True
+                                if initialsrboxi:
+                                    initialsrboxi.rdict[0]["boxi"].selected = False
+                                    initialsrboxi.rdict[1]["boxi"].selected = False
+                                    initialsrboxi.rdict[2]["boxi"].selected = True
+                                    initialsrboxi.draw()
+                        
+                elif loadselection == True:
+                    # This is the load screen showing part of the clock loop
+                    if didishowloadscreen == False:
+                        screen.fill(BLACK)
+                        hscreen = boxi.boxi(screen, get_image("sharkhangar.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)
+
+                        # Display Boxis for the list of savegames
+                        scoreboxi = boxi.boxi(*boxidef1)
+                        waveboxi = boxi.boxi(*boxidef2)
+                        livesboxi = boxi.boxi(*boxidef3)
+                        # This uses a default list of params above.  Long form it would be:
+                        # textitemboxi = boxi.boxi(screen, textitem, 100, 400, 0, BLUE, 2, BLACK, 0, 0)
+                        # Registering Boxi objects subscribes them for a redraw on refresh of the screen.
+                        #scoreboxi.register()
+                        #waveboxi.register()
+                        #livesboxi.register()
+                        # Column of savenames in Boxis, set up as a scrolling column.  This updates the boxis we created above.
+                        savesc = boxi.cboxiscroll(*cboxiscdef1, displayboxi1 = scoreboxi, displaykey1 = "score", displayboxi2 = waveboxi, displaykey2 = "wave", displayboxi3 = livesboxi, displaykey3 = "lives", displayfont = font20, displaycolor = BLACK, tabord = 1)
+                        
+                        savesc.frame.bordercolor = boxi.gotfocuscolor
+                        # And we register the new control
+                        #savesc.register()  
+                        jtimeout = 0                  
+                        instboxi = boxi.boxi(screen, loadtextred, SCREEN_HEIGHT - 30, SCREEN_WIDTH / 2 - loadtextred.width / 2, 2, BLACK, 3, RED, 0, 0)    
+                        didishowloadscreen = True
+                        jtimeout = 1
+                    # Look at every event in the queue
+                    if savesc != None:
+                        for event in pygame.event.get():
+                            # Did the user hit a key or joystick button?
+                            if nojoy != True:
+                                if event.type == pygame.JOYBUTTONDOWN:
+                                    if event.button == xbox360_controller.START:
+                                        stuff = False                         
+                                    if event.button == xbox360_controller.BACK:
+                                        # Return to main screen
+                                        didicleanup = False
+                                        loadselection = False
+                                        #running = False   
+                                left_x, left_y = controller.get_left_stick()
+                                if left_y > .2:
+                                    if jtimeout < 1:
+                                        savesc.updatebuttons(K_DOWN)
+                                        jtimeout = 5
+                                    if jtimeout > 0:
+                                        jtimeout -=1        
+                                elif left_y < -.2:
+                                    if jtimeout < 1:
+                                        savesc.updatebuttons(K_UP)
+                                        jtimeout = 5
+                                    if jtimeout > 0:
+                                        jtimeout -=1  
+                                triggers = controller.get_triggers()
+                                buttons = controller.get_buttons()
+                                if triggers > 0.3:
+                                    stuff = False
+                                if buttons[0] == 1:
+                                    inits = savesc.cdict[savesc.selectedrow]["key"]
+                                    readgamedict(initsuff = inits)
+                                    loadgame = inits
+                                    loaded = True    
+                                    didicleanup = False
+                                    loadselection = False 
+                                    jtimeout = 5 
+                                if buttons[2] == 1:
+                                    stuff = False
+                                if buttons[1] == 1:
+                                    stuff = False
+                                if buttons[3] == 1:
+                                    stuff = False
+                                if buttons[4] == 1:        
+                                    stuff = False    
+                            if event.type == KEYDOWN:
+                                if event.key == K_RETURN:
+                                    inits = savesc.cdict[savesc.selectedrow]["key"]
+                                    readgamedict(initsuff = inits)
+                                    loadgame = inits
+                                    loaded = True    
+                                    didicleanup = False
+                                    loadselection = False
+                        
+
+                                elif event.key == K_ESCAPE:
+                                    # Return to main screen
+                                    didicleanup = False
+                                    loadselection = False
+                                elif event.key == K_DOWN or event.key == K_UP:
+                                    savesc.updatebuttons(event.key)  
+                            
+                            if event.type == MOUSEBUTTONDOWN:
+                                mousepos = pygame.mouse.get_pos()
+                                boxi.mousehandler(event, event.button, mousepos)
+                            if event.type == MOUSEWHEEL:
+                                boxi.mousehandler(event, 0, (0, event.y)) 
+                else:
+                    # This is the Startup and Between Games part of the clock loop.
+                    # Get rid of any remaining sprites except sunmoon and player
+                    # Park on start screen
+                    # If cleanup hasn't happened, clean up
+                    if didicleanup == False:
+                        #if initialsrboxi in locals(): del initialsrboxi
+                        #if randomizeinitsboxibutton in locals(): del randomizeinitsboxibutton
+                        #if savesc in locals(): del savesc 
+                        #if scoreboxi in locals(): del scoreboxi
+                        #if waveboxi in locals(): del waveboxi
+                        #if livesboxi in locals(): del livesboxi
+                        settingsscreen = False
+                        loadselection = False
+                        screen.fill(BLACK)
+                        mscreen = boxi.boxi(screen, get_image("sharkcockpit.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)
+                        pygame.mixer.music.stop()
+                        for i, enemy1 in enumerate(enemies):
+                            enemy1.kill()
+                        for i, bullet1 in enumerate(bullets):
+                            bullet1.kill()
+                        for i, cloud1 in enumerate(clouds):
+                            cloud1.kill()       
+                        for i, mountain1 in enumerate(mountains):
+                            mountain1.kill()
+                        # Update highscore
+                        if score > highscore:
+                            highscore = score                      
+                        loaddataexists = edict.loadgame()
+                        # returns number of saved games
+                        listsize = edict.loadgame()
+                        # Add rendered versions of savenames to dictionary
+                        # Add a dictionary key "render" containing renders of the text keys
+                        renderedtext = boxi.rendertextdic(edict.savedict, font20, RED)
+                                           
+                        # Set Background for start screen     
+                        #screen.fill((135, 206, 250))
+                        texts3(highscore)
+                        didicleanup = True
+                    # Look at every event in the queue
+                    for event in pygame.event.get():
+                        # Did the user hit a key or joystick button?
+                        if nojoy != True:
+                            buttons = controller.get_buttons()
+                            if buttons[2] == 1:
+                                settingsscreen = True
+                                settingssetup = False
+                            if buttons[1] == 1:
+                                loadselection = True
+                                didishowloadscreen = False
+                                #if loaddataexists > 0:
+                                    #loaded = True                                        
+                                    #screen.fill((135, 206, 250))
+                                    #texts3(highscore)
+                            if event.type == pygame.JOYBUTTONDOWN:
+                                if event.button == xbox360_controller.START:
+                                    # Press Enter to Play
+                                    # Reinitialize gamestate at start
+                                    initnewgame()
+                                    ingame = True
+                                    pause = False                           
+                                if event.button == xbox360_controller.BACK:
+                                    # Prepare for exit
+                                    running = False           
+                        if event.type == KEYDOWN:
+                            if event.key == K_RETURN:
                                 # Press Enter to Play
                                 # Reinitialize gamestate at start
-                                #initnewgame()
-                                #ingame = True
-                                #pause = False                           
-                            #if event.button == xbox360_controller.BACK:
+                                ingame = True
+                                pause = False          
+                                initnewgame()
+                            elif event.key == K_ESCAPE:
                                 # Prepare for exit
-                                #running = False           
-                    if event.type == KEYDOWN:
-                        if event.key == K_RETURN:
-                            # Press Enter to Play
-                            # Reinitialize gamestate at start
-                            ingame = True
-                            pause = False
-                            initnewgame()
-
-                        elif event.key == K_ESCAPE:
-                            # Prepare for exit
-                            running = False               
-                        pressed_keysq = pygame.key.get_pressed()
-                    # Did the user click the window close button? If so, stop the loop
-                    elif event.type == QUIT:
-                        running = False
-                # Draw Enter to Play, Esc to Exit, High Score
-                if playscreenupdated == False:                   
-                    # Set Background for start screen     
-                    screen.fill((135, 206, 250))
-                    texts3(highscore)
+                                running = False               
+                            #pressed_keysq = pygame.key.get_pressed()
+                            
+                            pressed_keys = pygame.key.get_pressed()
+                            if pressed_keys[K_l] == True:
+                                loadselection = True
+                                didishowloadscreen = False
+                            if pressed_keys[K_s] == True:                    
+                                settingsscreen = True
+                                settingssetup = False
+                                #if loaddataexists > 0:
+                                    #loaded = True                                        
+                                    #screen.fill((135, 206, 250))
+                                    #texts3(highscore)
+                        # Did the user click the window close button? If so, stop the loop
+                        elif event.type == QUIT:
+                            running = False
+                    # Draw Enter to Play, Esc to Exit, High Score
+                    if playscreenupdated == False:
+                        screen.fill(BLACK)
+                        boxi.boxi(screen, get_image("sharkcockpit.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)                
+                        # Set Background for start screen     
+                        #screen.fill((135, 206, 250))
+                        texts3(highscore)
+                        playscreenupdated = True
                 # Flip everything to the display
                 pygame.display.flip()
                 # Ensure we maintain a 30 frames per second rate

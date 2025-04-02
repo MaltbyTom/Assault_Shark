@@ -254,6 +254,9 @@ class Boxi():
             self.target = None
         #self.draw()
 
+    def __del__(self):
+        stuff = False
+
     def draw(self):
         # Redraw the boxi
         hmod = (self.height - self.thing.height) // 2
@@ -341,6 +344,9 @@ class Boxibutton(Boxi):
         self.rectborder.left = self.rectbox.left
         self.frame = Boxicontrolframe(x, y, width, height, 8, GRAY, 4, BLACK, self)
         self.draw()
+
+    def __del__(self):
+        stuff = False
 
     def draw(self):        
         # Draw the frame
@@ -557,6 +563,9 @@ class Rboxipicwheels(Rboxi):
         self.wheelopts = wheelopts
     # Super calls use the parent class's method
 
+    def __del__(self):
+        stuff = False
+
     def draw(self):
         self.textstr = ""
         wheel = 1
@@ -709,6 +718,9 @@ class Cboxiscroll():
             bct += 1
         self.frame = Boxicontrolframe(left, top - 15, width, height + 30, 8, GRAY, 4, BLACK, self)
         self.draw()
+
+    def __del__(self):
+        stuff = False
 
     def draw(self):
         # Refresh the cboxiscroll onscreen
@@ -1193,40 +1205,30 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
             # Clear leading spaces
             while ord(teststr[0]) == 32:
                 linestart = linestart + 1
-                teststr = dispstr[linestart:linestart + approx]               
-            print(teststr)
+                teststr = dispstr[linestart:linestart + approx]    
             testr = rendertext(teststr, font, fontcolor)
             # If the string is too wide, prune back to the last space
             if testr.width > width: 
                 origteststr = teststr
-                print ("testrw", testr.width, ">", width)
                 #Count backwards to a space
                 fromend = 0
-                print("fromend 0")
                 gotline = False
                 while gotline == False:
                     # When space found, terminate the line there
-                    print("unsuccessful test char = " + teststr[len(teststr) - fromend - 1]) 
                     if ord(teststr[len(teststr) - fromend - 1]) == 32:
-                        print("successful test char = " + teststr[len(teststr) - fromend - 1]) 
                         testr = rendertext(teststr[0:len(teststr) - fromend - 1], font, fontcolor)
                         teststr = teststr[0:len(teststr) - fromend - 1]
                         # If this segment isn't too wide, and ends with a space, call it a line 
-                        print ("inside: testrw", testr.width, ">?", width)
                         if testr.width <= width:
                             # Declare success in the line making loop
                             #teststr[0:len(teststr) - fromend - 1] # Hopefully includes the space
-                            print(teststr)
                             gotline = True
-                            print("gotline!")
                     # Increment fromend
-                    print("fromend + 1")
                     fromend += 1          
                     # Exception for lines composed entirely of non space characters longer than desired width
                     # Incurred when we iterate through the line without finding a space
                     if fromend + 1 > len(origteststr):
                         exactlen = False
-                        print("exactlen is False!")
                         fromend = 0
                         while exactlen == False:
                         # iterate to one character short of desired width and end in hyphen
@@ -1234,7 +1236,6 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
                             if testr.width < width:
                                 teststr = teststr[0:len(teststr) - fromend - 2] + "- "
                                 hyphenated = True
-                                print(teststr)
                                 testr = rendertext(teststr[0:len(teststr)], font, fontcolor)
                                 exactlen = True
                                 gotline = True
@@ -1252,7 +1253,6 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
             # If not longer than desired line, and not to end of dispstr, add 5 characters and try again
             elif linestart + approx < len(dispstr):
                 approx = approx + 5
-                print + 5
             # If last characters, and not too long, make last line
             else: 
                 txtlinelist.append(teststr)
@@ -1262,7 +1262,4 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
                 eol = True
         # Now we have a dictionary of appropriately sized renders
 
-        print(txtlinelist)
-        for foo in txtlinelist:
-            print(foo)
         return txtlinedict

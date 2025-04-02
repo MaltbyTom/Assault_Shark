@@ -1,0 +1,23 @@
+{
+    "savepointFND": {
+        "wave": 8,
+        "score": 9077,
+        "ammo": [
+            994,
+            1079,
+            1038,
+            965
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 31,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 100,
+        "armormax": 200,
+        "initials": "FND"
+    }
+}

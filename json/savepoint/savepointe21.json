@@ -1,0 +1,23 @@
+{
+    "savepointE21": {
+        "wave": 9,
+        "score": 15834,
+        "ammo": [
+            1704,
+            2500,
+            1644,
+            2333
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 31,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 100,
+        "armormax": 200,
+        "initials": "E21"
+    }
+}

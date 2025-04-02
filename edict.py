@@ -16,12 +16,27 @@ GRAY = pygame.Color("gray")
 BLACK = pygame.Color("black")
 WHITE = pygame.Color("white")
 YELLOW = pygame.Color("yellow")
+LIGHTBLUE = pygame.Color("lightblue1")
+DKGRAY = pygame.Color("dimgray")
+DKGREEN = pygame.Color("darkgreen")
 
 # Define constants for the screen width and height
 root = tkinter.Tk()
 SCREEN_WIDTH = root.winfo_screenwidth() # - 50
 SCREEN_HEIGHT = root.winfo_screenheight() # - 100
 SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100   
+
+pygame.font.init()
+font8 = pygame.font.Font("fonts/arcade_r.ttf", 8)
+font10 = pygame.font.Font("fonts/arcade_r.ttf", 10)
+font12 = pygame.font.Font("fonts/arcade_r.ttf", 12)
+font15 = pygame.font.Font("fonts/arcade_r.ttf", 15)
+font16 = pygame.font.Font("fonts/arcade_r.ttf", 16)
+font20 = pygame.font.Font("fonts/arcade_r.ttf", 20)
+font30 = pygame.font.Font("fonts/arcade_r.ttf", 30)
+font50 = pygame.font.Font("fonts/arcade_r.ttf", 50)
+font60 = pygame.font.Font("fonts/arcade_r.ttf", 60)
+font75 = pygame.font.Font("fonts/arcade_r.ttf", 75)
 
 def loadgame():
     added = 0
@@ -43,6 +58,11 @@ def loadgame():
     #print(savedict)
     return added
 
+def savegame(savdict, initsuff):
+    filename = initsuff.lower()
+    with open("json/savepoint/" + filename + ".json", "w") as file:
+        json.dump(savdict, file, indent=4)
+
 def addjsons():
     added = 0
     # Gets a list of all jsons in the JSON directory
@@ -57,7 +77,18 @@ def addjsons():
                 enemydict.update(addtodict)
                 added += 1
     return added
+green8nums = {}
+blue8nums = {}
+red8nums = {}
 
+def gennumbers():
+    x = 0
+    while x < 100:
+        green8nums[x] = font8.render(x, 1, GREEN)
+        blue8nums[x] = font8.render(x, 1, BLUE)
+        red8nums[x] = font8.render(x, 1, RED)
+        x = x + 1
+# This generates a blank monster .json with all available attributes.  No longer used.
 #def gencompleteblank():
     #blankrecord = {}
     #for etype, etypeval in enemydict.items():
