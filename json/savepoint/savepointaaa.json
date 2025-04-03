@@ -1,22 +1,22 @@
 {
     "savepointAAA": {
-        "wave": 5,
-        "score": 46336,
+        "wave": 6,
+        "score": 67457,
         "ammo": [
-            1372,
-            1460,
-            1805,
-            1716
+            2112,
+            1611,
+            1302,
+            1736
         ],
         "mg": [
             5,
             3,
             3
         ],
-        "lives": 22,
-        "health": 181,
+        "lives": 26,
+        "health": 200,
         "healthmax": 400,
-        "armor": 0,
+        "armor": 100,
         "armormax": 200,
         "initials": "AAA"
     }

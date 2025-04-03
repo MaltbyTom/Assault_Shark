@@ -1033,6 +1033,9 @@ font60 = pygame.font.Font("fonts/arcade_r.ttf", 60)
 font75 = pygame.font.Font("fonts/arcade_r.ttf", 75)
 
 # Cache repeated text renders
+assaultsharktextblack = font75.render("Assault Shark", 1, BLACK)
+assaultsharktextred = font75.render("Assault Shark", 1, RED)
+assaultsharktextyellow = font75.render("Assault Shark", 1, YELLOW)
 playagametextblack = font20.render("Press [Enter]/(Start) To Play - Press [Esc]/(Back) to Quit", 1, BLACK)
 playagametextred = font20.render("Press [Enter]/(Start) To Play - Press [Esc]/(Back) to Quit", 1, RED)
 pausetext1 = font20.render(" [Keyboard Controls]:", 1, BLACK)
@@ -1093,6 +1096,10 @@ def texts2(flamer, shock, bio, pulse):
 def texts3(highscore):
     # on enter to play screen, gives high score
     global playscreenupdated
+    ptxtoffset = assaultsharktextblack.width / 2
+    screen.blit(assaultsharktextblack, (SCREEN_WIDTH / 2 - ptxtoffset, 50))
+    screen.blit(assaultsharktextred, (SCREEN_WIDTH / 2 - ptxtoffset + 3, 52))
+    screen.blit(assaultsharktextyellow, (SCREEN_WIDTH / 2 - ptxtoffset + 6, 54))
     ptxtoffset = playagametextblack.width / 2
     screen.blit(playagametextblack, (SCREEN_WIDTH / 2 - ptxtoffset, SCREEN_HEIGHT / 2 + 360))
     screen.blit(playagametextred, (SCREEN_WIDTH / 2 - ptxtoffset + 2, SCREEN_HEIGHT / 2 + 362))
