@@ -1,16 +1,20 @@
 # Assault Shark 
 
-(Formerly: They Comin)
+2D scrolling flight shooter inspired by the aesthetic of 80's arcade games.  
 
-2D scrolling flight shooter inspired by the aesthetic of 80's arcade games
+Jet powered sea creatures fight for dominance of the skies.
 
 Written by Tom Maltby, attributions for components follow
 
 www.maltby.org
 
-## Gameplay Gif
+## Gameplay Videos
 
-New gif coming soon!  The bullet upgrades and tentacle attack are graphically spectacular.
+Full demo video of 4/4/25 upgrade at https://www.maltby.org/images/AssaultShark.mp4
+
+Now with three slots of multitiered MG upgrades, blowaway graphics, save / load functionality with 
+savepoints in portals, screen backgrounds, pilot initials tracking, and the first BoxiPyg controls 
+from my growing UI constructor library.
 
 Assault Shark, as of 3/15/25 update:
 
@@ -46,6 +50,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Description
+
+Now with blowaway graphics, save / load functionality with savepoints in portals, screen backgrounds,
+and the first BoxiPyg controls from my growing UI constructor library.
 
 Bosses have a special tentacle attack!  Egg laying rocket fish.  3 slots of upgrades
 for the machine gun, each with multiple levels of upgrade.  New enemies can be added
