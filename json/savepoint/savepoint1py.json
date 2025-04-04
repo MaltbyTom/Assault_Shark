@@ -1,0 +1,23 @@
+{
+    "savepoint99a":{
+        "wave": 8,
+        "score": 1812,
+        "ammo": [
+            199,
+            199,
+            199,
+            199
+        ],
+        "mg":[
+            7,
+            3,
+            3
+        ],
+        "lives": 11,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 100,
+        "armormax": 200
+    }
+
+}

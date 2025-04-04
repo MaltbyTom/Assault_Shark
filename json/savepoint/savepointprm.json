@@ -1,0 +1,23 @@
+{
+    "savepointPRM": {
+        "wave": 10,
+        "score": 42571,
+        "ammo": [
+            6484,
+            4923,
+            4160,
+            6518
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 55,
+        "health": 126,
+        "healthmax": 400,
+        "armor": 0,
+        "armormax": 200,
+        "initials": "PRM"
+    }
+}

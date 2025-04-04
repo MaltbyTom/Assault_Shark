@@ -1,0 +1,23 @@
+{
+    "savepointUWA": {
+        "wave": 7,
+        "score": 19605,
+        "ammo": [
+            3969,
+            4891,
+            4014,
+            4493
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 42,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 75,
+        "armormax": 200,
+        "initials": "UWA"
+    }
+}

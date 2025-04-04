@@ -1,0 +1,23 @@
+{
+    "savepointCAT": {
+        "wave": 8,
+        "score": 12258,
+        "ammo": [
+            381,
+            483,
+            693,
+            1277
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 17,
+        "health": 158,
+        "healthmax": 400,
+        "armor": 17,
+        "armormax": 200,
+        "initials": "CAT"
+    }
+}

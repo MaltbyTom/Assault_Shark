@@ -1,0 +1,23 @@
+{
+    "savepointppy":{
+        "wave": 15,
+        "score": 1514,
+        "ammo": [
+            199,
+            199,
+            199,
+            199
+        ],
+        "mg":[
+            7,
+            3,
+            3
+        ],
+        "lives": 8,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 100,
+        "armormax": 200
+    }
+
+}
