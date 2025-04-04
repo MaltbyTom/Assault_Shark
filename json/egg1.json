@@ -45,7 +45,7 @@
         ],
         "isexploded": false,
         "isexplodable": "e_spawn_fish3",
-        "hp": 1,
+        "hp": 10,
         "fired": 0,
         "ispowerup": false,
         "damage": [

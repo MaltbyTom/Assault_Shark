@@ -1,0 +1,23 @@
+{
+    "savepointPH7": {
+        "wave": 7,
+        "score": 6545,
+        "ammo": [
+            599,
+            381,
+            725,
+            199
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 18,
+        "health": 165,
+        "healthmax": 400,
+        "armor": 0,
+        "armormax": 200,
+        "initials": "PH7"
+    }
+}

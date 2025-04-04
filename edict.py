@@ -16,12 +16,57 @@ GRAY = pygame.Color("gray")
 BLACK = pygame.Color("black")
 WHITE = pygame.Color("white")
 YELLOW = pygame.Color("yellow")
+LIGHTBLUE = pygame.Color("lightblue1")
+DKGRAY = pygame.Color("dimgray")
+DKGREEN = pygame.Color("darkgreen")
+PINK = pygame.Color("hotpink")
+MAROON = pygame.Color("maroon1")
+LAWNGREEN = pygame.Color("lawngreen")
+ORANGE = pygame.Color("darkorange")
+PURPLE = pygame.Color("darkorchid1")
 
 # Define constants for the screen width and height
 root = tkinter.Tk()
 SCREEN_WIDTH = root.winfo_screenwidth() # - 50
 SCREEN_HEIGHT = root.winfo_screenheight() # - 100
-SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100
+SCREEN_HEIGHT_NOBOX = SCREEN_HEIGHT - 100   
+
+pygame.font.init()
+font8 = pygame.font.Font("fonts/arcade_r.ttf", 8)
+font10 = pygame.font.Font("fonts/arcade_r.ttf", 10)
+font12 = pygame.font.Font("fonts/arcade_r.ttf", 12)
+font15 = pygame.font.Font("fonts/arcade_r.ttf", 15)
+font16 = pygame.font.Font("fonts/arcade_r.ttf", 16)
+font20 = pygame.font.Font("fonts/arcade_r.ttf", 20)
+font30 = pygame.font.Font("fonts/arcade_r.ttf", 30)
+font50 = pygame.font.Font("fonts/arcade_r.ttf", 50)
+font60 = pygame.font.Font("fonts/arcade_r.ttf", 60)
+font75 = pygame.font.Font("fonts/arcade_r.ttf", 75)
+
+def loadgame():
+    added = 0
+    # Gets a list of all jsons in the JSON directory
+    jsons = glob.glob ("json/savepoint/*.json")
+    # Loads all jsons into the savedict dictionary
+    
+    for jsonf in jsons:
+        json_name = os.path.basename(jsonf)
+        # only input the savepoint into savedict
+        if json_name.startswith("savepoint"):
+            with open("json/savepoint/" + json_name, "r") as jsonfile:
+                addtodict = json.load(jsonfile)
+                savedict.update(addtodict)
+                #print(json_name)
+                #print(addtodict)
+                added += 1
+    #print("savedict")
+    #print(savedict)
+    return added
+
+def savegame(savdict, initsuff):
+    filename = initsuff.lower()
+    with open("json/savepoint/" + filename + ".json", "w") as file:
+        json.dump(savdict, file, indent=4)
 
 def addjsons():
     added = 0
@@ -37,7 +82,62 @@ def addjsons():
                 enemydict.update(addtodict)
                 added += 1
     return added
+numbers = {}
+green8nums = {}
+blue8nums = {}
+red8nums = {}
+yellow8nums = {}
+pink8nums = {}
+maroon8nums = {}
+orange8nums = {}
+purple8nums = {}
+red16nums = {}
+green16nums = {}
+blue16nums = {}
+yellow16nums = {}
+pink16nums = {}
+maroon16nums = {}
+yellow16nums = {}
+pink16nums = {}
+maroon16nums = {}
+orange16nums = {}
+purple16nums = {}
 
+m2 = font20.render("Multi Shot 2", 1, ORANGE)
+m3 = font20.render("Multi Shot 3", 1, ORANGE)
+m5 = font30.render("Multi Shot 5", 1, ORANGE)
+m7 = font50.render("Multi Shot 7", 1, ORANGE)
+a2 = font30.render("Laser Ammo", 1, PURPLE)
+a3 = font50.render("Plasma Ammo", 1, PURPLE)
+b = font20.render("Bounce Shot", 1, MAROON)
+b2 = font30.render("Bounce Shot 2", 1, MAROON)
+b3 = font50.render("Bounce Shot 3", 1, MAROON)
+bio = font12.render("Bio Blaster", 1, PINK)
+shock = font12.render("Shock Shield", 1, PINK)
+flamer = font12.render("Flamer", 1, PINK)
+pulsar = font12.render("Pulsar", 1, PINK)
+xl = font12.render("Extra Life", 1, BLUE)
+
+def gennumbers():
+    x = 1
+    while x < 100000:
+        if x < 150:        
+            blue8nums[x] = font8.render(str(x), 1, BLUE)
+            red8nums[x] = font8.render(str(x), 1, RED)
+            yellow8nums[x] = font8.render(str(x), 1, YELLOW)        
+            pink8nums[x] = font8.render(str(x), 1, PINK)
+            maroon8nums[x] = font8.render(str(x), 1, MAROON)
+            red16nums[x] = font16.render(str(x), 1, RED)
+            yellow16nums[x] = font16.render(str(x), 1, YELLOW) 
+            green16nums[x] = font16.render(str(x), 1, LAWNGREEN)
+            blue16nums[x] = font16.render(str(x), 1, BLUE)       
+            pink16nums[x] = font16.render(str(x), 1, PINK)
+            maroon16nums[x] = font16.render(str(x), 1, MAROON)
+            purple16nums[x] = font16.render(str(x), 1, PURPLE)
+            orange16nums[x]  = font16.render(str(x), 1, ORANGE)
+        green8nums[x] = font8.render(str(x), 1, LAWNGREEN)
+        x = x + 1
+# This generates a blank monster .json with all available attributes.  No longer used.
 #def gencompleteblank():
     #blankrecord = {}
     #for etype, etypeval in enemydict.items():
@@ -57,7 +157,9 @@ def addjsons():
     #with open("JSON/fullblank.json", "w") as file:
         #json.dump(blankrecord, file, indent=4)
     #return len(blankrecord)
-            
+
+savedict = {
+}  
 
 # Fill a nested dictionary of enemies by etype
 enemydict = {
@@ -111,7 +213,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -188,7 +290,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -265,7 +367,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -335,7 +437,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_61",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 20,
+        "hp": 200,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 4,
         "ispowerup": False,
@@ -405,7 +507,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_61",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 20,
+        "hp": 200,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 5,
         "ispowerup": False,
@@ -482,7 +584,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -552,7 +654,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_64",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 25,
+        "hp": 250,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 2,
         "ispowerup": False,
@@ -623,7 +725,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_63",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 35,
+        "hp": 350,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 2,
         "ispowerup": False,
@@ -701,7 +803,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_65",
         # Missiles and shells have one hp; blimps and guns have more, bosses have many
-        "hp": 1000,
+        "hp": 10000,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -776,7 +878,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -851,7 +953,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -926,7 +1028,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1001,7 +1103,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1076,7 +1178,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1146,7 +1248,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": "e_exp_62",
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1225,7 +1327,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": False,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 300,
+        "hp": 3000,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": False,
@@ -1302,7 +1404,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1370,7 +1472,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1438,7 +1540,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1506,7 +1608,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1574,7 +1676,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1642,7 +1744,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1710,7 +1812,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1785,7 +1887,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1860,7 +1962,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -1935,7 +2037,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2010,7 +2112,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2085,7 +2187,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2160,7 +2262,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2235,7 +2337,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2310,7 +2412,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2385,7 +2487,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2460,7 +2562,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
@@ -2535,7 +2637,7 @@ enemydict = {
         # If isexplodable, eplodes before dying into etype isexplodable
         "isexplodable": 0,
         # Missiles and shells have one hp; blimps and guns have more
-        "hp": 1,
+        "hp": 10,
         # Fired is a flag acting as a single frame timer to give missiles time to get clear of the launcher
         "fired": 0,
         "ispowerup": True,
