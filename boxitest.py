@@ -159,7 +159,7 @@ def randomizebutton():
 isanioverflag = True
 isaniover = 0
 
-dispstr = "This is a big chunk of text string, such as I would use for plot dumps, conversations, etc.  It should be evaluated by control width and font size, and fed into a scrolling multiline display.  The last noble Assault Shark pilot perserveres in their daily struggle aginst the sky jet minions and their kleptofacist groundling artillery support."
+dispstr = "Assault Shark:  The year is 2317, and the battleground has spread, not just beneath the waves, but high above in the skies.   Science’s attempts to control nature have led to the creation of the ultimate weapon: bio-engineered creatures designed to fight in the most unforgiving of environments. The most feared of them all? You.  The last surviving free eggheads, guardians of the fading spark of mankind's learning, eke out a precarious survival on near-orbit asteroid stations.  To regain Earth, they have plotted a dangerous mission.  You must return to the skies, and strike down the evil mutant exo-marine jet creatures. Rescue more eggheads, reclaim the ancient fortresses of wisdom, and save Earth for a new age of enlightenment. You are the Shark Knight, the last remaining knight of the mystical order of pilots of jet-powered, bio-mechanical shark aircraft - a lethal fusion of oceanic predator and cutting-edge technology.  With advanced weaponry, agile jet propulsion, and the instincts of a true apex predator, you are the future's final hope against the plague of evil bio-craft. The skies are filled with deadly creatures — mutated squids, bio-engineered manta blimps, rocket fish, and other monstrosities, each vying for dominion over the oceans and skies alike.  Supported by the artillery of the cryptofacist groundlings, the atmosphere has long been viewed as an impregnable death zone.  Your mission: fight, survive, and conquer. Only one can rule the skies, and it’s time to show the world why the Shark is the ultimate predator.  Out there, they’ll fear your bite. Welcome to the Assault Shark.  Prepare for battle."
 
 # Preload graphics - called by image cache for all pngs in the graphics directory
 def get_image(key):
@@ -288,7 +288,7 @@ while running:
             somerboxi.register()
             # Set up the large text cboxiscroll with its own constructor function
             #renddispstr = boxi.renderlargetext(dispstr, font15, BLUE, screen, 6, 0,0, 400, 600)
-            ltextsc = boxi.ltextcboxiscroll(dispstr, font20, BLUE, screen, 6, 225, 155, 275, 340, 1, WHITE, 0, LIGHTBLUE, 0, 0, selgrow = 1)
+            ltextsc = boxi.ltextcboxiscroll(dispstr, font12, BLUE, screen, 6, 225, 155, 275, 340, 1, BLACK, 0, LIGHTBLUE, 0, 0, selgrow = 1)
             ltextsc.register()
             # skip setup in future
             issetup = True

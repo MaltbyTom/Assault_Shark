@@ -53,7 +53,7 @@ import pygame.mouse
 #from pygame._sdl2.video import Window
 import json
 #window = None
-
+import swtext
 
 #def move(Win):
 #    global window
@@ -97,6 +97,8 @@ from pygame.locals import (
     K_LCTRL,
     K_l,
     K_s,
+    K_RSHIFT,
+    K_LSHIFT,
     MOUSEBUTTONDOWN,
     MOUSEWHEEL,
     MOUSEBUTTONUP,
@@ -1071,7 +1073,7 @@ loadtextred = font16.render("Arrow keys or left stick select.  Press (A) on joys
 settextred = font16.render("Arrow keys or left stick select.  Press (A) on joystick or [ENTER] on keyboard to accept settings.", 1, RED)
 settextred2 = font16.render("(Y) or [SPACE] randomizes initials.", 1, RED)
 loaded = 0
-
+dispstr = "Assault Shark:  The year is 2317, and the battleground has spread, not just beneath the waves, but high above in the skies.   Science’s attempts to control nature have led to the creation of the ultimate weapon: bio-engineered creatures designed to fight in the most unforgiving of environments. The most feared of them all? You.  The last surviving free eggheads, guardians of the fading spark of mankind's learning, eke out a precarious survival on near-orbit asteroid stations.  To regain Earth, they have plotted a dangerous mission.  You must return to the skies, and strike down the evil mutant exo-marine jet creatures. Rescue more eggheads, reclaim the ancient fortresses of wisdom, and save Earth for a new age of enlightenment. You are the Shark Knight, the last remaining knight of the mystical order of pilots of jet-powered, bio-mechanical shark aircraft - a lethal fusion of oceanic predator and cutting-edge technology.  With advanced weaponry, agile jet propulsion, and the instincts of a true apex predator, you are the future's final hope against the plague of evil bio-craft. The skies are filled with deadly creatures: mutated squids, bio-engineered manta blimps, rocket fish, and other monstrosities, each vying for dominion over the oceans and skies alike.  Supported by the artillery of the cryptofacist groundlings, the atmosphere has long been viewed as an impregnable death zone.  Your mission: fight, survive, and conquer. Only one can rule the skies, and it’s time to show the world why the Shark is the ultimate predator.  Out there, they’ll fear your bite. Welcome to the Assault Shark.  Prepare for battle."
 # This generates dictionaries of flyaway numbers in different colors
 edict.gennumbers()
 
@@ -1730,6 +1732,9 @@ if hs["score"] > highscore:
             highscore = hs["score"]
             hsinitials = hs["inits"]
 
+# Set default colors for boxi frames
+boxi.framedefs(BLACK, RED)
+
 didishowloadscreen = False
 loadselection = False
 loaddataexists = False
@@ -1804,8 +1809,78 @@ def initnewgame():
     # New game has started, game loaded flag reset
     loaded = 0
 
+start_font_size = 60
+line_spacing = 20
+font_name = "fonts/arcade_r.ttf"
+font_color = YELLOW
+# Call the function to scroll the intro text
+lines = swtext.scroll_text_with_vanishing_point(font_name, start_font_size, font_color, screen)
+y_position = screen.get_height() + len(lines) * ((start_font_size * 1.24) + line_spacing) # Reset text position to start scrolling
+intro = True
 # Variable to keep our main loop running - false is exit condition
 running = True
+while intro:
+    for event in pygame.event.get():
+        # Did the user hit a key?
+        if event.type == pygame.JOYBUTTONDOWN:
+            if event.button == xbox360_controller.START:
+                intro = False
+        if event.type == KEYDOWN:
+            if event.key == K_RETURN:
+                intro = False
+            if event.key == K_ESCAPE:
+                intro = False
+        if event.type == pygame.QUIT:
+                intro = False
+                running = False
+        
+    # Clear the screen with a black background
+    screen.fill((0, 0, 0))
+    
+    # Draw each line of text, with increasing vertical offset and decreasing font size
+    line_y_position = y_position
+    for i, line in enumerate(lines):
+        # Calculate the shrinking effect based on the line's position
+        distance_from_top = screen.get_height() - line_y_position  # Distance from the top of the screen
+
+        # Prevent negative values and safely compute the shrink factor
+        shrink_factor = max(0, distance_from_top / screen.get_height())
+
+        # Create the font surface normally at the starting font size
+
+        font = pygame.font.Font(font_name, start_font_size)
+        text_surface = font.render(line, True, font_color)
+
+        # Scale the text surface based on the shrink factor
+        scale_factor = 1 - shrink_factor * 0.7  # You can adjust the 0.7 factor for different scaling effects
+        new_width = int(text_surface.get_width() * scale_factor)
+        new_height = int(text_surface.get_height() * scale_factor)
+        scaled_text_surface = pygame.transform.scale(text_surface, (new_width, new_height))
+
+        # Calculate the position of the text
+        text_rect = scaled_text_surface.get_rect(center=(screen.get_width() // 2, line_y_position))
+
+        # Blit the scaled text to the screen
+        screen.blit(scaled_text_surface, text_rect)
+
+        # Adjust vertical position for the next line
+        line_y_position -= new_height + line_spacing  # Adjust vertical spacing based on scaled height
+        # Remove lines that are no longer visible (within 20% of the top of the screen)
+        if line_y_position <= screen.get_height() * 0.2:
+            firstl = False
+            lines.pop(i)
+
+    
+    # Move the entire block of text up the screen
+    y_position -= 3  # Speed of scrolling (slower than before)
+    if y_position + len(lines) * (start_font_size + line_spacing) < 0:
+        intro = False  # Stop when the text is off-screen
+    
+    # Update the display
+    pygame.display.flip()
+    clock.tick(60)  # 60 FPS
+
+
 
 # Our main loop
 while running:
@@ -2831,6 +2906,7 @@ while running:
                     if settingssetup == False:
                         screen.fill(BLACK)
                         sscreen = boxi.boxi(screen, get_image("settingsscreen.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)                  
+                        ltextsc = boxi.ltextcboxiscroll(dispstr, font20, YELLOW, screen, 6, 60, 50, SCREEN_HEIGHT - 200, 400, 1, BLACK, 0, LIGHTBLUE, 0, 0, selgrow = 1)
                         # rboxi for initials
                         initialsrboxi = boxi.rboxipicwheels(*initrboxidef, tabord = 2)
                         # And we register the new control
@@ -2881,7 +2957,20 @@ while running:
                                         initialsrboxi.updatebuttons(K_LEFT)
                                         jtimeout = 7
                                     if jtimeout > 0:
-                                        jtimeout -=1                               
+                                        jtimeout -=1   
+                                right_x, right_y = controller.get_right_stick()
+                                if right_y > .2:
+                                    if jtimeout < 1:
+                                        ltextsc.updatebuttons(K_DOWN)
+                                        jtimeout = 2
+                                    if jtimeout > 0:
+                                        jtimeout -=1        
+                                elif right_y < -.2:
+                                    if jtimeout < 1:
+                                        ltextsc.updatebuttons(K_UP)
+                                        jtimeout = 2
+                                    if jtimeout > 0:
+                                        jtimeout -=1                              
                                 triggers = controller.get_triggers()
                                 buttons = controller.get_buttons()
                                 if triggers > 0.3:
@@ -2905,6 +2994,7 @@ while running:
                                 if buttons[4] == 1:        
                                     stuff = False    
                             if event.type == KEYDOWN:
+                                pressed_keys = pygame.key.get_pressed()
                                 if event.key == K_RETURN:
                                     initials = initialsrboxi.textstr
                                     didicleanup = False
@@ -2914,7 +3004,10 @@ while running:
                                     didicleanup = False
                                     settingsscreen = False
                                 elif event.key == K_DOWN or event.key == K_UP or event.key == K_LEFT or event.key == K_RIGHT:
-                                    initialsrboxi.updatebuttons(event.key)  
+                                    if pressed_keys[K_RSHIFT] or pressed_keys[K_LSHIFT]:
+                                        ltextsc.updatebuttons(event.key)
+                                    else:
+                                        initialsrboxi.updatebuttons(event.key)  
                                 elif event.key == K_SPACE:
                                     randomizeinitsboxibutton.buttonpressed(randomizeinitsboxibutton.getbuttonpressed)
                                     randomizeinitsboxibutton.rectborder.top = randomizeinitsboxibutton.rectbox.top - randomizeinitsboxibutton.border2
@@ -3083,6 +3176,8 @@ while running:
                         loadselection = False
                         screen.fill(BLACK)
                         mscreen = boxi.boxi(screen, get_image("sharkcockpit.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)
+                        #ltextsc = boxi.ltextcboxiscroll(dispstr, font15, YELLOW, screen, 6, 0, 0, SCREEN_HEIGHT, (SCREEN_WIDTH - (SCREEN_WIDTH / 2 - 512)) / 2, 1, BLACK, 0, LIGHTBLUE, 0, 0, selgrow = 1)
+                        #ltextsc.draw()
                         pygame.mixer.music.stop()
                         for i, enemy1 in enumerate(enemies):
                             enemy1.kill()
@@ -3162,6 +3257,8 @@ while running:
                     if playscreenupdated == False:
                         screen.fill(BLACK)
                         boxi.boxi(screen, get_image("sharkcockpit.png"), SCREEN_HEIGHT/2 - 512, SCREEN_WIDTH / 2 - 512, 3, GREEN, 3, YELLOW, 0, 0)                
+                        
+                        #ltextsc = boxi.ltextcboxiscroll(dispstr, font12, BLUE, screen, 6, 0, 0, SCREEN_HEIGHT, 340, 1, BLACK, 0, LIGHTBLUE, 0, 0, selgrow = 1)
                         # Set Background for start screen     
                         #screen.fill((135, 206, 250))
                         texts3(highscore)

@@ -127,6 +127,8 @@ currentfocuscontrol = None
 # Defaults for color of frame border for focus/no focus
 gotfocuscolor = YELLOW
 nofocuscolor = BLACK
+fdefbackc = GRAY
+fdefbordc = BLACK
 
 # Draws registered controls
 def drawregcontrols():
@@ -342,7 +344,7 @@ class Boxibutton(Boxi):
         self.target = target
         self.rectborder.top = self.rectbox.top
         self.rectborder.left = self.rectbox.left
-        self.frame = Boxicontrolframe(x, y, width, height, 8, GRAY, 4, BLACK, self)
+        self.frame = Boxicontrolframe(x, y, width, height, 8, fdefbackc, 4, fdefbordc, self)
         self.draw()
 
     def __del__(self):
@@ -412,7 +414,7 @@ class Cboxi(pygame.Rect):
         self.secondkey = secondkey
         self.cdict[0]["boxi"].selected = True
         self.selectedrow = 0
-        self.frame = Boxicontrolframe(left, top, width, height, 8, GRAY, 4, BLACK, self)
+        self.frame = Boxicontrolframe(left, top, width, height, 8, fdefbackc, 4, fdefbordc, self)
         self.cdict[0]["boxi"].draw()
         self.rows = len(self.cdict)
         self.lastrow = self.rows - 1
@@ -493,7 +495,7 @@ class Rboxi(pygame.Rect):
         self.secondkey = secondkey
         self.rdict[0]["boxi"].selected = True
         self.selectedcol = 0
-        self.frame = Boxicontrolframe(left, top, width, height, 8, GRAY, 4, BLACK, self)
+        self.frame = Boxicontrolframe(left, top, width, height, 8, fdefbackc, 4, fdefbordc, self)
         self.rdict[0]["boxi"].draw()
         self.cols = len(self.rdict)
         self.lastcol = self.cols - 1
@@ -716,7 +718,7 @@ class Cboxiscroll():
                     thisboxi.thing = self.source[b][self.secondkey]
                 visctr += 1
             bct += 1
-        self.frame = Boxicontrolframe(left, top - 15, width, height + 30, 8, GRAY, 4, BLACK, self)
+        self.frame = Boxicontrolframe(left, top - 15, width, height + 30, 8, fdefbackc, 4, fdefbordc, self)
         self.draw()
 
     def __del__(self):
@@ -1157,6 +1159,13 @@ def ltextcboxiscroll(dispstr, font, fontcolor, target, tabord, destytop, destxle
         bct += 1
     return createdcboxi
 
+# Set default colors for frames
+def framedefs(backcolor, bordercolor):
+    global fdefbackc, fdefbordc, nofocuscolor
+    fdefbackc = backcolor
+    fdefbordc = bordercolor
+    nofocuscolor = fdefbordc
+
 # Render an individual string in given font, color
 # Trim the extra line spacing of font rendering from the bottom
 def rendertext(text, font, color):
@@ -1210,7 +1219,7 @@ def renderlargetext(dispstr, font, fontcolor, target, tabord, top, left, height,
             # If the string is too wide, prune back to the last space
             if testr.width > width: 
                 origteststr = teststr
-                #Count backwards to a space
+                # Count backwards to a space
                 fromend = 0
                 gotline = False
                 while gotline == False:
