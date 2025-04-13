@@ -1,0 +1,23 @@
+{
+    "savepointP28": {
+        "wave": 8,
+        "score": 155588,
+        "ammo": [
+            3165,
+            2764,
+            2000,
+            2697
+        ],
+        "mg": [
+            7,
+            3,
+            3
+        ],
+        "lives": 34,
+        "health": 200,
+        "healthmax": 400,
+        "armor": 72,
+        "armormax": 200,
+        "initials": "P28"
+    }
+}

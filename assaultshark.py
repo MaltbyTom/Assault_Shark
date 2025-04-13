@@ -8,13 +8,13 @@
 # py_tut_with_images on github: https://github.com/realpython/pygame-primer/blob/master/py_tut_with_images.py
 # Jon's blog: https://realpython.com/pygame-a-primer/
 #
-# Additional sounds from  http://rpg.hamsterrepublic.com/ohrrpgce/Free_Sound_Effects#Battle_Sounds
 # # Arcade font from https://www.dafont.com/arcade-ya.font , by Yuji Adachi, listed as 100% free
 #
 # Barring 2 hours last summer, this is my first Python coding, and my first significant coding in any language
 # in the last 15 years.  I'm sure it could be more elegant, but I'm having fun.
 #
 # Thanks to Jon Fincher, and the creators of the great sounds and music
+# Extra sounds credits in sounds.py
 # Graphics except jet, missile, and white cloud are by me, using Corel and Gimp
 #
 # Joystick handling imported under MIT license:
@@ -54,6 +54,7 @@ import pygame.mouse
 import json
 #window = None
 import swtext
+import sounds
 
 #def move(Win):
 #    global window
@@ -118,6 +119,10 @@ YELLOW = pygame.Color("yellow")
 LIGHTBLUE = pygame.Color("lightblue1")
 DKGRAY = pygame.Color("dimgray")
 DKGREEN = pygame.Color("darkgreen")
+RED50 = (255, 0, 0, 50)
+GREEN50 = (0, 255, 0, 50)
+YELLOW50 = (255, 255, 0, 50)
+BLACK50 = (0, 0, 0, 50)
 
 
 screen_nums = []
@@ -258,12 +263,12 @@ class Player(pygame.sprite.Sprite):
             
             if pressed_keys[K_UP]:
                 self.rect.move_ip(0, -5)
-                move_up_sound.play()
+                gsounds["move_up_sound"].play()
                 jetupdown = 0
             elif pressed_keys[K_DOWN]:
                 self.rect.move_ip(0, 5)
                 jetupdown = 2
-                move_down_sound.play()
+                gsounds["move_down_sound"].play()
             if pressed_keys[K_LEFT]:
                 self.rect.move_ip(-10, 0)
             if pressed_keys[K_RIGHT]:
@@ -313,6 +318,7 @@ portalctr = 0
 gatehouse = False
 portal = False
 offset = 0
+notent = 0
 
 # Define the mountain object extending pygame.sprite.Sprite
 # Use an image for a better looking sprite
@@ -421,7 +427,9 @@ class Enemy(pygame.sprite.Sprite):
                 # Let boss shoot at multiple levels
                 if hasattr(launcher, "etype"):
                     if edict.enemydict[launcher.etype]["boss"] == 1:
-                        if etype == "e_tent_tentacle91":
+                        if etype == "e_tent_tentacle91":                           
+                            sounds.stopsounds(gsounds)
+                            pygame.mixer.Channel(0).play(gsounds["tentacle_sound"])
                             self.rect = self.surf.get_rect(center=(launcher.rect.left + edict.enemydict[etype]["centerwidth"], launcher.rect.top + edict.enemydict[etype]["centerheight"]))
                         else:
                             randadd = random.randint(-100,100)
@@ -449,6 +457,8 @@ class Enemy(pygame.sprite.Sprite):
         self.hp = edict.enemydict[etype]["hp"]
 
         if edict.enemydict[etype]["boss"]:
+            sounds.stopsounds(gsounds)
+            pygame.mixer.Channel(0).play(gsounds["boss_sound"])
             self.basex = SCREEN_WIDTH - 250 + random.randint(-200, 200)
             self.basey = SCREEN_HEIGHT_NOBOX / 2 - self.rect.height / 2 + random.randint(-300, 100)
         
@@ -461,6 +471,7 @@ class Enemy(pygame.sprite.Sprite):
     # Remove it when it passes the left edge of the screen
     def update(self):
         #if self.etype == 91:
+        global notent
         if random.randint(1,10)>5:
             # 50% modify climb if applicable
             if edict.enemydict[self.etype]["randclimb"]:
@@ -513,6 +524,13 @@ class Enemy(pygame.sprite.Sprite):
                         self.rect.centery = daboss.rect.bottom - 60
                     else:
                         self.rect.centery = daboss.rect.bottom - 50
+                        if not notent:
+                            pygame.mixer.Channel(0).play(gsounds["tentacle_sound"])
+                            notent = 10
+                        else:
+                            notent -= 1
+                        
+
                 else:
                     self.kill()
                     return
@@ -646,7 +664,15 @@ class Bullet(pygame.sprite.Sprite):
             self.surf = get_image(bulletdict[self.btype]["imgname"])
         self.name = "bullet" + bulletdict[self.btype]["imgname"]
         self.speed = bulletdict[self.btype]["bspeed"]
-        bulletdict[self.btype]["sound"].play()
+        if self.btype == 1:
+            if mgtype == 1:
+                bulletdict[self.btype]["sound"].play()
+            elif mgtype == 2:
+                gsounds["laser_sound"].play()
+            else:
+                gsounds["shoot2_sound"].play()
+        else:
+            bulletdict[self.btype]["sound"].play()
         self.boomcounter = boomcounter
         self.surf.set_colorkey(WHITE, RLEACCEL)
         # The starting position is the nose of the plane
@@ -1388,23 +1414,25 @@ def bosshealthbar(left, top, boss, health, bosshealthblink):
  
     bhealthmax = edict.enemydict[boss.etype]["hp"] / 2 * wave
     barsizefactor = bhealthmax / 5000
+    draw_surf = pygame.Surface((SCREEN_HEIGHT,SCREEN_WIDTH), pygame.SRCALPHA)
     healthbarblink = pygame.Rect(left + 35, top-5, int(100 * barsizefactor) + 10, 40)
     healthbarborder = pygame.Rect(left + 40, top, int(100 * barsizefactor), 30)
     healthbarfilled = pygame.Rect(left + 42, top + 2, int((196) * (health/(bhealthmax)) * barsizefactor), 26)
 
     if int((196) * (health/(bhealthmax))) > 70 * wave / 8:
-        healthbarcolor = GREEN
+        healthbarcolor = GREEN50
     elif int((196) * (health/(bhealthmax))) > 30 * wave / 8:
-        healthbarcolor = YELLOW
+        healthbarcolor = YELLOW50
     else:
-        healthbarcolor = RED
+        healthbarcolor = RED50
 
     if bosshealthblink < 10:
-        pygame.draw.rect(screen, YELLOW, healthbarblink, 0, 2)
+        pygame.draw.rect(draw_surf, YELLOW50, healthbarblink, 0, 2)
     else:
-        pygame.draw.rect(screen, RED, healthbarblink, 0, 2)
-    pygame.draw.rect(screen, BLACK, healthbarborder, 0, 2)
-    pygame.draw.rect(screen, healthbarcolor, healthbarfilled, 0, 2)
+        pygame.draw.rect(draw_surf, RED50, healthbarblink, 0, 2)
+    pygame.draw.rect(draw_surf, BLACK50, healthbarborder, 0, 2)
+    pygame.draw.rect(draw_surf, healthbarcolor, healthbarfilled, 0, 2)
+    screen.blit(draw_surf, (0, 0))
     if bosshealthblink > 20:
         bosshealthblink = 0
     return boss
@@ -1498,43 +1526,16 @@ for image in images:
 jsons = edict.addjsons()
 print(str(jsons) + " JSON file(s) added")
 
-# Load and play our background music
-# Sound source: http://ccmixter.org/files/Apoxode/59262
-# License: https://creativecommons.org/licenses/by/3.0/
-pygame.mixer.music.load("sounds/apoxode_-_electric_1.mp3")
 
-# Load all our sound files
-# Sound sources: Jon Fincher
-# Many new additional sounds sourced from: http://rpg.hamsterrepublic.com/ohrrpgce/Free_Sound_Effects#Battle_Sounds
-move_up_sound = pygame.mixer.Sound("sounds/rising_putter.ogg")
-move_down_sound = pygame.mixer.Sound("sounds/falling_putter.ogg")
-shoot_sound = pygame.mixer.Sound("sounds/shoot.ogg")
-collision_sound = pygame.mixer.Sound("sounds/small_explosion.ogg")
-bio_sound = pygame.mixer.Sound("sounds/bio_splat.ogg")
-shock_sound = pygame.mixer.Sound("sounds/shock_sound2.ogg")
-flamer_sound = pygame.mixer.Sound("sounds/flamer_sound.ogg")
-powerup_sound = pygame.mixer.Sound("sounds/power_up.ogg")
-wavechange_sound = pygame.mixer.Sound("sounds/wave_change.ogg")
-pulse_sound = pygame.mixer.Sound("sounds/pulse_sound.ogg")
+gsounds = sounds.setupsounds()
 
-# Set the base volume for all sounds
-move_up_sound.set_volume(0.5)
-move_down_sound.set_volume(0.5)
-collision_sound.set_volume(0.5)
-shoot_sound.set_volume(0.5)
-bio_sound.set_volume(0.5)
-shock_sound.set_volume(0.5)
-flamer_sound.set_volume(0.5)
-powerup_sound.set_volume(0.5)
-wavechange_sound.set_volume(0.5)
-pulse_sound.set_volume(0.5)
 
 # Fill a nested dictionary of bullets by btype
 bulletdict = {
     1: {
         "imgname": "bullet.png",
         "bspeed": 25,
-        "sound": shoot_sound,
+        "sound": gsounds["shoot_sound"],
         "isanimated": False,
         "numframes": 1,
         "frames": ("bullet.png",),
@@ -1544,7 +1545,7 @@ bulletdict = {
         "imgname": "blast1.png",
         "shield": False,
         "bspeed": 20,
-        "sound": flamer_sound,
+        "sound": gsounds["flamer_sound"],
         "isanimated": True,
         "numframes": 5,
         "frames": ("blast1.png","blast2.png","blast3.png","blast4.png","blast5.png"),
@@ -1554,7 +1555,7 @@ bulletdict = {
         "imgname": "shock1.png",
         "shield": True,
         "bspeed": 0,
-        "sound": shock_sound,
+        "sound": gsounds["shock_sound"],
         "isanimated": True,
         "numframes": 4,
         "frames": ("shock1.png","shock2.png","shock3.png","shock4.png"),
@@ -1564,7 +1565,7 @@ bulletdict = {
         "imgname": "bio1.png",
         "shield": False,
         "bspeed": 30,
-        "sound": bio_sound,
+        "sound": gsounds["bio_sound"],
         "isanimated": True,
         "numframes": 5,
         "frames": ("bio1.png","bio2.png","bio3.png","bio4.png","bio5.png"),
@@ -1574,7 +1575,7 @@ bulletdict = {
         "imgname": "pulse1.png",
         "shield": False,
         "bspeed": 15,
-        "sound": pulse_sound,
+        "sound": gsounds["pulse_sound"],
         "isanimated": True,
         "numframes": 5,
         "frames": ("pulse1.png","pulse2.png","pulse3.png","pulse4.png","pulse5.png"),
@@ -1584,7 +1585,7 @@ bulletdict = {
         "imgname": "shockbolt.png",
         "shield": False,
         "bspeed": 0,
-        "sound": shock_sound,
+        "sound": gsounds["shock_sound"],
         "isanimated": True,
         "numframes": 2,
         "frames": ("shockbolt2.png", "shockbolt.png"),
@@ -1954,6 +1955,7 @@ while running:
                 # Set Background for start screen     
                 #screen.fill((135, 206, 250))
             else:
+                # This is the non-vault part of the paused state of the loop
                 if pausescreenupdated == False:
                     texts4()
                 # Look at every event in the queue
@@ -1962,7 +1964,7 @@ while running:
                     if event.type == pygame.JOYBUTTONDOWN:
                         if event.button == xbox360_controller.START:
                             pause = False
-                            pygame.mixer.music.play(loops=-1)
+                            pygame.mixer.music.unpause() #play(loops=-1)
                         if event.button == xbox360_controller.BACK:
                             ingame = False
                     if event.type == KEYDOWN:
@@ -1971,7 +1973,7 @@ while running:
                             # unpause
                             inportal = False
                             pause = False
-                            pygame.mixer.music.play(loops=-1)
+                            pygame.mixer.music.unpause()  #play(loops=-1)
                         elif event.key == K_ESCAPE:
                             # Prepare for exit
                             ingame = False              
@@ -2000,14 +2002,15 @@ while running:
                     if event.type == pygame.JOYBUTTONDOWN:
                         if event.button == xbox360_controller.START:
                             pause = True
-                            pygame.mixer.music.stop()                  
+                            pygame.mixer.music.pause()                  
                     if event.type == KEYDOWN:
                         # Was it the Escape key? If so, stop the loop
                         if event.key == K_ESCAPE:
                             pause = True 
+                            pygame.mixer.music.pause()
                         elif event.key == K_RETURN:
                             pause = True
-                            pygame.mixer.music.stop()
+                            pygame.mixer.music.pause()
                     # Did the user click the window close button? If so, stop the loop
                     elif event.type == QUIT:
                         running = False
@@ -2363,7 +2366,8 @@ while running:
                             bosshealthblink = 0
                 # Spawn shower of powerups - the boss is dead
                 # Score being non zero blocks bonus spawn at game beginning after lost bossfight            
-                if bossmode == False and wasbossmode == True and score > 0:
+                if bossmode == False and wasbossmode == True and score > 0:                    
+                    pygame.mixer.Channel(1).play(gsounds["reward_sound"])
                     pups = wave * 10 # E to spawn
                     newe = 0 # E being spawned
                     spawnlist = []
@@ -2399,6 +2403,7 @@ while running:
 
                 if redflash:
                     pygame.mixer.music.stop()
+                    
                     #Count down on get ready message - has to occur after sprites
                     counterstr = ""
                     #font = pygame.font.Font("fonts/arcade_r.ttf",30)
@@ -2459,7 +2464,8 @@ while running:
                     if pygame.sprite.collide_mask(player, crash):
                         # If portal!
                         if crash.name.startswith("portal") and player.rect.left < crash.rect.left and player.rect.top > crash.rect.top + 25:
-                            #player has gone through portal
+                            #player has gone through portal                           
+                            pygame.mixer.Channel(0).play(gsounds["warp_sound"])
                             portalmountain = crash
                             inportal = True
                             portalsetup = False
@@ -2489,20 +2495,22 @@ while running:
                                     score = score + 1
                                     wavecounter = wavecounter + 1                                                           
                             # If no lives remain, kill player
-                            if plives < 1:
+                            sounds.stopsounds(gsounds)
+                            pygame.mixer.Channel(1).stop()
+                            deathticker = 500
+                            if plives < 1:                          
+                                pygame.mixer.Channel(1).play(gsounds["gameover_sound"])
                                 for i, enemy1 in enumerate(enemies):
                                     enemy1.kill()
                                 # Go to start screen
                                 ingame = False
+                            else:
+                                pygame.mixer.Channel(1).play(gsounds["die_sound"])
+                            
 
                 # Check if any enemies have collided with the player
                 # PLAYER ENEMY COLLISIONS
-                
-                # Make sure all enemies have rectangles
-                #for e in enemies:
-                    #if e.etype == 91:
-                    #if hasattr(e, "rect") == False:
-                    #    e.kill()
+ 
                 crash = pygame.sprite.spritecollideany(player, enemies)
                 if crash:
                     crash.mask = pygame.mask.from_surface(crash.surf)
@@ -2510,7 +2518,7 @@ while running:
                         #if crash.etype == 91:
                         if edict.enemydict[crash.etype]["ispowerup"] == False:
                             # Missile or blimp, possibly exploding
-                            collision_sound.play()
+                            #gsounds["collision_sound"].play()
                             # Implement variable damage
                             damage = random.randint(*edict.enemydict[crash.etype]["damage"])
                             # if player has armor left
@@ -2550,12 +2558,20 @@ while running:
                                             enemy1.kill()
                                         score = score + 1
                                         wavecounter = wavecounter + 1                                                           
-                            # If no lives remain, kill player
-                            if plives < 1:
-                                for i, enemy1 in enumerate(enemies):
-                                    enemy1.kill()
-                                # Go to start screen
-                                ingame = False
+                                # If no lives remain, kill player
+                                sounds.stopsounds(gsounds)
+                                pygame.mixer.Channel(1).stop()
+                                pygame.mixer.stop()
+                                deathticker = 500
+                                if plives < 1:
+                                    
+                                    pygame.mixer.Channel(1).play(gsounds["gameover_sound"])
+                                    for i, enemy1 in enumerate(enemies):
+                                        enemy1.kill()
+                                    # Go to start screen
+                                    ingame = False
+                                else:
+                                    pygame.mixer.Channel(1).play(gsounds["die_sound"])
                         
                         elif crash.etype == "e_pu_life111":
                             newnumber(edict.maroon16nums[1],(player.rect.left, player.rect.top))
@@ -2692,23 +2708,15 @@ while running:
                                 player.rect.top = crash.rect.bottom + 50
                                 player.climb = crash.climb + 3
                         # Stop any moving sounds and play the collision sound
-                        move_up_sound.stop()
-                        move_down_sound.stop()
-                        shoot_sound.stop()
-                        bio_sound.stop()
-                        shock_sound.stop()
-                        flamer_sound.stop()
-                        powerup_sound.stop()
-                        wavechange_sound.stop()
-                        pulse_sound.stop()
+                        #sounds.stopsounds(gsounds)
                         if edict.enemydict[crash.etype]["ispowerup"] == False:
                             # If hostile
-                            collision_sound.play()
+                            gsounds["collision_sound"].play()
                         elif edict.enemydict[crash.etype]["ispowerup"]:
                             # If powerup
                             score = score + 25
                             wavecounter = wavecounter + 1
-                            powerup_sound.play()
+                            gsounds["powerup_sound"].play()
                 # Check for other collisions, kill colliding enemies and destructable bullets   
                 # ENEMY ENEMY COLLISIONS
                 # Make sure all enemies have rectangles
@@ -2738,7 +2746,7 @@ while running:
                         
                         # 2 powerups don't hurt eachother
                         if not(edict.enemydict[enemy1.etype]["ispowerup"] and edict.enemydict[enemy2.etype]["ispowerup"]):
-                            collision_sound.play()
+                            gsounds["collision_sound"].play()
                             if edict.enemydict[enemy1.etype]["isexploded"] == False:
                                 # is enemy immune?
                                 if edict.enemydict[enemy1.etype]["damenemies"] > 0:
@@ -2775,7 +2783,7 @@ while running:
                     # If bullet hits enemy
                     if bullethit:
                         #newnumber(edict.red16nums[edam],(thisenemy.rect.left, thisenemy.rect.top))
-                        collision_sound.play()
+                        gsounds["collision_sound"].play()
                         if edict.enemydict[thisenemy.etype]["isexploded"] == False and edict.enemydict[thisenemy.etype]["ispowerup"] == False:
                             edam = random.randint(5,15)
                             if bullethit.btype == 1 and mgtype > 1:
@@ -2876,16 +2884,7 @@ while running:
                         # Green flash for wave complete
                         greenflash = True
                         greenflashticks = pygame.time.get_ticks()
-                        move_up_sound.stop()
-                        move_down_sound.stop()
-                        shoot_sound.stop()
-                        collision_sound.stop()
-                        bio_sound.stop()
-                        shock_sound.stop()
-                        flamer_sound.stop()
-                        powerup_sound.stop()
-                        pulse_sound.stop()
-                        wavechange_sound.play()
+                        sounds.stopsounds(gsounds)
                         # Move player positon to hide
                         player.rect.left = -300
                         player.rect.top = SCREEN_HEIGHT_NOBOX / 5
