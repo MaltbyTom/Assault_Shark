@@ -1,0 +1,7 @@
+schema: gimtrist-bridge/v1
+
+connection:
+  id: b57a4e12-7bb1-41a0-91fe-3d9028d1e934
+  repository_id: 943024321
+  challenge: 1e4d638f653f44bc9b478b2c5568fc88952cb96cb894915d
+  site: https://gimtrist.com
